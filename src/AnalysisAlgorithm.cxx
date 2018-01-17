@@ -23,7 +23,6 @@ using namespace lar_content;
 namespace lar_physics_content
 {
 AnalysisAlgorithm::AnalysisAlgorithm() :
-    m_pfoListName(),         
     m_fiducialCutXMargin(10.f),
     m_fiducialCutYMargin(20.f),
     m_fiducialCutZMargin(10.f),
@@ -40,7 +39,6 @@ AnalysisAlgorithm::AnalysisAlgorithm() :
     m_birksSelectionMaxdEdX(500.f),
     m_uniquePlotIdentifier(0),
     m_addMcInformation(true),
-    m_wCaloHitListName(),
     m_pTmvaReader(nullptr),
     m_tmvaTrackLength(0.f),
     m_tmvaAvgEnergyDeposition(0.f),
@@ -62,14 +60,26 @@ AnalysisAlgorithm::~AnalysisAlgorithm()
 
 void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, const ParticleFlowObject*& pOutputPfo) const
 {
+    // Work out what kind of PFO we're dealing with.
+    bool isNeutrino(false), isPrimaryNeutrinoDaughter(false), isCosmicRay(false);
+    
+    if (LArPfoHelper::IsNeutrino(pInputPfo))  
+        isNeutrino = true;
+        
+    else if (!LArPfoHelper::GetParentPfo(pInputPfo)) 
+        isCosmicRay = true;
+    
+    else if (LArPfoHelper::GetParentPfo(pInputPfo) == LArPfoHelper::GetParentNeutrino(pInputPfo))
+        isPrimaryNeutrinoDaughter = true;
+
+    if (!isNeutrino && !isCosmicRay && !isPrimaryNeutrinoDaughter) // we only want analysis particles for these
+        return;
+        
     // Check whether fiducial cut is satisfied. If not, record this and keep going anyway.
     bool fiducialCutSatisfied = true;
     
     if (!LArAnalysisParticleHelper::RecursivelyCheckFiducialCut(pInputPfo, this->m_minCoordinates, this->m_maxCoordinates))
-    {
-        CERR("Fiducial cut was not satisfied");
         fiducialCutSatisfied = false;
-    }
     
     // Check there is one vertex for this primary PFO and get it.
     if (pInputPfo->GetVertexList().size() != 1)
@@ -119,6 +129,24 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     
     (void) num3DHits; (void) numWHits; (void) particleType; (void) initialDirection; (void) gotMcInformation; (void) fiducialCutSatisfied;
     
+    analysisParticleParameters.m_particleId = pInputPfo->GetParticleId();
+    analysisParticleParameters.m_charge     = pInputPfo->GetCharge();
+    analysisParticleParameters.m_mass       = pInputPfo->GetMass();
+    analysisParticleParameters.m_energy     = pInputPfo->GetEnergy();
+    analysisParticleParameters.m_momentum   = pInputPfo->GetMomentum();
+    
+   // analysisParticleParameters.m_type             = particleType;
+   // analysisParticleParameters.m_typeTree         = typeTree;
+//    analysisParticleParameters.m_analysisEnergy   = 0.f;
+//    analysisParticleParameters.m_energyFromCharge = 0.f;
+//    analysisParticleParameters.m_is       = false;
+//    analysisParticleParameters.m_vertexPosition   = CartesianVector{0.f, 0.f, 0.f};
+//    analysisParticleParameters.m_initialDirection = CartesianVector{0.f, 0.f, 0.f};
+//    analysisParticleParameters.m_num3DHits        = 0;
+//    analysisParticleParameters.m_numWHits         = 0;
+//    analysisParticleParameters.m_isShower         = (particleType == LArAnalysisParticle::TYPE::SHOWER);
+//    analysisParticleParameters.m_hasMcInfo        = false;
+    
     /*
     analysisParticleParameters.m_particleId = pInputPfo->GetParticleId();
     analysisParticleParameters.m_charge     = pInputPfo->GetCharge();
@@ -154,6 +182,10 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, analysisParticleParameters,
         pOutputPfo, analysisParticleFactory));
+        
+    if (LArPfoHelper::IsNeutrino(pOutputPfo)) std::cout << " *** Reconstructed neutrino *** " << std::endl;
+    if (LArPfoHelper::IsShower(pOutputPfo)) std::cout << " *** Reconstructed shower *** " << std::endl;
+    if (LArPfoHelper::IsTrack(pOutputPfo)) std::cout << " *** Reconstructed track *** " << std::endl;
 
     const LArAnalysisParticle *const pLArAnalysisParticle = dynamic_cast<const LArAnalysisParticle*>(pOutputPfo);
     
@@ -509,24 +541,10 @@ CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject
 bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree,
                                             LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition) const
 {
-    const MCParticle *pMCParticle = nullptr;
-
-    try
-    {
-        pMCParticle = LArMCParticleHelper::GetMainMCParticle(pPfo);
-    }
-
-    catch (...)
-    {
-        CERR("Failed to get main MC particle");
-        return false;
-    }
+    const MCParticle *const pMCParticle = LArAnalysisParticleHelper::GetMainMCParticle(pPfo);
 
     if (!pMCParticle)
-    {
-        CERR("Failed to get main MC particle");
         return false;
-    }
     
     typeTree = this->CreateMcTypeTree(pMCParticle);
     mcEnergy = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
@@ -581,8 +599,6 @@ LArAnalysisParticle::TYPE AnalysisAlgorithm::GetMcParticleType(const MCParticle 
 
 StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", this->m_pfoListName));
-                                                                           
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutXMargin", this->m_fiducialCutXMargin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutYMargin", this->m_fiducialCutYMargin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutZMargin", this->m_fiducialCutZMargin));
@@ -599,7 +615,6 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BirksSelectionMaxdEdX", this->m_birksSelectionMaxdEdX));
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AddMcInformation", this->m_addMcInformation));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "WCaloHitListName", this->m_wCaloHitListName));
     
     TNtuple *const pBirksNtuple = LArAnalysisParticleHelper::LoadNTupleFromFile(this->m_parametersFile, this->m_birksFitNtupleName);
     

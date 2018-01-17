@@ -67,7 +67,6 @@ private:
     
     using EnergyFromRangeDataVector = std::vector<EnergyFromRangeData>;
     
-    std::string   m_pfoListName;                        ///<
     float         m_fiducialCutXMargin;                 ///< 
     float         m_fiducialCutYMargin;                 ///< 
     float         m_fiducialCutZMargin;                 ///< 
@@ -84,7 +83,6 @@ private:
     float         m_birksSelectionMaxdEdX;              ///<
     mutable int   m_uniquePlotIdentifier;               ///< 
     bool          m_addMcInformation;                   ///< 
-    std::string   m_wCaloHitListName;                   ///< 
     EnergyFromRangeDataVector m_protonEnergyFromRangeDataVector;
     EnergyFromRangeDataVector m_pionMuonEnergyFromRangeDataVector;
     TMVA::Reader *m_pTmvaReader;

@@ -129,7 +129,17 @@ public:
      */
     static TNtuple * LoadNTupleFromFile(const std::string &filePath, const std::string &nTupleName);
     
+    /**
+     *  @brief ...
+     * 
+     */
+    static const MCParticle *GetMainMCParticle(const ParticleFlowObject *const pPfo);
+    
 private:
+    using McParticleVotingMap    = std::unordered_map<const MCParticle *, unsigned int>; ///< ...
+    using McParticleVotingPair   = std::pair<const MCParticle *, unsigned int>;          ///< ...
+    using McParticleVotingVector = std::vector<McParticleVotingPair>;                    ///< ...
+
     /**
      *  @brief ...
      * 

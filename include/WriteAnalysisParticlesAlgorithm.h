@@ -178,51 +178,25 @@ private:
      *  @brief  Populate the tree parameters with neutrino information
      * 
      *  @param  neutrinoAnalysisParticle the neutrino analysis particle
-     * 
      */
     void PopulateNeutrinoParameters(const LArAnalysisParticle &neutrinoAnalysisParticle) const;
-    
-    /**
-     *  @brief  Populate the tree parameters with the neutrino's primary daughter information
-     * 
-     *  @param  treeParameters the tree parameters to update
-     *  @param  analysisParticleList the list of analysis particles
-     * 
-     */
-    void PopulatePrimaryDaughterParameters(const AnalysisParticleList &analysisParticleList) const;
         
     /**
      *  @brief  Add a primary daughter record to the tree parameters
      * 
-     *  @param  treeParameters the tree parameters to update
-     *  @param  analysisParticle the analysis particle for the given primary daughter
-     * 
+     *  @param  analysisParticle the primary daughter analysis particle
      */
-    void AddPrimaryDaughterRecord(const LArAnalysisParticle &analysisParticle) const;
-    
-    /**
-     *  @brief  Populate the tree parameters with cosmic ray information
-     * 
-     *  @param  treeParameters the tree parameters to update
-     *  @param  cosmicRayPfoList the list of cosmic ray PFOs
-     * 
-     */
-    void PopulateCosmicRayParameters(const PfoList &cosmicRayPfoList) const;
+    void AddPrimaryDaughterRecord(const LArAnalysisParticle &primaryAnalysisParticle) const;
         
     /**
      *  @brief  Add a cosmic ray record to the tree parameters
      * 
-     *  @param  treeParameters the tree parameters to update
-     *  @param  cosmicRayPfo the cosmic ray PFO
-     * 
+     *  @param  cosmicRayAnalysisParticle the cosmic ray analysis particle
      */
-    void AddCosmicRayRecord(const ParticleFlowObject &cosmicRayPfo) const;
+    void AddCosmicRayRecord(const LArAnalysisParticle &cosmicRayAnalysisParticle) const;
     
     /**
      *  @brief  Print the tree parameters
-     * 
-     *  @param  treeParameters the tree parameters to print
-     * 
      */
     void PrintTree() const;
         
@@ -232,18 +206,15 @@ private:
      *  @param  interactionType the interaction type enum
      * 
      *  @return whether the interaction type is charged-current
-     * 
      */
     bool IsChargedCurrent(const LArMCParticleHelper::InteractionType interactionType) const;
 
-    std::string     m_neutrinoPfoListName;      ///< The neutrino PFO list name
-    std::string     m_cosmicRayPfoListName;     ///< The cosmic ray PFO list name
-    std::string     m_outputFile;               ///< The output file path
-    TFile          *m_pOutputTFile;             ///< The ROOT TFile associated with the tree
-    TTree          *m_pOutputTree;              ///< The ROOT TTree to which to write the data
-    bool            m_verbose;                  ///< Whether to print some AnalysisParticle information to screen
-    
-    mutable TreeParameters m_treeParameters;    ///< The tree parameters
+    std::string               m_pfoListName;       ///< The neutrino PFO list name
+    std::string               m_outputFile;        ///< The output file path
+    TFile                    *m_pOutputTFile;      ///< The ROOT TFile associated with the tree
+    TTree                    *m_pOutputTree;       ///< The ROOT TTree to which to write the data
+    bool                      m_verbose;           ///< Whether to print some AnalysisParticle information to screen
+    mutable TreeParameters    m_treeParameters;    ///< The tree parameters
 };
 
 } // namespace lar_physics_content

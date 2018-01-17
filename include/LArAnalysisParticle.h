@@ -106,7 +106,7 @@ public:
      *  @param  parameters the parameters with which to construct the object
      * 
      */
-    LArAnalysisParticle(const LArAnalysisParticleParameters &parameters) noexcept;
+    LArAnalysisParticle(const LArAnalysisParticleParameters &parameters);
 
     /**
      *  @brief  Get the particle type
@@ -178,7 +178,7 @@ public:
      *  @return the initial direction
      * 
      */
-    const CartesianVector & Momentum() const noexcept;
+    const CartesianVector & AnalysisMomentum() const noexcept;
 
     /**
      *  @brief  Get the number of 3D hits
@@ -343,7 +343,7 @@ private:
     bool               m_areAllHitsFiducial;             ///< Whether all the hits are fiducial
     CartesianVector    m_vertexPosition;                 ///< The vertex position
     CartesianVector    m_directionCosines;               ///< The direction cosines at the vertex
-    CartesianVector    m_momentum;                       ///< The momentum at the vertex
+    CartesianVector    m_analysisMomentum;               ///< The momentum at the vertex
     unsigned           m_numberOf3dHits;                 ///< The number of 3D hits
     unsigned           m_numberOfCollectionPlaneHits;    ///< The number of collection-plane hits
     bool               m_isShower;                       ///< Whether the particle is a shower
@@ -396,7 +396,7 @@ public:
     bool                             m_areAllHitsFiducial;         
     CartesianVector                  m_vertexPosition;             
     CartesianVector                  m_directionCosines;           
-    CartesianVector                  m_momentum;                   
+    CartesianVector                  m_analysisMomentum;                   
     unsigned                         m_numberOf3dHits;             
     unsigned                         m_numberOfCollectionPlaneHits;
     bool                             m_isShower;                   
@@ -514,9 +514,9 @@ inline const CartesianVector & LArAnalysisParticle::DirectionCosines() const noe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const CartesianVector & LArAnalysisParticle::Momentum() const noexcept
+inline const CartesianVector & LArAnalysisParticle::AnalysisMomentum() const noexcept
 {
-    return this->m_momentum;
+    return this->m_analysisMomentum;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

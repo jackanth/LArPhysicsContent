@@ -18,6 +18,7 @@
 #include "Geometry/LArTPC.h"
 #include "Api/PandoraContentApi.h"
 #include "PandoraMonitoringApi.h"
+#include "Helpers/MCParticleHelper.h"
 
 #include "TFile.h"
 #include "TCanvas.h"
@@ -360,6 +361,58 @@ TNtuple * LArAnalysisParticleHelper::LoadNTupleFromFile(const std::string &fileP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const MCParticle *LArAnalysisParticleHelper::GetMainMCParticle(const ParticleFlowObject *const pPfo)
+{
+    ClusterList clusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+    
+    McParticleVotingMap mcParticleVotingMap;
+
+    for (const Cluster *const pCluster : clusterList)
+    {
+        try
+        {
+            if (const MCParticle *const pThisMainMCParticle = MCParticleHelper::GetMainMCParticle(pCluster))
+            {
+                const auto findIter = mcParticleVotingMap.find(pThisMainMCParticle);
+                
+                if (findIter == mcParticleVotingMap.end())
+                    mcParticleVotingMap.emplace(pThisMainMCParticle, 1U);
+                    
+                else
+                    ++findIter->second;
+            }
+        }
+        
+        catch (...)
+        {
+            continue;
+        }
+    }
+    
+    if (mcParticleVotingMap.empty())
+        return nullptr;
+        
+    if (mcParticleVotingMap.size() == 1)
+        return mcParticleVotingMap.begin()->first;
+    
+    // There are at least two different candidates, so pick the one with the most votes.
+    McParticleVotingVector mcParticleVotingVector;
+    mcParticleVotingVector.insert(mcParticleVotingVector.end(), std::make_move_iterator(mcParticleVotingMap.begin()), 
+                                  std::make_move_iterator(mcParticleVotingMap.end()));
+    
+    std::sort(mcParticleVotingVector.begin(), mcParticleVotingVector.end(),
+        [](const McParticleVotingPair &lhs, const McParticleVotingPair &rhs)
+        {
+            return lhs.second > rhs.second;
+        }
+    );
+    
+    return mcParticleVotingVector.front().first;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 // ATTN this method is copied from elsewhere.
 bool LArAnalysisParticleHelper::SortRecoNeutrinos(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
 {
@@ -412,4 +465,5 @@ float LArAnalysisParticleHelper::CellToThreeDDistance(const float hitWidth, cons
     
     return std::min(dx_p, dx_w);
 }
+
 } // namespace lar_physics_content
