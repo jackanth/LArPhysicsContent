@@ -98,7 +98,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
     }
     
     if (this->m_verbose)
-        this->PrintTree();
+        this->DumpTree();
     
     this->m_pOutputTree->Fill();
     return STATUS_CODE_SUCCESS;
@@ -302,9 +302,8 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::PrintTree() const
+void WriteAnalysisParticlesAlgorithm::DumpTree() const
 {
-    // TODO
     const std::string nuLabel = " - [nu]        ";
     
     std::cout << "Pandora Tree dump:\n";

@@ -127,11 +127,13 @@ std::string LArAnalysisParticle::TypeAsString(const TYPE type)
 {
     switch (type)
     {
-        case TYPE::PION_MUON: return "PION_MUON";
-        case TYPE::PROTON:    return "PROTON";
-        case TYPE::SHOWER:    return "SHOWER";
-        case TYPE::TRACK:     return "TRACK";
-        default:              break;
+        case TYPE::PION_MUON:  return "PION_MUON";
+        case TYPE::PROTON:     return "PROTON";
+        case TYPE::SHOWER:     return "SHOWER";
+        case TYPE::TRACK:      return "TRACK";
+        case TYPE::NEUTRINO:   return "NEUTRINO";
+        case TYPE::COSMIC_RAY: return "COSMIC_RAY";
+        default:               break;
     }
     
     return "UNKNOWN";

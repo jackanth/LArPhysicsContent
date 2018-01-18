@@ -63,15 +63,25 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     // Work out what kind of PFO we're dealing with.
     bool isNeutrino(false), isPrimaryNeutrinoDaughter(false), isCosmicRay(false);
     
-    if (LArPfoHelper::IsNeutrino(pInputPfo))  
+    if (LArPfoHelper::IsNeutrino(pInputPfo))
+    {
+        std::cout << " ******************** Got neutrino" << std::endl;
         isNeutrino = true;
+    }
+        
         
     else if (!LArPfoHelper::GetParentPfo(pInputPfo)) 
+    {
+        std::cout << " ******************** Got cosmic ray" << std::endl;
         isCosmicRay = true;
+    }
     
     else if (LArPfoHelper::GetParentPfo(pInputPfo) == LArPfoHelper::GetParentNeutrino(pInputPfo))
+    {
+        std::cout << " ******************** Got primary daughter" << std::endl;
         isPrimaryNeutrinoDaughter = true;
-
+    }
+    
     if (!isNeutrino && !isCosmicRay && !isPrimaryNeutrinoDaughter) // we only want analysis particles for these
         return;
         
@@ -134,6 +144,35 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     analysisParticleParameters.m_mass       = pInputPfo->GetMass();
     analysisParticleParameters.m_energy     = pInputPfo->GetEnergy();
     analysisParticleParameters.m_momentum   = pInputPfo->GetMomentum();
+    
+            
+    /*
+    analysisParticleParameters.m_type                        =  // different behaviour for nu/cr
+    analysisParticleParameters.m_typeTree                    =  // different behaviour for nu/cr?
+    analysisParticleParameters.m_analysisEnergy              =  // different behaviour for nu
+    analysisParticleParameters.m_energyFromCharge            = 
+    analysisParticleParameters.m_isVertexFiducial            = 
+    analysisParticleParameters.m_areAllHitsFiducial          =  // different behaviour for nu
+    analysisParticleParameters.m_vertexPosition              = 
+    analysisParticleParameters.m_directionCosines            =  // different behaviour for nu
+    analysisParticleParameters.m_analysisMomentum            = 
+    analysisParticleParameters.m_numberOf3dHits              =  // different behaviour for nu
+    analysisParticleParameters.m_numberOfCollectionPlaneHits =  // different behaviour for nu
+    analysisParticleParameters.m_isShower                    = 
+    analysisParticleParameters.m_numberOfDownstreamParticles =  
+    analysisParticleParameters.m_hasMcInfo                   =  
+    analysisParticleParameters.m_mcType                      = 
+    analysisParticleParameters.m_mcTypeTree                  = 
+    analysisParticleParameters.m_mcEnergy                    = 
+    analysisParticleParameters.m_mcMomentum                  = 
+    analysisParticleParameters.m_mcVertexPosition            = 
+    analysisParticleParameters.m_mcDirectionCosines          = 
+    analysisParticleParameters.m_mcIsVertexFiducial          = 
+    analysisParticleParameters.m_mcIsContained               = 
+    analysisParticleParameters.m_mcIsShower                  = 
+    analysisParticleParameters.m_mcIsCorrectlyReconstructed  = 
+    analysisParticleParameters.m_mcPdgCode                   = 
+    */
     
    // analysisParticleParameters.m_type             = particleType;
    // analysisParticleParameters.m_typeTree         = typeTree;

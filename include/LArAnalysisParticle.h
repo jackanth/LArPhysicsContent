@@ -39,11 +39,13 @@ public:
      */
     enum class TYPE : int
     {
-        UNKNOWN   = 0, ///< Unknown particle type
-        TRACK     = 1, ///< A track not clearly a pion, muon or proton
-        SHOWER    = 2, ///< A shower
-        PROTON    = 3, ///< A proton
-        PION_MUON = 4  ///< A pion or a muon
+        UNKNOWN    = 0, ///< Unknown particle type
+        TRACK      = 1, ///< A track not clearly a pion, muon or proton
+        SHOWER     = 2, ///< A shower
+        PROTON     = 3, ///< A proton
+        PION_MUON  = 4, ///< A pion or a muon
+        NEUTRINO   = 5, ///< A neutrino
+        COSMIC_RAY = 6  ///< A cosmic ray
     };
     
     using PfoTypeMap = std::unordered_map<const ParticleFlowObject *, TYPE>; ///< Alias for a map from PFOs to types

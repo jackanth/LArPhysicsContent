@@ -29,8 +29,6 @@ class TreeParameters
 {
 public:
     using BoolVector     = std::vector<bool>;     ///< Alias for a vector of bools
-    using FloatVector    = std::vector<float>;    ///< Alias for a vector of floats
-    using IntVector      = std::vector<int>;      ///< Alias for a vector of ints
     using UnsignedVector = std::vector<unsigned>; ///< Alias for a vector of unsigned ints
     
     /**
@@ -196,9 +194,9 @@ private:
     void AddCosmicRayRecord(const LArAnalysisParticle &cosmicRayAnalysisParticle) const;
     
     /**
-     *  @brief  Print the tree parameters
+     *  @brief  Dump the tree parameters
      */
-    void PrintTree() const;
+    void DumpTree() const;
         
     /**
      *  @brief  Find out whether a given interaction type is charged-current
