@@ -104,7 +104,13 @@ public:
      * 
      */
     static bool CheckFiducialCut(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
-                                 
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    static bool IsPointFiducial(const CartesianVector &point, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
+    
     /**
      *  @brief ...
      * 

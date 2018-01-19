@@ -67,6 +67,7 @@ private:
     
     using EnergyFromRangeDataVector = std::vector<EnergyFromRangeData>;
     
+    std::string   m_mcParticleListName;
     float         m_fiducialCutXMargin;                 ///< 
     float         m_fiducialCutYMargin;                 ///< 
     float         m_fiducialCutZMargin;                 ///< 
@@ -191,7 +192,7 @@ private:
      * 
      */
     bool GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree, 
-        LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition) const;
+        LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode, const bool isNeutrino) const;
     
     /**
      *  @brief ...
@@ -204,6 +205,12 @@ private:
      * 
      */
     LArAnalysisParticle::TYPE GetMcParticleType(const MCParticle *const pMCParticle) const;
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    void CountNumberOfDownstreamParticles(const ParticleFlowObject *const pPfo, unsigned &numberOfParticles) const;
     
     /**
      *  @brief ...

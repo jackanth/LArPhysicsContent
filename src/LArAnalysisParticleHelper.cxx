@@ -236,20 +236,31 @@ bool LArAnalysisParticleHelper::CheckFiducialCut(const ParticleFlowObject *const
     
     for (const CaloHit *const pCaloHit : caloHitList)
     {
-        const float hitXPosition = pCaloHit->GetPositionVector().GetX();
-        const float hitYPosition = pCaloHit->GetPositionVector().GetY();
-        const float hitZPosition = pCaloHit->GetPositionVector().GetZ();
-        
-        if (hitXPosition < minCoordinates.GetX() || hitXPosition > maxCoordinates.GetX())
-            return false;
-            
-        if (hitYPosition < minCoordinates.GetY() || hitYPosition > maxCoordinates.GetY())
-            return false;
-            
-        if (hitZPosition < minCoordinates.GetZ() || hitZPosition > maxCoordinates.GetZ())
+        if (!LArAnalysisParticleHelper::IsPointFiducial(pCaloHit->GetPositionVector(), minCoordinates, maxCoordinates))
             return false;
     }
     
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArAnalysisParticleHelper::IsPointFiducial(const CartesianVector &point, const CartesianVector &minCoordinates,
+    const CartesianVector &maxCoordinates)
+{
+    const float xPosition = point.GetX();
+    const float yPosition = point.GetY();
+    const float zPosition = point.GetZ();
+    
+    if (xPosition < minCoordinates.GetX() || xPosition > maxCoordinates.GetX())
+        return false;
+        
+    if (yPosition < minCoordinates.GetY() || yPosition > maxCoordinates.GetY())
+        return false;
+        
+    if (zPosition < minCoordinates.GetZ() || zPosition > maxCoordinates.GetZ())
+        return false;
+        
     return true;
 }
 

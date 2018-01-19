@@ -82,7 +82,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
                 this->m_treeParameters.m_nu_Exists = true;
             }
                 
-            else if (!LArPfoHelper::GetParentPfo(pPfo)) // it's a cosmic ray
+            else if (pPfo == LArPfoHelper::GetParentPfo(pPfo)) // it's a cosmic ray
             {
                 this->AddCosmicRayRecord(*pAnalysisParticle);
                 ++this->m_treeParameters.m_cr_Number;
@@ -90,7 +90,6 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
             
             else if (LArPfoHelper::GetParentPfo(pPfo) == LArPfoHelper::GetParentNeutrino(pPfo)) // it's a primary daughter
             {
-                std::cout << "Found primary" << std::endl;
                 this->AddPrimaryDaughterRecord(*pAnalysisParticle);
                 ++this->m_treeParameters.m_primary_Number;
             }
