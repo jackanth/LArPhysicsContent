@@ -424,6 +424,27 @@ const MCParticle *LArAnalysisParticleHelper::GetMainMCParticle(const ParticleFlo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArAnalysisParticleHelper::IsNeutrino(const ParticleFlowObject *const pPfo)
+{
+    return (LArPfoHelper::IsNeutrino(pPfo) && pPfo->GetParentPfoList().empty());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArAnalysisParticleHelper::IsCosmicRay(const ParticleFlowObject *const pPfo)
+{
+    return (pPfo->GetParentPfoList().empty() && !LArPfoHelper::IsNeutrino(pPfo) && LArPfoHelper::IsTrack(pPfo));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(const ParticleFlowObject *const pPfo)
+{
+    return LArPfoHelper::IsNeutrinoFinalState(pPfo);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 // ATTN this method is copied from elsewhere.
 bool LArAnalysisParticleHelper::SortRecoNeutrinos(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
 {

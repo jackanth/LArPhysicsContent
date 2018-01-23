@@ -141,6 +141,24 @@ public:
      */
     static const MCParticle *GetMainMCParticle(const ParticleFlowObject *const pPfo);
     
+    /**
+     *  @brief ...
+     * 
+     */
+    static bool IsNeutrino(const ParticleFlowObject *const pPfo);
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    static bool IsCosmicRay(const ParticleFlowObject *const pPfo);
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    static bool IsPrimaryNeutrinoDaughter(const ParticleFlowObject *const pPfo);
+    
 private:
     using McParticleVotingMap    = std::unordered_map<const MCParticle *, unsigned int>; ///< ...
     using McParticleVotingPair   = std::pair<const MCParticle *, unsigned int>;          ///< ...

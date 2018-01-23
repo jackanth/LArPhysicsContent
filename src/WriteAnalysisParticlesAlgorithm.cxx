@@ -8,6 +8,8 @@
 
 #include "WriteAnalysisParticlesAlgorithm.h"
 
+#include "LArAnalysisParticleHelper.h"
+
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "Pandora/AlgorithmHeaders.h"
@@ -70,7 +72,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
     {
         if (const LArAnalysisParticle *const pAnalysisParticle = dynamic_cast<const LArAnalysisParticle *>(pPfo))
         {
-            if (LArPfoHelper::IsNeutrino(pPfo))  
+            if (LArAnalysisParticleHelper::IsNeutrino(pPfo))  
             {
                 if (this->m_treeParameters.m_nu_Exists)
                 {
@@ -81,17 +83,23 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
                 this->PopulateNeutrinoParameters(*pAnalysisParticle);
                 this->m_treeParameters.m_nu_Exists = true;
             }
-                
-            else if (pPfo == LArPfoHelper::GetParentPfo(pPfo)) // it's a cosmic ray
+            
+            else if (LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(pPfo))
+            {
+                this->AddPrimaryDaughterRecord(*pAnalysisParticle);
+                ++this->m_treeParameters.m_primary_Number;
+            }
+            
+            else if (LArAnalysisParticleHelper::IsCosmicRay(pPfo))
             {
                 this->AddCosmicRayRecord(*pAnalysisParticle);
                 ++this->m_treeParameters.m_cr_Number;
             }
             
-            else if (LArPfoHelper::GetParentPfo(pPfo) == LArPfoHelper::GetParentNeutrino(pPfo)) // it's a primary daughter
+            else
             {
-                this->AddPrimaryDaughterRecord(*pAnalysisParticle);
-                ++this->m_treeParameters.m_primary_Number;
+                std::cout << "WriteAnalysisParticlesAlgorithm: analysis particle was not a cosmic ray, neutrino or primary daughter" << std::endl;
+                continue;
             }
         }
     }

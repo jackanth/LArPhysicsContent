@@ -49,7 +49,7 @@ public:
     ~AnalysisAlgorithm();
 
 protected:
-    StatusCode ReadSettings(const TiXmlHandle xmlHandle);
+    StatusCode ReadSettings(const TiXmlHandle xmlHandle) override;
     void CreatePfo(const ParticleFlowObject *const pInputPfo, const ParticleFlowObject*& pOutputPfo) const override;
 
 private:

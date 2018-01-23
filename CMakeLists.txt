@@ -41,8 +41,14 @@ if(PANDORA_MONITORING)
     add_definitions("-DMONITORING")
 
     list(APPEND CMAKE_MODULE_PATH "$ENV{ROOTSYS}/etc/cmake/")
-    find_package(ROOT 5.26.00 REQUIRED COMPONENTS Eve Geom RGL EG)
+    find_package(ROOT 5.26.00 REQUIRED COMPONENTS Eve Geom RGL EG TMVA)
 endif()
+
+find_package(ROOT 5.26.00 REQUIRED COMPONENTS Eve Geom RGL EG TMVA)
+include_directories(${ROOT_INCLUDE_DIRS})
+link_libraries(${ROOT_LIBRARIES} ${ROOT_COMPONENT_LIBRARIES})
+add_definitions(${ROOT_DEFINITIONS})
+add_definitions("-DMONITORING")
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Low level settings - compiler etc
@@ -74,7 +80,6 @@ if(PANDORA_MONITORING)
 endif()
 
 target_link_libraries(PandoraInterface ${PROJECT_NAME})
-target_link_libraries(PandoraInterface TMVA)
 
 # - Optional documents
 option(LArPhysicsContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)

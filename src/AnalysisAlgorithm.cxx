@@ -64,18 +64,27 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     // Work out what kind of PFO we're dealing with.
     bool isNeutrino(false), isPrimaryNeutrinoDaughter(false), isCosmicRay(false);
     
-    if (LArPfoHelper::IsNeutrino(pInputPfo))
+    if (LArAnalysisParticleHelper::IsNeutrino(pInputPfo))
+    {
+        std::cout << "Found neutrino" << std::endl;
         isNeutrino = true;
-   
-    else if (pInputPfo == LArPfoHelper::GetParentPfo(pInputPfo)) 
-        isCosmicRay = true;
+    }
     
-    else if (LArPfoHelper::GetParentPfo(pInputPfo) == LArPfoHelper::GetParentNeutrino(pInputPfo))
+    else if (LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(pInputPfo))
+    {
+        std::cout << "Found primary" << std::endl;
         isPrimaryNeutrinoDaughter = true;
+    }
    
-    else // we only want analysis particles for these types
-        return;
+    else if (LArAnalysisParticleHelper::IsCosmicRay(pInputPfo))
+    {
+        std::cout << "Found CR" << std::endl;
+        isCosmicRay = true;
+    }
     
+    else
+        return;
+        
     // Check there is one vertex for this primary PFO and get it.
     if (pInputPfo->GetVertexList().size() != 1)
     {
@@ -84,7 +93,6 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     }
     
     const Vertex *const pVertex = pInputPfo->GetVertexList().front();
-    
     bool gotMcInformation = false;
     
     float mcEnergy = 0.f;
@@ -116,7 +124,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     analysisParticleParameters.m_numberOfDownstreamParticles = numberOfDownstreamParticles;
     
     analysisParticleParameters.m_hasMcInfo = gotMcInformation;
-    
+
     if (gotMcInformation)
     {
         analysisParticleParameters.m_mcEnergy           = mcEnergy;
@@ -769,7 +777,7 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     this->m_pTmvaReader = new TMVA::Reader("!Color:Silent");    
     this->m_pTmvaReader->AddVariable("TrackLength", &this->m_tmvaTrackLength);
     this->m_pTmvaReader->AddVariable("AvgEnergyDeposition := TrueEnergy/TrackLength", &this->m_tmvaAvgEnergyDeposition);
-    this->m_pTmvaReader->BookMVA("BDT", "/home/jaw/Dropbox/PhD/weights/TMVAClassification_BDT.weights.xml"); 
+    this->m_pTmvaReader->BookMVA("BDT", "/Users/jaw/Dropbox/PhD/weights/TMVAClassification_BDT.weights.xml"); 
         
     // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
     LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), this->m_fiducialCutXMargin, this->m_fiducialCutYMargin,
