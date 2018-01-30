@@ -11,6 +11,7 @@
 #include "Pandora/Pandora.h"
 #include "Objects/ParticleFlowObject.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
+#include "LArAnalysisParticle.h"
 
 #include "TNtuple.h"
 #include "LArTrackHitEnergy.h"
@@ -158,6 +159,14 @@ public:
      * 
      */
     static bool IsPrimaryNeutrinoDaughter(const ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief ...
+     * 
+     */
+    static bool GetMcInformation(const MCParticle *const pMCParticle, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree,
+        LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode,
+        float &mcContainmentFraction, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
     
 private:
     using McParticleVotingMap    = std::unordered_map<const MCParticle *, unsigned int>; ///< ...
@@ -175,6 +184,33 @@ private:
      * 
      */
     static float CellToThreeDDistance(const float hitWidth, const float wirePitch, const CartesianVector &fitDirection);
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    static void RecursivelyAddEscapedEnergy(const MCParticle *const pCurrentMCParticle, float &escapedEnergy, float &totalEnergy, 
+        const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    static void AdjustMusForContainmentFraction(const CartesianVector &planePoint, const CartesianVector &planeNormal,
+        const CartesianVector &vertexPosition, const CartesianVector &originalDisplacementVector, float &muMin, float &muMax,
+        bool &forceZeroContainment);
+
+    /**
+     *  @brief ...
+     * 
+     */
+    static LArAnalysisParticle::TypeTree CreateMcTypeTree(const MCParticle *const pMCParticle);
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    static LArAnalysisParticle::TYPE GetMcParticleType(const MCParticle *const pMCParticle);
 };
 } // namespace lar_physics_content
 

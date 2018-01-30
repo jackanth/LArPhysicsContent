@@ -45,7 +45,8 @@ AnalysisAlgorithm::AnalysisAlgorithm() :
     m_tmvaAvgEnergyDeposition(0.f),
     m_minCoordinates(0.f, 0.f, 0.f),
     m_maxCoordinates(0.f, 0.f, 0.f),
-    m_pBirksHitSelectionTool(nullptr)
+    m_pBirksHitSelectionTool(nullptr),
+    m_mcContainmentFractionLowerBound(0.9f)
 {
 }
 
@@ -95,15 +96,19 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     const Vertex *const pVertex = pInputPfo->GetVertexList().front();
     bool gotMcInformation = false;
     
-    float mcEnergy = 0.f;
+    float mcEnergy = 0.f, mcContainmentFraction = 0.f;
     LArAnalysisParticle::TypeTree mcTypeTree;
     LArAnalysisParticle::TYPE mcType(LArAnalysisParticle::TYPE::UNKNOWN);
     CartesianVector mcVertexPosition(0.f, 0.f, 0.f), mcMomentum(0.f, 0.f, 0.f);
     int mcPdgCode(0);
+    const MCParticle *pMcMainMCParticle(nullptr);
     
     if (this->m_addMcInformation)
-        gotMcInformation = this->GetMcInformation(pInputPfo, mcEnergy, mcTypeTree, mcType, mcVertexPosition, mcMomentum, mcPdgCode, isNeutrino);
-        
+    {
+        gotMcInformation = this->GetMcInformation(pInputPfo, mcEnergy, mcTypeTree, mcType, mcVertexPosition, mcMomentum, mcPdgCode, isNeutrino, 
+            mcContainmentFraction, pMcMainMCParticle);
+    }
+    
     // Common parameter calculations.
     LArAnalysisParticleParameters analysisParticleParameters;
     
@@ -135,12 +140,13 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         analysisParticleParameters.m_mcIsVertexFiducial = LArAnalysisParticleHelper::IsPointFiducial(mcVertexPosition, 
             this->m_minCoordinates, this->m_maxCoordinates);
             
-        analysisParticleParameters.m_mcIsContained              = false; // TODO
-        analysisParticleParameters.m_mcIsShower                 = (mcType == LArAnalysisParticle::TYPE::SHOWER);
-        analysisParticleParameters.m_mcIsCorrectlyReconstructed = false; // TODO
-        analysisParticleParameters.m_mcPdgCode                  = mcPdgCode;
-        analysisParticleParameters.m_mcType                     = mcType;
-        analysisParticleParameters.m_mcTypeTree                 = mcTypeTree;
+        analysisParticleParameters.m_mcIsContained      = (mcContainmentFraction > this->m_mcContainmentFractionLowerBound);
+        analysisParticleParameters.m_mcIsShower         = (mcType == LArAnalysisParticle::TYPE::SHOWER);
+        analysisParticleParameters.m_mcPdgCode          = mcPdgCode;
+        analysisParticleParameters.m_mcType             = mcType;
+        analysisParticleParameters.m_pMcMainMCParticle  = pMcMainMCParticle;
+        
+        std::cout << "Setting main MC particle: " << pMcMainMCParticle << std::endl;
     }
     
     // Neutrino-specific calculations.
@@ -582,10 +588,9 @@ CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree,
-    LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode, const bool isNeutrino) const
+    LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode, const bool isNeutrino,
+    float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle) const
 {
-    const MCParticle *pMCParticle(nullptr);
-    
     if (isNeutrino)
     {
         const MCParticleList *pMCParticleList(nullptr);
@@ -594,7 +599,7 @@ bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, f
             return false;
         
         MCParticleVector trueNeutrinos;
-        LArMCParticleHelper::SelectTrueNeutrinos(pMCParticleList, trueNeutrinos);
+        LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, trueNeutrinos);
         
         
         if (trueNeutrinos.empty())
@@ -606,63 +611,17 @@ bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, f
             std::cout << "AnalysisAlgorithm: more than one MC neutrino; picking one with largest momentum" << std::endl;
         }
         
-        pMCParticle = trueNeutrinos.front();
+        pMcMainMCParticle = trueNeutrinos.front();
     }
    
     else
-        pMCParticle = LArAnalysisParticleHelper::GetMainMCParticle(pPfo);
+        pMcMainMCParticle = LArAnalysisParticleHelper::GetMainMCParticle(pPfo);
 
-    if (!pMCParticle)
+    if (!pMcMainMCParticle)
         return false;
-    
-    typeTree = this->CreateMcTypeTree(pMCParticle);
-    mcEnergy = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
-    mcType = typeTree.Type();
-    mcVertexPosition = pMCParticle->GetVertex();
-    mcMomentum = pMCParticle->GetMomentum();
-    mcPdgCode = pMCParticle->GetParticleId();
-    
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
         
-LArAnalysisParticle::TypeTree AnalysisAlgorithm::CreateMcTypeTree(const MCParticle *const pMCParticle) const
-{
-    LArAnalysisParticle::TypeTree::List daughterTypeTrees;
-    
-    const LArAnalysisParticle::TYPE type = this->GetMcParticleType(pMCParticle);
-    
-    if (type != LArAnalysisParticle::TYPE::SHOWER && type != LArAnalysisParticle::TYPE::UNKNOWN)
-    {
-        for (const MCParticle *const pDaughterParticle : pMCParticle->GetDaughterList())
-        {
-            if (pDaughterParticle->GetEnergy() > 0.05f)
-                daughterTypeTrees.push_back(this->CreateMcTypeTree(pDaughterParticle));
-        }
-    }
-    
-    return {type, daughterTypeTrees};
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-LArAnalysisParticle::TYPE AnalysisAlgorithm::GetMcParticleType(const MCParticle *const pMCParticle) const
-{
-    switch (pMCParticle->GetParticleId())
-    {
-        case PROTON:   return LArAnalysisParticle::TYPE::PROTON;
-        case MU_MINUS: 
-        case PI_MINUS:
-        case PI_PLUS:  return LArAnalysisParticle::TYPE::PION_MUON;
-        case PHOTON:
-        case E_MINUS:
-        case E_PLUS:   return LArAnalysisParticle::TYPE::SHOWER;
-        case NEUTRON:  return LArAnalysisParticle::TYPE::UNKNOWN;
-        default: break;
-    }
-    
-    return LArAnalysisParticle::TYPE::UNKNOWN;
+    return LArAnalysisParticleHelper::GetMcInformation(pMcMainMCParticle, mcEnergy, typeTree, mcType, mcVertexPosition, mcMomentum, 
+        mcPdgCode, mcContainmentFraction, this->m_minCoordinates, this->m_maxCoordinates);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -699,6 +658,8 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BirksSelectionMaxdEdX", this->m_birksSelectionMaxdEdX));
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AddMcInformation", this->m_addMcInformation));
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McContainmentFractionLowerBound", this->m_mcContainmentFractionLowerBound));
     
     TNtuple *const pBirksNtuple = LArAnalysisParticleHelper::LoadNTupleFromFile(this->m_parametersFile, this->m_birksFitNtupleName);
     

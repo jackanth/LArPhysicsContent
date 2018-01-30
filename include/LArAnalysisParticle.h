@@ -11,6 +11,7 @@
 
 #include "Objects/CartesianVector.h"
 #include "Objects/ParticleFlowObject.h"
+#include "Objects/MCParticle.h"
 
 #include "Pandora/ObjectFactory.h"
 
@@ -293,14 +294,6 @@ public:
      * 
      */
     bool McIsShower() const;
-
-    /**
-     *  @brief  Get whether the particle has been reconstructed correctly
-     * 
-     *  @return whether the particle has been reconstructed correctly
-     * 
-     */
-    bool McIsCorrectlyReconstructed() const;
     
     /**
      *  @brief  Get whether the particle has been reconstructed correctly
@@ -309,6 +302,14 @@ public:
      * 
      */
     int McPdgCode() const;
+    
+    /**
+     *  @brief  Get the address of the main MC particle
+     * 
+     *  @return the address of the MC particle
+     * 
+     */
+    const MCParticle * McMainMCParticle() const;
     
     /**
      *  @brief  Print some information about the particle
@@ -360,8 +361,8 @@ private:
     bool               m_mcIsVertexFiducial;             ///< Whether the vertex is fiducial (MC quantity)
     bool               m_mcIsContained;                  ///< Whether the particle is contained (MC quantity)
     bool               m_mcIsShower;                     ///< Whether the particle is a shower (MC quantity)
-    bool               m_mcIsCorrectlyReconstructed;     ///< Whether the particle has been reconstructed correctly (MC quantity)
     int                m_mcPdgCode;                      ///< The PDG code of the particle (MC quantity)
+    const MCParticle * m_pMcMainMCParticle;              ///< Address of the main MC particle (MC quantity)
     
     /**
      *  @brief  Get the particle type tree as a string (implementation)
@@ -413,8 +414,8 @@ public:
     bool                             m_mcIsVertexFiducial;         
     bool                             m_mcIsContained;              
     bool                             m_mcIsShower;                 
-    bool                             m_mcIsCorrectlyReconstructed; 
     int                              m_mcPdgCode;                  
+    const MCParticle *               m_pMcMainMCParticle;                  
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -630,18 +631,19 @@ inline bool LArAnalysisParticle::McIsShower() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool LArAnalysisParticle::McIsCorrectlyReconstructed() const
-{
-    ThrowIfNoMcInfo(); 
-    return this->m_mcIsCorrectlyReconstructed;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 inline int LArAnalysisParticle::McPdgCode() const
 {
     ThrowIfNoMcInfo(); 
     return this->m_mcPdgCode;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const MCParticle * LArAnalysisParticle::McMainMCParticle() const
+{
+    ThrowIfNoMcInfo(); 
+    std::cout << this->m_pMcMainMCParticle->GetUid() << std::endl;
+    return this->m_pMcMainMCParticle;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

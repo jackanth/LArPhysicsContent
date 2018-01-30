@@ -13,7 +13,9 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
+#include "Pandora/PdgTable.h"
 #include "Managers/GeometryManager.h"
 #include "Geometry/LArTPC.h"
 #include "Api/PandoraContentApi.h"
@@ -385,10 +387,11 @@ const MCParticle *LArAnalysisParticleHelper::GetMainMCParticle(const ParticleFlo
         {
             if (const MCParticle *const pThisMainMCParticle = MCParticleHelper::GetMainMCParticle(pCluster))
             {
-                const auto findIter = mcParticleVotingMap.find(pThisMainMCParticle);
+                const MCParticle *const pThisMCPrimary = LArMCParticleHelper::GetPrimaryMCParticle(pThisMainMCParticle);
+                const auto findIter = mcParticleVotingMap.find(pThisMCPrimary);
                 
                 if (findIter == mcParticleVotingMap.end())
-                    mcParticleVotingMap.emplace(pThisMainMCParticle, 1U);
+                    mcParticleVotingMap.emplace(pThisMCPrimary, 1U);
                     
                 else
                     ++findIter->second;
@@ -445,6 +448,30 @@ bool LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(const ParticleFlowObje
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCParticle, float &mcEnergy, 
+    LArAnalysisParticle::TypeTree &typeTree, LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition,
+    CartesianVector &mcMomentum, int &mcPdgCode, float &mcContainmentFraction, const CartesianVector &minCoordinates,
+    const CartesianVector &maxCoordinates)
+{
+    if (!pMCParticle)
+        return false;
+    
+    typeTree         = LArAnalysisParticleHelper::CreateMcTypeTree(pMCParticle);
+    mcEnergy         = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+    mcType           = typeTree.Type();
+    mcVertexPosition = pMCParticle->GetVertex();
+    mcMomentum       = pMCParticle->GetMomentum();
+    mcPdgCode        = pMCParticle->GetParticleId();
+    
+    float escapedEnergy(0.f), totalEnergy(0.f);
+    LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(pMCParticle, escapedEnergy, totalEnergy, minCoordinates, maxCoordinates);
+    mcContainmentFraction = (totalEnergy - escapedEnergy) / totalEnergy;
+    
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 // ATTN this method is copied from elsewhere.
 bool LArAnalysisParticleHelper::SortRecoNeutrinos(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
 {
@@ -496,6 +523,155 @@ float LArAnalysisParticleHelper::CellToThreeDDistance(const float hitWidth, cons
         dx_w = hitWidth / sinPhi_sinTheta;
     
     return std::min(dx_p, dx_w);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(const MCParticle *const pCurrentMCParticle, float &escapedEnergy,
+    float &totalEnergy, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates)
+{
+    bool allEnergyContained(true);
+    
+    switch (pCurrentMCParticle->GetParticleId())
+    {
+        case E_MINUS:
+        case E_PLUS:
+        case MU_MINUS:
+        case MU_PLUS:
+        case PI_PLUS:
+        case PI_MINUS:
+        case PROTON:
+        {
+            const CartesianVector displacementVector = pCurrentMCParticle->GetEndpoint() - pCurrentMCParticle->GetVertex();
+            
+            if (displacementVector.GetMagnitude() < std::numeric_limits<float>::epsilon())
+                break;
+            
+            float muMin(0.f), muMax(1.f);
+            bool forceZeroContainment(false);
+            
+            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(minCoordinates.GetX(), 0.f, 0.f), 
+                CartesianVector(-1.f, 0.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+                
+            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(maxCoordinates.GetX(), 0.f, 0.f), 
+                CartesianVector(1.f, 0.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+                
+            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(0.f, minCoordinates.GetY(), 0.f), 
+                CartesianVector(0.f, -1.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+                
+            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(0.f, maxCoordinates.GetY(), 0.f),
+                CartesianVector(0.f, 1.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+                
+            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(0.f, 0.f, minCoordinates.GetZ()),
+                CartesianVector(0.f, 0.f, -1.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+                
+            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(0.f, 0.f, maxCoordinates.GetZ()),
+                CartesianVector(0.f, 0.f, 1.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+                
+            if (forceZeroContainment)
+            {
+                escapedEnergy += pCurrentMCParticle->GetEnergy();
+                allEnergyContained = false;
+            }
+                
+            else
+            {
+                const float containmentFraction = std::max(0.f, muMax - muMin);
+                
+                if (containmentFraction < 1.f)
+                {
+                    escapedEnergy += (1.f - containmentFraction) * pCurrentMCParticle->GetEnergy();
+                    allEnergyContained = false;
+                }
+            }
+                
+            totalEnergy += pCurrentMCParticle->GetEnergy();
+        }
+        
+        default: break;
+    }
+    
+    if (allEnergyContained)
+    {
+        for (const MCParticle *const pDaughterParticle : pCurrentMCParticle->GetDaughterList())
+        {
+            LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(pDaughterParticle, escapedEnergy, totalEnergy, minCoordinates,
+                maxCoordinates);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArAnalysisParticleHelper::AdjustMusForContainmentFraction(const CartesianVector &planePoint, const CartesianVector &planeNormal, 
+    const CartesianVector &vertexPosition, const CartesianVector &originalDisplacementVector, float &muMin, float &muMax,
+    bool &forceZeroContainment)
+{
+    const float projectedDisplacement = originalDisplacementVector.GetDotProduct(planeNormal);
+    
+    if (std::fabs(projectedDisplacement) < std::numeric_limits<float>::epsilon())
+        return;
+        
+    const float muIntercept = (planePoint - vertexPosition).GetDotProduct(planeNormal) / projectedDisplacement;
+    const bool isAligned = (projectedDisplacement > 0.f);
+    
+    if (isAligned)
+    {
+        if (muIntercept > std::numeric_limits<float>::min() && muIntercept < std::numeric_limits<float>::max())
+            muMax = std::min(muMax, muIntercept);
+            
+        else if (muIntercept < 0.f)
+            forceZeroContainment = true;
+    }
+    
+    else
+    {
+        if (muIntercept > std::numeric_limits<float>::min() && muIntercept < std::numeric_limits<float>::max())
+            muMin = std::max(muMin, muIntercept);
+            
+        else if (muIntercept > 0.f)
+            forceZeroContainment = true;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+        
+LArAnalysisParticle::TypeTree LArAnalysisParticleHelper::CreateMcTypeTree(const MCParticle *const pMCParticle)
+{
+    LArAnalysisParticle::TypeTree::List daughterTypeTrees;
+    
+    const LArAnalysisParticle::TYPE type = LArAnalysisParticleHelper::GetMcParticleType(pMCParticle);
+    
+    if (type != LArAnalysisParticle::TYPE::SHOWER && type != LArAnalysisParticle::TYPE::UNKNOWN)
+    {
+        for (const MCParticle *const pDaughterParticle : pMCParticle->GetDaughterList())
+        {
+            if (pDaughterParticle->GetEnergy() > 0.05f)
+                daughterTypeTrees.push_back(LArAnalysisParticleHelper::CreateMcTypeTree(pDaughterParticle));
+        }
+    }
+    
+    return {type, daughterTypeTrees};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArAnalysisParticle::TYPE LArAnalysisParticleHelper::GetMcParticleType(const MCParticle *const pMCParticle)
+{
+    switch (pMCParticle->GetParticleId())
+    {
+        case PROTON:   return LArAnalysisParticle::TYPE::PROTON;
+        case MU_MINUS: 
+        case PI_MINUS:
+        case PI_PLUS:  return LArAnalysisParticle::TYPE::PION_MUON;
+        case PHOTON:
+        case E_MINUS:
+        case E_PLUS:   return LArAnalysisParticle::TYPE::SHOWER;
+        case NEUTRON:  return LArAnalysisParticle::TYPE::UNKNOWN;
+        default: break;
+    }
+    
+    return LArAnalysisParticle::TYPE::UNKNOWN;
 }
 
 } // namespace lar_physics_content

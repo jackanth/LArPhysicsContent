@@ -176,7 +176,7 @@ void AnalysisDataAlgorithm::RecursivelyAppendMCParticleMap(const ParticleFlowObj
 
     try
     {
-        pMCParticle = LArMCParticleHelper::GetMainMCParticle(pPfo);
+        pMCParticle = LArAnalysisParticleHelper::GetMainMCParticle(pPfo);
     }
 
     catch (...)

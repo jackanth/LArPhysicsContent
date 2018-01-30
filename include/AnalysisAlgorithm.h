@@ -92,6 +92,7 @@ private:
     CartesianVector m_minCoordinates;
     CartesianVector m_maxCoordinates;
     BirksHitSelectionTool *m_pBirksHitSelectionTool;
+    float m_mcContainmentFractionLowerBound;
 
     /**
      *  @brief ...
@@ -192,19 +193,8 @@ private:
      * 
      */
     bool GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree, 
-        LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode, const bool isNeutrino) const;
-    
-    /**
-     *  @brief ...
-     * 
-     */
-    LArAnalysisParticle::TypeTree CreateMcTypeTree(const MCParticle *const pMCParticle) const;
-    
-    /**
-     *  @brief ...
-     * 
-     */
-    LArAnalysisParticle::TYPE GetMcParticleType(const MCParticle *const pMCParticle) const;
+        LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode, const bool isNeutrino,
+        float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle) const;
     
     /**
      *  @brief ...

@@ -38,8 +38,8 @@ LArAnalysisParticle::LArAnalysisParticle(const LArAnalysisParticleParameters &pa
     m_mcIsVertexFiducial(parameters.m_mcIsVertexFiducial),
     m_mcIsContained(parameters.m_mcIsContained),
     m_mcIsShower(parameters.m_mcIsShower),
-    m_mcIsCorrectlyReconstructed(parameters.m_mcIsCorrectlyReconstructed),
-    m_mcPdgCode(parameters.m_mcPdgCode)
+    m_mcPdgCode(parameters.m_mcPdgCode),
+    m_pMcMainMCParticle(parameters.m_pMcMainMCParticle)
 {
 }
 
@@ -86,9 +86,8 @@ void LArAnalysisParticle::Print() const
               << "    - MC is shower:              " << std::boolalpha << this->m_mcIsShower << std::noboolalpha << "\n"
               << "    - Num downstream particles:  " << this->m_numberOfDownstreamParticles << "\n"
               << "    - Has MC info:               " << std::boolalpha << this->m_hasMcInfo << std::noboolalpha << "\n"
-              << "    - MC is reco correct:        " << std::boolalpha << TEXT_RED_BOLD << this->m_mcIsCorrectlyReconstructed 
-                                                     << std::noboolalpha << TEXT_NORMAL
               << "    - MC PDG code:               " << this->m_mcPdgCode << "\n"
+              << "    - MC main MC particle at:    " << this->m_pMcMainMCParticle
               << std::endl;
     }
     
@@ -193,8 +192,8 @@ LArAnalysisParticleParameters::LArAnalysisParticleParameters() noexcept :
     m_mcIsVertexFiducial(false),
     m_mcIsContained(false),
     m_mcIsShower(false),
-    m_mcIsCorrectlyReconstructed(false),
-    m_mcPdgCode(0)
+    m_mcPdgCode(0),
+    m_pMcMainMCParticle(nullptr)
 {
 }
 
