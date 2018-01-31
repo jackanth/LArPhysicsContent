@@ -66,23 +66,14 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     bool isNeutrino(false), isPrimaryNeutrinoDaughter(false), isCosmicRay(false);
     
     if (LArAnalysisParticleHelper::IsNeutrino(pInputPfo))
-    {
-        std::cout << "Found neutrino" << std::endl;
         isNeutrino = true;
-    }
     
     else if (LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(pInputPfo))
-    {
-        std::cout << "Found primary" << std::endl;
         isPrimaryNeutrinoDaughter = true;
-    }
    
     else if (LArAnalysisParticleHelper::IsCosmicRay(pInputPfo))
-    {
-        std::cout << "Found CR" << std::endl;
         isCosmicRay = true;
-    }
-    
+
     else
         return;
         
@@ -145,8 +136,6 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         analysisParticleParameters.m_mcPdgCode          = mcPdgCode;
         analysisParticleParameters.m_mcType             = mcType;
         analysisParticleParameters.m_pMcMainMCParticle  = pMcMainMCParticle;
-        
-        std::cout << "Setting main MC particle: " << pMcMainMCParticle << std::endl;
     }
     
     // Neutrino-specific calculations.

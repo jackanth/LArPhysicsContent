@@ -642,7 +642,6 @@ inline int LArAnalysisParticle::McPdgCode() const
 inline const MCParticle * LArAnalysisParticle::McMainMCParticle() const
 {
     ThrowIfNoMcInfo(); 
-    std::cout << this->m_pMcMainMCParticle->GetUid() << std::endl;
     return this->m_pMcMainMCParticle;
 }
 

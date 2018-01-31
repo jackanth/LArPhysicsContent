@@ -542,6 +542,7 @@ void LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(const MCParticle *co
         case PI_MINUS:
         case PROTON:
         {
+            const float mcParticleEnergy = pCurrentMCParticle->GetEnergy() - PdgTable::GetParticleMass(pCurrentMCParticle->GetParticleId());
             const CartesianVector displacementVector = pCurrentMCParticle->GetEndpoint() - pCurrentMCParticle->GetVertex();
             
             if (displacementVector.GetMagnitude() < std::numeric_limits<float>::epsilon())
@@ -570,7 +571,7 @@ void LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(const MCParticle *co
                 
             if (forceZeroContainment)
             {
-                escapedEnergy += pCurrentMCParticle->GetEnergy();
+                escapedEnergy += mcParticleEnergy;
                 allEnergyContained = false;
             }
                 
@@ -580,12 +581,12 @@ void LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(const MCParticle *co
                 
                 if (containmentFraction < 1.f)
                 {
-                    escapedEnergy += (1.f - containmentFraction) * pCurrentMCParticle->GetEnergy();
+                    escapedEnergy += (1.f - containmentFraction) * mcParticleEnergy;
                     allEnergyContained = false;
                 }
             }
                 
-            totalEnergy += pCurrentMCParticle->GetEnergy();
+            totalEnergy += mcParticleEnergy;
         }
         
         default: break;

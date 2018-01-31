@@ -76,16 +76,14 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
     
     // Get the MC particle list if it exists.
     const MCParticleList *pMCParticleList(nullptr);
-    std::cout << m_mcParticleListName << std::endl;
     PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList);
     
     // Get the CaloHit list if it exists.
     const CaloHitList *pCaloHitList(nullptr);
-    std::cout << m_caloHitListName << std::endl;
     PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList);
     
     this->m_treeParameters = TreeParameters();
-    
+
     MCParticleSet coveredMcPrimaries;
     
     for (const ParticleFlowObject * const pPfo : *pPfoList)
@@ -99,7 +97,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
                     std::cout << "WriteAnalysisParticlesAlgorithm: multiple neutrinos found - only recording one" << std::endl;
                     continue;
                 }
-                    
+
                 this->PopulateNeutrinoParameters(*pAnalysisParticle, pMCParticleList, pCaloHitList);
                 this->m_treeParameters.m_nu_WasReconstructed = true;
                 
@@ -141,7 +139,11 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
         {
             try
             {
-                mcPrimarySet.insert(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
+                if ((pMCParticle->GetParentList().size() == 0) && LArMCParticleHelper::IsNeutrino(pMCParticle))
+                    mcPrimarySet.insert(pMCParticle);
+                
+                else
+                    mcPrimarySet.insert(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
             }
             
             catch (...)
@@ -154,7 +156,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
         {
             if (coveredMcPrimaries.find(pMCPrimary) != coveredMcPrimaries.end())
                 continue;
-                
+   
             if (!LArMCParticleHelper::IsNeutrino(pMCPrimary) && !LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) &&
                 (pMCPrimary->GetParticleId() != MU_MINUS))
             {
@@ -173,14 +175,18 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
                 std::cout << "WriteAnalysisParticlesAlgorithm: failed to get MC information for non-reconstructed MC particle" << std::endl;
                 continue;
             }
-            
+
             const bool mcIsVertexFiducial = LArAnalysisParticleHelper::IsPointFiducial(mcVertexPosition, this->m_minCoordinates,
                 this->m_maxCoordinates);
                 
             const bool mcIsContained = (mcContainmentFraction > this->m_mcContainmentFractionLowerBound);
+            
+            if (mcMomentum.GetMagnitude() < std::numeric_limits<float>::epsilon())
+                continue;
+            
             const CartesianVector mcDirectionCosines = mcMomentum.GetUnitVector();
             const bool mcIsShower = (mcType == LArAnalysisParticle::TYPE::SHOWER);
-                
+
             if (LArMCParticleHelper::IsNeutrino(pMCPrimary))
             {
                 if (this->m_treeParameters.m_nu_HasMcInfo)
@@ -210,7 +216,6 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
             }
         }
     }
-    
     
     if (this->m_verbose)
         this->DumpTree();
@@ -305,7 +310,7 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
     }
     
     MCParticleSet mcPrimarySet;
-    
+
     for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
         try
@@ -321,7 +326,7 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
             continue;
         }
     }
-    
+
     CartesianVector visibleMomentum(0.f, 0.f, 0.f);
     float visibleEnergy(0.f);
     
@@ -329,21 +334,24 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
     {
         const float primaryVisibleEnergy = pMCPrimary->GetEnergy() - PdgTable::GetParticleMass(pMCPrimary->GetParticleId());
         visibleEnergy += primaryVisibleEnergy;
-        visibleMomentum += pMCPrimary->GetMomentum().GetUnitVector() * primaryVisibleEnergy;
-        std::cout << "Adding energy: " << primaryVisibleEnergy<< std::endl;
+
+        const CartesianVector &mcPrimaryMomentum(pMCPrimary->GetMomentum());
+        
+        if (mcPrimaryMomentum.GetMagnitude() > std::numeric_limits<float>::epsilon())
+            visibleMomentum += mcPrimaryMomentum.GetUnitVector() * primaryVisibleEnergy;
     }
     
     const LArInteractionTypeHelper::InteractionType interactionType = this->GetInteractionType(pMCParticleList, pCaloHitList);
     
     // To align with the non-MC definition, we define the longitudinal/transverse components with respect to the z-direction.
     const CartesianVector zDirectionVector(0.f, 0.f, 1.f);
-    
+
     const float mcLongitudinalEnergy = mcMomentum.GetDotProduct(zDirectionVector);
     this->m_treeParameters.m_nu_mc_LongitudinalEnergy = mcLongitudinalEnergy;
     
     const CartesianVector mcTransverseMomentum = mcMomentum.GetCrossProduct(zDirectionVector);
-    this->m_treeParameters.m_nu_mc_TransverseEnergy = mcTransverseMomentum.GetMagnitude();
     
+    this->m_treeParameters.m_nu_mc_TransverseEnergy = mcTransverseMomentum.GetMagnitude();
     this->m_treeParameters.m_nu_mc_VisibleLongitudinalEnergy = visibleMomentum.GetZ();
     this->m_treeParameters.m_nu_mc_VisibleTransverseEnergy   = visibleMomentum.GetCrossProduct(zDirectionVector).GetMagnitude();
     this->m_treeParameters.m_nu_mc_InteractionType           = static_cast<int>(interactionType);
@@ -417,7 +425,7 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
         
         else
         {
-            std::cout << "Primary neutrino daughter had MC info but no associated main MC particle" << std::endl;
+            std::cout << "WriteAnalysisParticlesAlgorithm: primary neutrino daughter had MC info but no associated main MC particle" << std::endl;
             PUSH_TREE_RECORD(m_primary_mc_McParticleUid, 0ULL);
         }
         
@@ -492,7 +500,7 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyPrimaryDaughterRecord(const MCPar
     
     else
     {
-        std::cout << "Primary neutrino daughter had MC info but no associated main MC particle" << std::endl;
+        std::cout << "WriteAnalysisParticlesAlgorithm: primary neutrino daughter had MC info but no associated main MC particle" << std::endl;
         PUSH_TREE_RECORD(m_primary_mc_McParticleUid, 0ULL);
     }
     
@@ -545,7 +553,7 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
         
         else
         {
-            std::cout << "Cosmic ray had MC info but no associated main MC particle" << std::endl;
+            std::cout << "WriteAnalysisParticlesAlgorithm: cosmic ray had MC info but no associated main MC particle" << std::endl;
             PUSH_TREE_RECORD(m_cr_mc_McParticleUid, 0ULL);
         }
         
@@ -614,7 +622,7 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyCosmicRayRecord(const MCParticle 
     
     else
     {
-        std::cout << "Cosmic ray had MC info but no associated main MC particle" << std::endl;
+        std::cout << "WriteAnalysisParticlesAlgorithm: cosmic ray had MC info but no associated main MC particle" << std::endl;
         PUSH_TREE_RECORD(m_cr_mc_McParticleUid, 0ULL);
     }
     
@@ -702,7 +710,8 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         std::cout << label << "Momentum x:                " << 1000.f * this->m_treeParameters.m_primary_MomentumX.at(i) << " MeV/c\n";
         std::cout << label << "Momentum y:                " << 1000.f * this->m_treeParameters.m_primary_MomentumY.at(i) << " MeV/c\n";
         std::cout << label << "Momentum z:                " << 1000.f * this->m_treeParameters.m_primary_MomentumZ.at(i) << " MeV/c\n";
-        std::cout << label << "Particle type:             " << this->m_treeParameters.m_primary_ParticleType.at(i) << '\n';
+        std::cout << label << "Particle type:             " << this->m_treeParameters.m_primary_ParticleType.at(i) << " (" << 
+            LArAnalysisParticle::TypeAsString(static_cast<LArAnalysisParticle::TYPE>(this->m_treeParameters.m_primary_ParticleType.at(i))) << ")\n";
         std::cout << label << "Number of 3D hits:         " << this->m_treeParameters.m_primary_NumberOf3dHits.at(i) << '\n';
         std::cout << label << "Number of coll plane hits: " << this->m_treeParameters.m_primary_NumberOfCollectionPlaneHits.at(i) << '\n';
         std::cout << label << "Is shower:                 " << std::boolalpha << this->m_treeParameters.m_primary_IsShower.at(i) << std::noboolalpha << '\n';
@@ -720,7 +729,8 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         std::cout << label << "MC momentum z:             " << 1000.f * this->m_treeParameters.m_primary_mc_MomentumZ.at(i) << " MeV/c\n";
         std::cout << label << "MC is vertex fiducial:     " << std::boolalpha << this->m_treeParameters.m_primary_mc_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
         std::cout << label << "MC is contained:           " << std::boolalpha << this->m_treeParameters.m_primary_mc_IsContained.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC particle type:          " << this->m_treeParameters.m_primary_mc_ParticleType.at(i) << '\n';
+        std::cout << label << "MC particle type:          " << this->m_treeParameters.m_primary_mc_ParticleType.at(i) << " (" << 
+            LArAnalysisParticle::TypeAsString(static_cast<LArAnalysisParticle::TYPE>(this->m_treeParameters.m_primary_mc_ParticleType.at(i))) << ")\n";
         std::cout << label << "MC is shower:              " << std::boolalpha << this->m_treeParameters.m_primary_mc_IsShower.at(i) << std::noboolalpha << '\n';
         std::cout << label << "MC PDG code:               " << this->m_treeParameters.m_primary_mc_PdgCode.at(i) << '\n';
     }

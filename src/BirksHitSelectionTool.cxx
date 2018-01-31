@@ -36,10 +36,7 @@ bool BirksHitSelectionTool::Run(const Algorithm *const pAlgorithm, LArTrackHitEn
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    std::cout << "Running Birks' hit selection tool..." << std::endl;
-    
     this->DecideWhichTrackHitsToCorrect(trackHitEnergyVector, uniquePlotIdentifier);
-
     return true;
 }
 
