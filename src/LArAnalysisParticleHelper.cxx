@@ -136,7 +136,7 @@ PfoList LArAnalysisParticleHelper::GetRecoNeutrinoList(const Algorithm &algorith
 float LArAnalysisParticleHelper::CaloHitToThreeDDistance(const Pandora &pandoraInstance, const CaloHit *const pCaloHit,
                                                  const ThreeDSlidingFitResult &trackFit)
 {
-    const CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, pCaloHit->GetPositionVector());
+    const CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, pCaloHit->GetPositionVector(), false);
     return LArAnalysisParticleHelper::CellToThreeDDistance(pCaloHit->GetCellSize1(), LArGeometryHelper::GetWirePitch(pandoraInstance, TPC_VIEW_W),
                                                    fitDirection);
 }
@@ -173,7 +173,8 @@ CaloHitList LArAnalysisParticleHelper::GetHitsOfType(const ParticleFlowObject *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position)
+CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position, 
+    const bool pointTowardsMiddle)
 {
     const CartesianVector &minPosition = trackFit.GetGlobalMinLayerPosition();
     const CartesianVector &maxPosition = trackFit.GetGlobalMaxLayerPosition();
@@ -207,6 +208,9 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
                 fitDirection = maxDirection;
         }
     }
+    
+    if (pointTowardsMiddle && (maxCoordinate - displacementAlongFittedTrack) < (displacementAlongFittedTrack - minCoordinate))
+        fitDirection *= -1.f;
     
     return fitDirection;
 }
@@ -494,7 +498,12 @@ bool LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCPart
     
     float escapedEnergy(0.f), totalEnergy(0.f);
     LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(pMCParticle, escapedEnergy, totalEnergy, minCoordinates, maxCoordinates);
-    mcContainmentFraction = (totalEnergy - escapedEnergy) / totalEnergy;
+    
+    if (totalEnergy > std::numeric_limits<float>::epsilon())
+        mcContainmentFraction = (totalEnergy - escapedEnergy) / totalEnergy;
+        
+    else
+        mcContainmentFraction = 0.f;
     
     return true;
 }
@@ -688,6 +697,12 @@ LArAnalysisParticle::TypeTree LArAnalysisParticleHelper::CreateMcTypeTree(const 
 
 LArAnalysisParticle::TYPE LArAnalysisParticleHelper::GetMcParticleType(const MCParticle *const pMCParticle)
 {
+    if (LArMCParticleHelper::IsNeutrino(pMCParticle))
+        return LArAnalysisParticle::TYPE::NEUTRINO;
+        
+    if (LArMCParticleHelper::IsCosmicRay(pMCParticle))
+        return LArAnalysisParticle::TYPE::COSMIC_RAY;
+    
     switch (pMCParticle->GetParticleId())
     {
         case PROTON:   return LArAnalysisParticle::TYPE::PROTON;
@@ -697,7 +712,7 @@ LArAnalysisParticle::TYPE LArAnalysisParticleHelper::GetMcParticleType(const MCP
         case PHOTON:
         case E_MINUS:
         case E_PLUS:   return LArAnalysisParticle::TYPE::SHOWER;
-        case NEUTRON:  return LArAnalysisParticle::TYPE::UNKNOWN;
+        case NEUTRON:
         default: break;
     }
     

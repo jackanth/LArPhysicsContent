@@ -214,6 +214,38 @@ public:
      * 
      */
     unsigned NumberOfDownstreamParticles() const noexcept;
+    
+    /**
+     *  @brief  Get the fraction of the analysis energy sourced from range
+     * 
+     *  @return the energy fraction
+     * 
+     */
+    float EnergyFromRangeFraction() const noexcept;
+    
+    /**
+     *  @brief  Get the fraction of the analysis energy sourced from recombination-corrected track charge
+     * 
+     *  @return the energy fraction
+     * 
+     */
+    float EnergyFromCorrectedTrackChargeFraction() const noexcept;
+    
+    /**
+     *  @brief  Get the fraction of the analysis energy sourced from uncorrected track charge
+     * 
+     *  @return the energy fraction
+     * 
+     */
+    float EnergyFromUncorrectedTrackChargeFraction() const noexcept;
+    
+    /**
+     *  @brief  Get the fraction of the analysis energy sourced from shower charge
+     * 
+     *  @return the energy fraction
+     * 
+     */
+    float EnergyFromShowerChargeFraction() const noexcept;
 
     /**
      *  @brief  Get whether the particle has MC info
@@ -354,33 +386,37 @@ public:
     static std::string TypeTreeAsString(const TypeTree &typeTree);
 
 private:
-    TYPE               m_type;                           ///< The particle type
-    TypeTree           m_typeTree;                       ///< The type tree
-    float              m_analysisEnergy;                 ///< The particle energy in GeV
-    float              m_energyFromCharge;               ///< The particle energy in GeV, calculated only using charge
-    bool               m_isVertexFiducial;               ///< Whether the vertex is fiducial
-    float              m_fiducialHitFraction;            ///< The fraction of hits that are fiducial
-    CartesianVector    m_vertexPosition;                 ///< The vertex position
-    CartesianVector    m_directionCosines;               ///< The direction cosines at the vertex
-    CartesianVector    m_analysisMomentum;               ///< The momentum at the vertex
-    unsigned           m_numberOf3dHits;                 ///< The number of 3D hits
-    unsigned           m_numberOfCollectionPlaneHits;    ///< The number of collection-plane hits
-    bool               m_isShower;                       ///< Whether the particle is a shower
-    unsigned           m_numberOfDownstreamParticles;    ///< The number of downstream particles
-    bool               m_hasMcInfo;                      ///< Whether the particle has MC info attached
-    TYPE               m_mcType;                         ///< The MC type
-    TypeTree           m_mcTypeTree;                     ///< The MC type tree
-    float              m_mcEnergy;                       ///< The MC energy
-    CartesianVector    m_mcMomentum;                     ///< The MC momentum at the vertex
-    CartesianVector    m_mcVertexPosition;               ///< The MC vertex position
-    CartesianVector    m_mcDirectionCosines;             ///< The MC direction cosines
-    bool               m_mcIsVertexFiducial;             ///< Whether the vertex is fiducial (MC quantity)
-    float              m_mcContainmentFraction;          ///< The fraction of the particle that is contained (MC quantity)
-    bool               m_mcIsShower;                     ///< Whether the particle is a shower (MC quantity)
-    int                m_mcPdgCode;                      ///< The PDG code of the particle (MC quantity)
-    float              m_mcHitPurity;                    ///< The hit number purity (MC quantity)
-    float              m_mcHitCompleteness;              ///< The hit number completeness (MC quantity)
-    const MCParticle * m_pMcMainMCParticle;              ///< Address of the main MC particle (MC quantity)
+    TYPE               m_type;                                     ///< The particle type
+    TypeTree           m_typeTree;                                 ///< The type tree
+    float              m_analysisEnergy;                           ///< The particle energy in GeV
+    float              m_energyFromCharge;                         ///< The particle energy in GeV, calculated only using charge
+    bool               m_isVertexFiducial;                         ///< Whether the vertex is fiducial
+    float              m_fiducialHitFraction;                      ///< The fraction of hits that are fiducial
+    CartesianVector    m_vertexPosition;                           ///< The vertex position
+    CartesianVector    m_directionCosines;                         ///< The direction cosines at the vertex
+    CartesianVector    m_analysisMomentum;                         ///< The momentum at the vertex
+    unsigned           m_numberOf3dHits;                           ///< The number of 3D hits
+    unsigned           m_numberOfCollectionPlaneHits;              ///< The number of collection-plane hits
+    bool               m_isShower;                                 ///< Whether the particle is a shower
+    unsigned           m_numberOfDownstreamParticles;              ///< The number of downstream particles
+    float              m_energyFromRangeFraction;                  ///< The fraction of analysis energy calculated from particle range
+    float              m_energyFromCorrectedTrackChargeFraction;   ///< The fraction of analysis energy calculated from recombination-corrected track charge
+    float              m_energyFromUncorrectedTrackChargeFraction; ///< The fraction of analysis energy calculated from uncorrected track charge
+    float              m_energyFromShowerChargeFraction;           ///< The fraction of analysis energy calculated from shower charge
+    bool               m_hasMcInfo;                                ///< Whether the particle has MC info attached
+    TYPE               m_mcType;                                   ///< The MC type
+    TypeTree           m_mcTypeTree;                               ///< The MC type tree
+    float              m_mcEnergy;                                 ///< The MC energy
+    CartesianVector    m_mcMomentum;                               ///< The MC momentum at the vertex
+    CartesianVector    m_mcVertexPosition;                         ///< The MC vertex position
+    CartesianVector    m_mcDirectionCosines;                       ///< The MC direction cosines
+    bool               m_mcIsVertexFiducial;                       ///< Whether the vertex is fiducial (MC quantity)
+    float              m_mcContainmentFraction;                    ///< The fraction of the particle that is contained (MC quantity)
+    bool               m_mcIsShower;                               ///< Whether the particle is a shower (MC quantity)
+    int                m_mcPdgCode;                                ///< The PDG code of the particle (MC quantity)
+    float              m_mcHitPurity;                              ///< The hit number purity (MC quantity)
+    float              m_mcHitCompleteness;                        ///< The hit number completeness (MC quantity)
+    const MCParticle * m_pMcMainMCParticle;                        ///< Address of the main MC particle (MC quantity)
     
     /**
      *  @brief  Get the particle type tree as a string (implementation)
@@ -422,6 +458,10 @@ public:
     unsigned                         m_numberOfCollectionPlaneHits;
     bool                             m_isShower;                   
     unsigned                         m_numberOfDownstreamParticles;
+    float                            m_energyFromRangeFraction;
+    float                            m_energyFromCorrectedTrackChargeFraction;
+    float                            m_energyFromUncorrectedTrackChargeFraction; 
+    float                            m_energyFromShowerChargeFraction; 
     bool                             m_hasMcInfo;                  
     LArAnalysisParticle::TYPE        m_mcType;                     
     LArAnalysisParticle::TypeTree    m_mcTypeTree;                 
@@ -568,6 +608,34 @@ inline bool LArAnalysisParticle::IsShower() const noexcept
 inline unsigned LArAnalysisParticle::NumberOfDownstreamParticles() const noexcept
 {
     return this->m_numberOfDownstreamParticles;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisParticle::EnergyFromRangeFraction() const noexcept
+{
+    return m_energyFromRangeFraction;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisParticle::EnergyFromCorrectedTrackChargeFraction() const noexcept
+{
+    return m_energyFromCorrectedTrackChargeFraction;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisParticle::EnergyFromUncorrectedTrackChargeFraction() const noexcept
+{
+    return m_energyFromUncorrectedTrackChargeFraction;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisParticle::EnergyFromShowerChargeFraction() const noexcept
+{
+    return m_energyFromShowerChargeFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

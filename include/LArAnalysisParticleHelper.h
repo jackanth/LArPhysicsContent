@@ -92,7 +92,8 @@ public:
      *  @brief ...
      * 
      */
-    static CartesianVector GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position);
+    static CartesianVector GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position,
+        const bool pointTowardsMiddle);
     
     /**
      *  @brief ...

@@ -28,6 +28,10 @@ LArAnalysisParticle::LArAnalysisParticle(const LArAnalysisParticleParameters &pa
     m_numberOfCollectionPlaneHits(parameters.m_numberOfCollectionPlaneHits),
     m_isShower(parameters.m_isShower),
     m_numberOfDownstreamParticles(parameters.m_numberOfDownstreamParticles),
+    m_energyFromRangeFraction(parameters.m_energyFromRangeFraction),
+    m_energyFromCorrectedTrackChargeFraction(parameters.m_energyFromCorrectedTrackChargeFraction),
+    m_energyFromUncorrectedTrackChargeFraction(parameters.m_energyFromUncorrectedTrackChargeFraction),
+    m_energyFromShowerChargeFraction(parameters.m_energyFromShowerChargeFraction),
     m_hasMcInfo(parameters.m_hasMcInfo),
     m_mcType(parameters.m_mcType),
     m_mcTypeTree(parameters.m_mcTypeTree),
@@ -59,6 +63,10 @@ void LArAnalysisParticle::Print() const
               << "    - Energy:                    " << TEXT_MAGENTA_BOLD << 1000.f * this->m_analysisEnergy << "MeV\n" << TEXT_NORMAL
               << "    - MC energy:                 " << TEXT_MAGENTA_BOLD << 1000.f * this->m_mcEnergy << "MeV\n" << TEXT_NORMAL
               << "    - Energy from charge:        " << 1000.f * this->m_energyFromCharge << "MeV\n"
+              << "    - E from range:              " << 100.f * m_energyFromRangeFraction << "%\n"
+              << "    - E from corr track charge:  " << 100.f * m_energyFromCorrectedTrackChargeFraction << "%\n"
+              << "    - E from track charge:       " << 100.f * m_energyFromUncorrectedTrackChargeFraction << "%\n"
+              << "    - E from shower charge:      " << 100.f * m_energyFromShowerChargeFraction << "%\n"
               << "    - Is vertex fiducial:        " << TEXT_RED_BOLD << std::boolalpha << this->m_isVertexFiducial << std::noboolalpha
                                                      << TEXT_NORMAL << "\n"
               << "    - MC is vertex fiducial:     " << TEXT_RED_BOLD << std::boolalpha << this->m_mcIsVertexFiducial << std::noboolalpha
@@ -101,6 +109,10 @@ void LArAnalysisParticle::Print() const
                                                          << "\n"
                   << "    - Energy:                    " << TEXT_MAGENTA_BOLD << 1000.f * this->m_analysisEnergy << "MeV\n" << TEXT_NORMAL
                   << "    - Energy from charge:        " << 1000.f * this->m_energyFromCharge << "MeV\n"
+                  << "    - E from range:              " << 100.f * m_energyFromRangeFraction << "%\n"
+                  << "    - E from corr track charge:  " << 100.f * m_energyFromCorrectedTrackChargeFraction << "%\n"
+                  << "    - E from track charge:       " << 100.f * m_energyFromUncorrectedTrackChargeFraction << "%\n"
+                  << "    - E from shower charge:      " << 100.f * m_energyFromShowerChargeFraction << "%\n"
                   << "    - Is vertex fiducial:        " << TEXT_RED_BOLD << std::boolalpha << this->m_isVertexFiducial << std::noboolalpha
                                                          << TEXT_NORMAL << "\n"
                   << "    - Fiducial hit fraction:     " << TEXT_RED_BOLD << 100.f * this->m_fiducialHitFraction << TEXT_NORMAL << "%\n"
@@ -183,6 +195,10 @@ LArAnalysisParticleParameters::LArAnalysisParticleParameters() noexcept :
     m_numberOfCollectionPlaneHits(0U),
     m_isShower(false),
     m_numberOfDownstreamParticles(0U),
+    m_energyFromRangeFraction(0.f),
+    m_energyFromCorrectedTrackChargeFraction(0.f),
+    m_energyFromUncorrectedTrackChargeFraction(0.f),
+    m_energyFromShowerChargeFraction(0.f),
     m_hasMcInfo(false),
     m_mcType(LArAnalysisParticle::TYPE::UNKNOWN),
     m_mcTypeTree(),

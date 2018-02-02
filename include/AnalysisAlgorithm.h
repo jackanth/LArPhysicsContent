@@ -131,7 +131,8 @@ private:
     void EstimateParticleEnergy(const ParticleFlowObject *const pPfo, const LArAnalysisParticle::PfoTypeMap &typeMap,
                                  const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
                                  const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap, float &particleEnergy,
-    float &particleEnergyFromCharge) const;
+    float &particleEnergyFromCharge, float &energySourcedFromRange, float &energySourcedFromShowerCharge, 
+    float &energySourcedFromTrackCharge, float &energySourcedFromCorrectedTrackCharge) const;
     
     /**
      *  @brief ...

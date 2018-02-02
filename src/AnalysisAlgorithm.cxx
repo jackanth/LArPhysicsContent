@@ -7,6 +7,7 @@
  */
 
 #include "AnalysisAlgorithm.h"
+#include "AnalysisAlgorithm.h"
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
@@ -159,8 +160,9 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         analysisParticleParameters.m_typeTree         = LArAnalysisParticle::TypeTree(LArAnalysisParticle::TYPE::NEUTRINO);
         analysisParticleParameters.m_directionCosines = CartesianVector(0.f, 0.f, 1.f);
         
-        float analysisEnergy(0.f);
-        float energyFromCharge(0.f);
+        float analysisEnergy(0.f), energyFromCharge(0.f), energySourcedFromRange(0.f), energySourcedFromCorrectedTrackCharge(0.f),
+            energySourcedFromTrackCharge(0.f), energySourcedFromShowerCharge(0.f);
+            
         CartesianVector analysisMomentum(0.f, 0.f, 0.f);
         unsigned numberOf3dHits(0U), numberOfCollectionPlaneHits(0U);
         
@@ -173,6 +175,10 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
                 analysisMomentum            += pAnalysisPrimary->AnalysisMomentum();
                 numberOf3dHits              += pAnalysisPrimary->NumberOf3dHits();
                 numberOfCollectionPlaneHits += pAnalysisPrimary->NumberOfCollectionPlaneHits();
+                energySourcedFromRange                += pAnalysisPrimary->AnalysisEnergy() * pAnalysisPrimary->EnergyFromRangeFraction();
+                energySourcedFromCorrectedTrackCharge += pAnalysisPrimary->AnalysisEnergy() * pAnalysisPrimary->EnergyFromCorrectedTrackChargeFraction();
+                energySourcedFromTrackCharge          += pAnalysisPrimary->AnalysisEnergy() * pAnalysisPrimary->EnergyFromUncorrectedTrackChargeFraction();
+                energySourcedFromShowerCharge         += pAnalysisPrimary->AnalysisEnergy() * pAnalysisPrimary->EnergyFromShowerChargeFraction();
             }
             
             else
@@ -184,6 +190,22 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         analysisParticleParameters.m_analysisMomentum            = analysisMomentum;
         analysisParticleParameters.m_numberOf3dHits              = numberOf3dHits;
         analysisParticleParameters.m_numberOfCollectionPlaneHits = numberOfCollectionPlaneHits;
+                
+        if (analysisEnergy > std::numeric_limits<float>::epsilon())
+        {
+            analysisParticleParameters.m_energyFromRangeFraction                  = energySourcedFromRange / analysisEnergy;
+            analysisParticleParameters.m_energyFromCorrectedTrackChargeFraction   = energySourcedFromCorrectedTrackCharge / analysisEnergy;
+            analysisParticleParameters.m_energyFromUncorrectedTrackChargeFraction = energySourcedFromTrackCharge / analysisEnergy;
+            analysisParticleParameters.m_energyFromShowerChargeFraction           = energySourcedFromShowerCharge / analysisEnergy;
+        }
+        
+        else
+        {
+            analysisParticleParameters.m_energyFromRangeFraction                  = 0.f;
+            analysisParticleParameters.m_energyFromCorrectedTrackChargeFraction   = 0.f;
+            analysisParticleParameters.m_energyFromUncorrectedTrackChargeFraction = 0.f;
+            analysisParticleParameters.m_energyFromShowerChargeFraction           = 0.f;
+        }
     }
     
     // Calculations specific cosmic rays and primary daughters.
@@ -201,8 +223,11 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         LArAnalysisParticle::PfoTypeMap particleTypeMap;
         this->RecursivelyAppendParticleTypeMap(pInputPfo, particleTypeMap, trackHitEnergyMap, trackFitMap);
         
-        float particleEnergy(0.f), particleEnergyFromCharge(0.f);
-        this->EstimateParticleEnergy(pInputPfo, particleTypeMap, trackFitMap, trackHitEnergyMap, particleEnergy, particleEnergyFromCharge);
+        float particleEnergy(0.f), particleEnergyFromCharge(0.f), energySourcedFromRange(0.f), energySourcedFromShowerCharge(0.f),
+            energySourcedFromTrackCharge(0.f), energySourcedFromCorrectedTrackCharge(0.f);
+            
+        this->EstimateParticleEnergy(pInputPfo, particleTypeMap, trackFitMap, trackHitEnergyMap, particleEnergy, particleEnergyFromCharge,
+            energySourcedFromRange, energySourcedFromShowerCharge, energySourcedFromTrackCharge, energySourcedFromCorrectedTrackCharge);
         
         const LArAnalysisParticle::TypeTree typeTree = this->CreateTypeTree(pInputPfo, particleTypeMap);
         
@@ -222,6 +247,21 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         analysisParticleParameters.m_type                        = particleType;
         analysisParticleParameters.m_typeTree                    = typeTree;
         
+        if (particleEnergy > std::numeric_limits<float>::epsilon())
+        {
+            analysisParticleParameters.m_energyFromRangeFraction                  = energySourcedFromRange / particleEnergy;
+            analysisParticleParameters.m_energyFromCorrectedTrackChargeFraction   = energySourcedFromCorrectedTrackCharge / particleEnergy;
+            analysisParticleParameters.m_energyFromUncorrectedTrackChargeFraction = energySourcedFromTrackCharge / particleEnergy;
+            analysisParticleParameters.m_energyFromShowerChargeFraction           = energySourcedFromShowerCharge / particleEnergy;
+        }
+        
+        else
+        {
+            analysisParticleParameters.m_energyFromRangeFraction                  = 0.f;
+            analysisParticleParameters.m_energyFromCorrectedTrackChargeFraction   = 0.f;
+            analysisParticleParameters.m_energyFromUncorrectedTrackChargeFraction = 0.f;
+            analysisParticleParameters.m_energyFromShowerChargeFraction           = 0.f;
+        }
     }
 
     // Build AnalysisParticle.
@@ -373,8 +413,9 @@ LArAnalysisParticle::TYPE AnalysisAlgorithm::EstimateParticleType(const Particle
 //------------------------------------------------------------------------------------------------------------------------------------------
         
 void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const pPfo, const LArAnalysisParticle::PfoTypeMap &typeMap,
-    const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap, float &particleEnergy,
-    float &particleEnergyFromCharge) const
+    const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap, 
+    float &particleEnergy, float &particleEnergyFromCharge, float &energySourcedFromRange, float &energySourcedFromShowerCharge, 
+    float &energySourcedFromTrackCharge, float &energySourcedFromCorrectedTrackCharge) const
 {
     const LArAnalysisParticle::TYPE particleType = typeMap.at(pPfo);
     
@@ -392,9 +433,11 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
         // For showers, we assume everything downstream of a showerlike PFO is part of the shower.
         case LArAnalysisParticle::TYPE::SHOWER:
         {
-            const float showerEnergy = this->EstimateShowerEnergy(pPfo);
-            particleEnergy += showerEnergy;
-            particleEnergyFromCharge += showerEnergy;
+            const float showerEnergy   = this->EstimateShowerEnergy(pPfo);
+            particleEnergy                += showerEnergy;
+            particleEnergyFromCharge      += showerEnergy;
+            energySourcedFromShowerCharge += showerEnergy;
+            return;
         }
         
         case LArAnalysisParticle::TYPE::PION_MUON:
@@ -403,10 +446,17 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
             const float energyFromCharge = this->EstimateEnergyFromCharge(pPfo);
             
             if (fitFound && hitEnergyFound)
-                particleEnergy += this->EstimateTrackEnergyFromRange(pPfo, fitFindIter->second, particleType, hitEnergyFindIter->second);
+            {
+                const float energyFromRange = this->EstimateTrackEnergyFromRange(pPfo, fitFindIter->second, particleType, hitEnergyFindIter->second);
+                particleEnergy         += energyFromRange;
+                energySourcedFromRange += energyFromRange;
+            }
                 
             else
-                particleEnergy += energyFromCharge; // not including recombination correction (need a fit)
+            {
+                particleEnergy               += energyFromCharge; // not including recombination correction (need a fit)
+                energySourcedFromTrackCharge += energyFromCharge;
+            }
                 
             particleEnergyFromCharge += energyFromCharge;
                 
@@ -418,15 +468,17 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
             if (hitEnergyFound)
             {
                 const float energyFromCharge = this->EstimateTrackEnergyFromCharge(hitEnergyFindIter->second); // incl recombination correction
-                particleEnergy += energyFromCharge; 
-                particleEnergyFromCharge += energyFromCharge;
+                particleEnergy                        += energyFromCharge; 
+                particleEnergyFromCharge              += energyFromCharge;
+                energySourcedFromCorrectedTrackCharge += energyFromCharge;
             }
                 
             else
             {
                 const float energyFromCharge = this->EstimateEnergyFromCharge(pPfo); // not including recombination correction (need a fit)
-                particleEnergy += energyFromCharge; 
-                particleEnergyFromCharge += energyFromCharge;
+                particleEnergy               += energyFromCharge; 
+                particleEnergyFromCharge     += energyFromCharge;
+                energySourcedFromTrackCharge += energyFromCharge;
             }
             
             break;
@@ -436,7 +488,10 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
     }
     
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
-        this->EstimateParticleEnergy(pDaughterPfo, typeMap, trackFitMap, trackHitEnergyMap, particleEnergy, particleEnergyFromCharge);
+    {
+        this->EstimateParticleEnergy(pDaughterPfo, typeMap, trackFitMap, trackHitEnergyMap, particleEnergy, particleEnergyFromCharge, 
+            energySourcedFromRange, energySourcedFromShowerCharge, energySourcedFromTrackCharge, energySourcedFromCorrectedTrackCharge);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -561,7 +616,7 @@ CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject
     const auto findIter = trackFitMap.find(pPfo);
     
     if (findIter != trackFitMap.end())
-        return LArAnalysisParticleHelper::GetFittedDirectionAtPosition(findIter->second, pVertex->GetPosition());
+        return LArAnalysisParticleHelper::GetFittedDirectionAtPosition(findIter->second, pVertex->GetPosition(), true);
 
     const CaloHitList all3DHits = LArAnalysisParticleHelper::GetHitsOfType(pPfo, TPC_3D, true);
     
