@@ -39,6 +39,8 @@ LArAnalysisParticle::LArAnalysisParticle(const LArAnalysisParticleParameters &pa
     m_mcIsContained(parameters.m_mcIsContained),
     m_mcIsShower(parameters.m_mcIsShower),
     m_mcPdgCode(parameters.m_mcPdgCode),
+    m_mcHitPurity(parameters.m_mcHitPurity),
+    m_mcHitCompleteness(parameters.m_mcHitCompleteness),
     m_pMcMainMCParticle(parameters.m_pMcMainMCParticle)
 {
 }
@@ -87,6 +89,8 @@ void LArAnalysisParticle::Print() const
               << "    - Num downstream particles:  " << this->m_numberOfDownstreamParticles << "\n"
               << "    - Has MC info:               " << std::boolalpha << this->m_hasMcInfo << std::noboolalpha << "\n"
               << "    - MC PDG code:               " << this->m_mcPdgCode << "\n"
+              << "    - MC hit purity:             " << 100.f * this->m_mcHitPurity << "%\n"
+              << "    - MC hit completeness:       " << 100.f * this->m_mcHitCompleteness << "%\n"
               << "    - MC main MC particle at:    " << this->m_pMcMainMCParticle
               << std::endl;
     }
@@ -193,6 +197,8 @@ LArAnalysisParticleParameters::LArAnalysisParticleParameters() noexcept :
     m_mcIsContained(false),
     m_mcIsShower(false),
     m_mcPdgCode(0),
+    m_mcHitPurity(0.f),
+    m_mcHitCompleteness(0.f),
     m_pMcMainMCParticle(nullptr)
 {
 }

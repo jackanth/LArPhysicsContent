@@ -28,7 +28,7 @@ namespace lar_physics_content
 class TreeParameters
 {
 public:
-    using BoolVector     = std::vector<bool>;           ///< Alias for a vector of bools
+    using BoolVector     = std::vector<bool>;          ///< Alias for a vector of bools
     using UnsignedVector = std::vector<unsigned>;      ///< Alias for a vector of unsigned ints
     using UInt64Vector   = std::vector<std::uint64_t>; ///< Alias for a vector of unsigned 64-bit ints
     
@@ -61,6 +61,7 @@ public:
     float             m_nu_mc_Energy;                           ///< The MC energy of the neutrino
     float             m_nu_mc_LongitudinalEnergy;               ///< The MC longitudinal energy of the neutrino
     float             m_nu_mc_TransverseEnergy;                 ///< The MC transverse energy of the neutrino
+    float             m_nu_mc_VisibleEnergy;                    ///< The MC visible energy of the neutrino
     float             m_nu_mc_VisibleLongitudinalEnergy;        ///< The MC visible longitudinal energy of the neutrino
     float             m_nu_mc_VisibleTransverseEnergy;          ///< The MC visible transverse energy of the neutrino
     float             m_nu_mc_VertexX;                          ///< The MC x-component of the neutrino vertex position
@@ -78,6 +79,8 @@ public:
     bool              m_nu_mc_IsChargedCurrent;                 ///< Whether the interaction is charged-current (MC quantity)
     float             m_nu_mc_VisibleEnergyFraction;            ///< The fraction of the neutrino's energy that is visible (MC quantity)
     int               m_nu_mc_PdgCode;                          ///< The neutrino's PDG code (MC quantity)
+    float             m_nu_mc_HitPurity;                        ///< The neutrino's hit number purity (MC quantity)
+    float             m_nu_mc_HitCompleteness;                  ///< The neutrino's hit number completeness (MC quantity)
                                                                 
     unsigned          m_primary_Number;                         ///< The number of primary daughters
     BoolVector        m_primary_WasReconstructed;               ///< Whether each primary daughter's vertex has been reconstructed
@@ -116,6 +119,8 @@ public:
     IntVector         m_primary_mc_ParticleType;                ///< The MC type enum for each primary daughter
     BoolVector        m_primary_mc_IsShower;                    ///< Whether each primary daughter is a shower (MC quantity)
     IntVector         m_primary_mc_PdgCode;                     ///< The primary daughter's PDG code (MC quantity)
+    FloatVector       m_primary_mc_HitPurity;                   ///< The primary daughter's hit number purity (MC quantity)
+    FloatVector       m_primary_mc_HitCompleteness;             ///< The primary daughter's hit number completeness (MC quantity)
                                                                 
     unsigned          m_cr_Number;                              ///< The number of cosmic rays
     BoolVector        m_cr_WasReconstructed;                     ///< Whether each cosmic ray's vertex has been reconstructed
@@ -149,6 +154,8 @@ public:
     FloatVector       m_cr_mc_MomentumZ;                        ///< The MC momentum of each cosmic ray in the z-direction
     BoolVector        m_cr_mc_IsVertexFiducial;                 ///< Whether each cosmic ray's vertex is fiducial (MC quantity)
     BoolVector        m_cr_mc_IsContained;                      ///< Whether each cosmic ray is contained (MC quantity)
+    FloatVector       m_cr_mc_HitPurity;                        ///< The cosmic ray's hit number purity (MC quantity)
+    FloatVector       m_cr_mc_HitCompleteness;                  ///< The cosmic ray's hit number completeness (MC quantity)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -191,7 +198,8 @@ private:
      */
     void PopulateNeutrinoMcParameters(const MCParticle *const pMainMcParticle, const float mcEnergy, const CartesianVector &mcVertexPosition, 
         const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, 
-        const bool mcIsContained, const int mcPdgCode, const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList) const;
+        const bool mcIsContained, const int mcPdgCode, const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
+        const float mcHitPurity, const float mcHitCompleteness) const;
     
     /**
      *  @brief  ...

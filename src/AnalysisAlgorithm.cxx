@@ -46,7 +46,8 @@ AnalysisAlgorithm::AnalysisAlgorithm() :
     m_minCoordinates(0.f, 0.f, 0.f),
     m_maxCoordinates(0.f, 0.f, 0.f),
     m_pBirksHitSelectionTool(nullptr),
-    m_mcContainmentFractionLowerBound(0.9f)
+    m_mcContainmentFractionLowerBound(0.9f),
+    m_caloHitListName()
 {
 }
 
@@ -87,7 +88,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     const Vertex *const pVertex = pInputPfo->GetVertexList().front();
     bool gotMcInformation = false;
     
-    float mcEnergy = 0.f, mcContainmentFraction = 0.f;
+    float mcEnergy = 0.f, mcContainmentFraction = 0.f, mcHitPurity = 0.f, mcHitCompleteness = 0.f;
     LArAnalysisParticle::TypeTree mcTypeTree;
     LArAnalysisParticle::TYPE mcType(LArAnalysisParticle::TYPE::UNKNOWN);
     CartesianVector mcVertexPosition(0.f, 0.f, 0.f), mcMomentum(0.f, 0.f, 0.f);
@@ -97,7 +98,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     if (this->m_addMcInformation)
     {
         gotMcInformation = this->GetMcInformation(pInputPfo, mcEnergy, mcTypeTree, mcType, mcVertexPosition, mcMomentum, mcPdgCode, isNeutrino, 
-            mcContainmentFraction, pMcMainMCParticle);
+            mcContainmentFraction, pMcMainMCParticle, mcHitPurity, mcHitCompleteness);
     }
     
     // Common parameter calculations.
@@ -126,7 +127,15 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         analysisParticleParameters.m_mcEnergy           = mcEnergy;
         analysisParticleParameters.m_mcMomentum         = mcMomentum;
         analysisParticleParameters.m_mcVertexPosition   = mcVertexPosition;
-        analysisParticleParameters.m_mcDirectionCosines = mcMomentum.GetUnitVector();
+        
+        if (mcMomentum.GetMagnitude() > std::numeric_limits<float>::epsilon())
+            analysisParticleParameters.m_mcDirectionCosines = mcMomentum.GetUnitVector();
+            
+        else
+        {
+            std::cout << "AnalysisAlgorithm: could not get direction from MC momentum as it was too small" << std::endl;
+            analysisParticleParameters.m_mcDirectionCosines = CartesianVector(0.f, 0.f, 0.f);
+        }
         
         analysisParticleParameters.m_mcIsVertexFiducial = LArAnalysisParticleHelper::IsPointFiducial(mcVertexPosition, 
             this->m_minCoordinates, this->m_maxCoordinates);
@@ -135,6 +144,8 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         analysisParticleParameters.m_mcIsShower         = (mcType == LArAnalysisParticle::TYPE::SHOWER);
         analysisParticleParameters.m_mcPdgCode          = mcPdgCode;
         analysisParticleParameters.m_mcType             = mcType;
+        analysisParticleParameters.m_mcHitPurity        = mcHitPurity;
+        analysisParticleParameters.m_mcHitCompleteness  = mcHitCompleteness;
         analysisParticleParameters.m_pMcMainMCParticle  = pMcMainMCParticle;
     }
     
@@ -578,14 +589,17 @@ CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject
 
 bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree,
     LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode, const bool isNeutrino,
-    float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle) const
+    float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle, float &mcHitPurity, float &mcHitCompleteness) const
 {
     if (isNeutrino)
     {
         const MCParticleList *pMCParticleList(nullptr);
 
         if ((PandoraContentApi::GetList(*this, this->m_mcParticleListName, pMCParticleList) != STATUS_CODE_SUCCESS) || !pMCParticleList)
+        {
+            std::cout << "AnalysisAlgorithm: could not get MC information because no valid MC particle list name was provided" << std::endl;
             return false;
+        }
         
         MCParticleVector trueNeutrinos;
         LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, trueNeutrinos);
@@ -609,8 +623,82 @@ bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, f
     if (!pMcMainMCParticle)
         return false;
         
+    const CaloHitList *pCaloHitList(nullptr);
+
+    if ((PandoraContentApi::GetList(*this, this->m_caloHitListName, pCaloHitList) != STATUS_CODE_SUCCESS) || !pCaloHitList)
+    {
+        std::cout << "AnalysisAlgorithm: could not get MC information because no valid CaloHit list name was provided" << std::endl;
+        return false;
+    }
+        
+    this->CalculateHitPurityAndCompleteness(pPfo, pMcMainMCParticle, pCaloHitList, isNeutrino, mcHitPurity, mcHitCompleteness);
+        
     return LArAnalysisParticleHelper::GetMcInformation(pMcMainMCParticle, mcEnergy, typeTree, mcType, mcVertexPosition, mcMomentum, 
         mcPdgCode, mcContainmentFraction, this->m_minCoordinates, this->m_maxCoordinates);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void AnalysisAlgorithm::CalculateHitPurityAndCompleteness(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle, 
+    const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness) const
+{
+    // Purity       = (num 2D hits assoc with PFO or its descendents && assoc with MC particle or its descendents) / 
+    //                (num 2D hits assoc with PFO or its descendents)
+    
+    // Completeness = (num 2D hits assoc with PFO or its descendents && assoc with MC particle or its descendents) / 
+    //                (num 2D hits assoc with MC particle or its descendents)
+    
+    PfoList downstreamPfos;
+    LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
+    
+    CaloHitList pfoAssociatedCaloHits;
+    LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_U, pfoAssociatedCaloHits);
+    LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_V, pfoAssociatedCaloHits);
+    LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_W, pfoAssociatedCaloHits);
+    
+    std::unordered_map<const CaloHit *, float> mcAssociatedCaloHits;
+    float totalMcHitWeight(0.f);
+    
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        for (const MCParticleWeightMap::value_type &mapPair : pCaloHit->GetMCParticleWeightMap())
+        {
+            try
+            {
+                if ((isNeutrino && LArMCParticleHelper::IsBeamNeutrinoFinalState(mapPair.first)) ||
+                    (!isNeutrino && LArMCParticleHelper::GetPrimaryMCParticle(mapPair.first) == pMCParticle))
+                {
+                    mcAssociatedCaloHits.emplace(pCaloHit, mapPair.second);
+                    totalMcHitWeight += mapPair.second;
+                }
+            }
+            
+            catch (...)
+            {
+                continue;
+            }
+        }
+    }
+    
+    float numerator(0.f);
+    
+    for (const CaloHit *const pPfoAssocCaloHit : pfoAssociatedCaloHits)
+    {
+        const auto findIter = mcAssociatedCaloHits.find(pPfoAssocCaloHit);
+        
+        if (findIter != mcAssociatedCaloHits.end())
+            numerator += findIter->second;
+    }
+    
+    if (pfoAssociatedCaloHits.empty() || (totalMcHitWeight < std::numeric_limits<float>::epsilon()))
+    {
+        hitPurity       = 0.f;
+        hitCompleteness = 0.f;
+        return;
+    }
+    
+    hitPurity       = numerator / static_cast<float>(pfoAssociatedCaloHits.size());
+    hitCompleteness = numerator / totalMcHitWeight;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -649,6 +737,7 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AddMcInformation", this->m_addMcInformation));
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McContainmentFractionLowerBound", this->m_mcContainmentFractionLowerBound));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", this->m_caloHitListName));
     
     TNtuple *const pBirksNtuple = LArAnalysisParticleHelper::LoadNTupleFromFile(this->m_parametersFile, this->m_birksFitNtupleName);
     

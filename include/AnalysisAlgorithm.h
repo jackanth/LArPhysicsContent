@@ -93,6 +93,7 @@ private:
     CartesianVector m_maxCoordinates;
     BirksHitSelectionTool *m_pBirksHitSelectionTool;
     float m_mcContainmentFractionLowerBound;
+    std::string m_caloHitListName; 
 
     /**
      *  @brief ...
@@ -194,7 +195,14 @@ private:
      */
     bool GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree, 
         LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode, const bool isNeutrino,
-        float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle) const;
+        float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle, float &mcHitPurity, float &mcHitCompleteness) const;
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    void CalculateHitPurityAndCompleteness(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle, 
+        const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness) const;
     
     /**
      *  @brief ...

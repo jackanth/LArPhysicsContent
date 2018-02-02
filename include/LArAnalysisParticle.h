@@ -296,12 +296,28 @@ public:
     bool McIsShower() const;
     
     /**
-     *  @brief  Get whether the particle has been reconstructed correctly
+     *  @brief  Get the MC PDG code
      * 
-     *  @return whether the particle has been reconstructed correctly
+     *  @return the MC PDG code
      * 
      */
     int McPdgCode() const;
+    
+    /**
+     *  @brief  Get the MC hit purity
+     * 
+     *  @return the MC hit purity
+     * 
+     */
+    float McHitPurity() const;
+    
+    /**
+     *  @brief  Get the MC hit completeness
+     * 
+     *  @return the MC hit completeness
+     * 
+     */
+    float McHitCompleteness() const;
     
     /**
      *  @brief  Get the address of the main MC particle
@@ -362,6 +378,8 @@ private:
     bool               m_mcIsContained;                  ///< Whether the particle is contained (MC quantity)
     bool               m_mcIsShower;                     ///< Whether the particle is a shower (MC quantity)
     int                m_mcPdgCode;                      ///< The PDG code of the particle (MC quantity)
+    float              m_mcHitPurity;                    ///< The hit number purity (MC quantity)
+    float              m_mcHitCompleteness;              ///< The hit number completeness (MC quantity)
     const MCParticle * m_pMcMainMCParticle;              ///< Address of the main MC particle (MC quantity)
     
     /**
@@ -414,7 +432,9 @@ public:
     bool                             m_mcIsVertexFiducial;         
     bool                             m_mcIsContained;              
     bool                             m_mcIsShower;                 
-    int                              m_mcPdgCode;                  
+    int                              m_mcPdgCode;     
+    float                            m_mcHitPurity;
+    float                            m_mcHitCompleteness;
     const MCParticle *               m_pMcMainMCParticle;                  
 };
 
@@ -635,6 +655,22 @@ inline int LArAnalysisParticle::McPdgCode() const
 {
     ThrowIfNoMcInfo(); 
     return this->m_mcPdgCode;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisParticle::McHitPurity() const
+{
+    ThrowIfNoMcInfo(); 
+    return this->m_mcHitPurity;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisParticle::McHitCompleteness() const
+{
+    ThrowIfNoMcInfo(); 
+    return this->m_mcHitCompleteness;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

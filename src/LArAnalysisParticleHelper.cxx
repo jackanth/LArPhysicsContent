@@ -379,50 +379,63 @@ const MCParticle *LArAnalysisParticleHelper::GetMainMCParticle(const ParticleFlo
     ClusterList clusterList;
     LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
     
-    McParticleVotingMap mcParticleVotingMap;
-
+    CaloHitList caloHitList;
+    
     for (const Cluster *const pCluster : clusterList)
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+    
+    MCParticleWeightMap mcParticleWeightMap;
+
+    for (const CaloHit *const pCaloHit : caloHitList)
     {
-        try
+        const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
+        MCParticleVector mcParticleVector;
+        
+        for (const MCParticleWeightMap::value_type &mapEntry : hitMCParticleWeightMap) 
+            mcParticleVector.push_back(mapEntry.first);
+            
+        std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
+
+        for (const MCParticle *const pMCParticle : mcParticleVector)
         {
-            if (const MCParticle *const pThisMainMCParticle = MCParticleHelper::GetMainMCParticle(pCluster))
+            try
             {
-                const MCParticle *const pThisMCPrimary = LArMCParticleHelper::GetPrimaryMCParticle(pThisMainMCParticle);
-                const auto findIter = mcParticleVotingMap.find(pThisMCPrimary);
-                
-                if (findIter == mcParticleVotingMap.end())
-                    mcParticleVotingMap.emplace(pThisMCPrimary, 1U);
-                    
-                else
-                    ++findIter->second;
+                const MCParticle *const pMCPrimary = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
+                mcParticleWeightMap[pMCPrimary] += hitMCParticleWeightMap.at(pMCParticle);
+            }
+            
+            catch (...)
+            {
+                continue;
             }
         }
+    }
+
+    float bestWeight(0.f);
+    const MCParticle *pBestMCParticle(nullptr);
+
+    MCParticleVector mcParticleVector;
+    
+    for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
+        mcParticleVector.push_back(mapEntry.first);
         
-        catch (...)
+    std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
+
+    for (const MCParticle *const pCurrentMCParticle : mcParticleVector)
+    {
+        const float currentWeight(mcParticleWeightMap.at(pCurrentMCParticle));
+
+        if (currentWeight > bestWeight)
         {
-            continue;
+            pBestMCParticle = pCurrentMCParticle;
+            bestWeight = currentWeight;
         }
     }
-    
-    if (mcParticleVotingMap.empty())
-        return nullptr;
-        
-    if (mcParticleVotingMap.size() == 1)
-        return mcParticleVotingMap.begin()->first;
-    
-    // There are at least two different candidates, so pick the one with the most votes.
-    McParticleVotingVector mcParticleVotingVector;
-    mcParticleVotingVector.insert(mcParticleVotingVector.end(), std::make_move_iterator(mcParticleVotingMap.begin()), 
-                                  std::make_move_iterator(mcParticleVotingMap.end()));
-    
-    std::sort(mcParticleVotingVector.begin(), mcParticleVotingVector.end(),
-        [](const McParticleVotingPair &lhs, const McParticleVotingPair &rhs)
-        {
-            return lhs.second > rhs.second;
-        }
-    );
-    
-    return mcParticleVotingVector.front().first;
+
+    if (!pBestMCParticle)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return pBestMCParticle;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
