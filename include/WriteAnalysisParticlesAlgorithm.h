@@ -39,7 +39,8 @@ public:
 
     bool              m_nu_WasReconstructed;                    ///< Whether the neutrino has been reconstructed
     bool              m_nu_IsVertexFiducial;                    ///< Whether the neutrino vertex is fiducial
-    bool              m_nu_AreAllHitsFiducial;                  ///< Whether all the neutrino hits are fiducial
+    bool              m_nu_IsContained;                         ///< Whether the neutrino looks contained
+    float             m_nu_FiducialHitFraction;                 ///< The fraction of the neutrino's hits that are fiducial
     bool              m_nu_HasMcInfo;                           ///< Whether the neutrino has MC information
     float             m_nu_Energy;                              ///< The neutrino energy
     float             m_nu_EnergyFromChargeOnly;                ///< The neutrino energy using only charge
@@ -75,6 +76,7 @@ public:
     float             m_nu_mc_MomentumZ;                        ///< The MC momentum of the neutrino in the z-direction
     bool              m_nu_mc_IsVertexFiducial;                 ///< Whether the neutrino vertex is fiducial (MC quantity)
     bool              m_nu_mc_IsContained;                      ///< Whether the neutrino is contained (MC quantity)
+    float             m_nu_mc_ContainmentFraction;              ///< The fraction of the neutrino that is contained (MC quantity)
     int               m_nu_mc_InteractionType;                  ///< The neutrino interaction type (MC quantity)
     bool              m_nu_mc_IsChargedCurrent;                 ///< Whether the interaction is charged-current (MC quantity)
     float             m_nu_mc_VisibleEnergyFraction;            ///< The fraction of the neutrino's energy that is visible (MC quantity)
@@ -83,9 +85,10 @@ public:
     float             m_nu_mc_HitCompleteness;                  ///< The neutrino's hit number completeness (MC quantity)
                                                                 
     unsigned          m_primary_Number;                         ///< The number of primary daughters
-    BoolVector        m_primary_WasReconstructed;               ///< Whether each primary daughter's vertex has been reconstructed
+    BoolVector        m_primary_WasReconstructed;               ///< Whether each primary daughter has been reconstructed
     BoolVector        m_primary_IsVertexFiducial;               ///< Whether each primary daughter's vertex is fiducial
-    BoolVector        m_primary_AreAllHitsFiducial;             ///< Whether each primary's hits are all fiducial
+    BoolVector        m_primary_IsContained;                    ///< Whether the primary looks contained
+    FloatVector       m_primary_FiducialHitFraction;            ///< The fraction of the primary's hits that are fiducial
     BoolVector        m_primary_HasMcInfo;                      ///< Whether each primary daughter has MC information
     FloatVector       m_primary_Energy;                         ///< The energy of each primary daughter
     FloatVector       m_primary_EnergyFromChargeOnly;           ///< The energy of each primary daughter from charge only
@@ -116,6 +119,7 @@ public:
     FloatVector       m_primary_mc_MomentumZ;                   ///< The MC momentum of each primary daughter in the z-direction
     BoolVector        m_primary_mc_IsVertexFiducial;            ///< Whether each primary daughter's vertex is fiducial (MC quantity)
     BoolVector        m_primary_mc_IsContained;                 ///< Whether each primary daughter is contained (MC quantity)
+    FloatVector       m_primary_mc_ContainmentFraction;         ///< The fraction of the primary that is contained (MC quantity)
     IntVector         m_primary_mc_ParticleType;                ///< The MC type enum for each primary daughter
     BoolVector        m_primary_mc_IsShower;                    ///< Whether each primary daughter is a shower (MC quantity)
     IntVector         m_primary_mc_PdgCode;                     ///< The primary daughter's PDG code (MC quantity)
@@ -123,9 +127,10 @@ public:
     FloatVector       m_primary_mc_HitCompleteness;             ///< The primary daughter's hit number completeness (MC quantity)
                                                                 
     unsigned          m_cr_Number;                              ///< The number of cosmic rays
-    BoolVector        m_cr_WasReconstructed;                     ///< Whether each cosmic ray's vertex has been reconstructed
+    BoolVector        m_cr_WasReconstructed;                    ///< Whether each cosmic ray has been reconstructed
     BoolVector        m_cr_IsVertexFiducial;                    ///< Whether each cosmic ray's vertex is fiducial
-    BoolVector        m_cr_AreAllHitsFiducial;                  ///< Whether each cosmic ray's hits are all fiducial
+    BoolVector        m_cr_IsContained;                         ///< Whether the cosmic ray looks contained
+    FloatVector       m_cr_FiducialHitFraction;                 ///< The fraction of the cosmic ray's hits that are fiducial
     BoolVector        m_cr_HasMcInfo;                           ///< Whether each cosmic ray has MC information
     FloatVector       m_cr_Energy;                              ///< The energy of each cosmic ray
     FloatVector       m_cr_EnergyFromChargeOnly;                ///< The energy of each cosmic ray from charge only
@@ -154,6 +159,7 @@ public:
     FloatVector       m_cr_mc_MomentumZ;                        ///< The MC momentum of each cosmic ray in the z-direction
     BoolVector        m_cr_mc_IsVertexFiducial;                 ///< Whether each cosmic ray's vertex is fiducial (MC quantity)
     BoolVector        m_cr_mc_IsContained;                      ///< Whether each cosmic ray is contained (MC quantity)
+    FloatVector       m_cr_mc_ContainmentFraction;              ///< The fraction of the CR that is contained (MC quantity)
     FloatVector       m_cr_mc_HitPurity;                        ///< The cosmic ray's hit number purity (MC quantity)
     FloatVector       m_cr_mc_HitCompleteness;                  ///< The cosmic ray's hit number completeness (MC quantity)
 };
@@ -198,7 +204,7 @@ private:
      */
     void PopulateNeutrinoMcParameters(const MCParticle *const pMainMcParticle, const float mcEnergy, const CartesianVector &mcVertexPosition, 
         const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, 
-        const bool mcIsContained, const int mcPdgCode, const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
+        const float mcContainmentFraction, const int mcPdgCode, const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
         const float mcHitPurity, const float mcHitCompleteness) const;
     
     /**
@@ -219,7 +225,7 @@ private:
      */
     void AddMcOnlyPrimaryDaughterRecord(const MCParticle *const pMainMcParticle, const float mcEnergy, 
         const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum,
-        const bool mcIsVertexFiducial, const bool mcIsContained, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, 
+        const bool mcIsVertexFiducial, const float mcContainmentFraction, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, 
         const int mcPdgCode) const;
         
     /**
@@ -234,7 +240,7 @@ private:
      */
     void AddMcOnlyCosmicRayRecord(const MCParticle *const pMainMcParticle, const float mcEnergy, const CartesianVector &mcVertexPosition,
         const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, 
-        const bool mcIsContained) const;
+        const float mcContainmentFraction) const;
     
     /**
      *  @brief  Dump the tree parameters
@@ -264,6 +270,7 @@ private:
     CartesianVector m_minCoordinates;
     CartesianVector m_maxCoordinates;
     float m_mcContainmentFractionLowerBound;
+    float m_fiducialHitFractionLowerBound;
 };
 
 } // namespace lar_physics_content

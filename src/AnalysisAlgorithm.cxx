@@ -119,7 +119,10 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     unsigned numberOfDownstreamParticles(0U);
     this->CountNumberOfDownstreamParticles(pInputPfo, numberOfDownstreamParticles);
     analysisParticleParameters.m_numberOfDownstreamParticles = numberOfDownstreamParticles;
-    
+        
+    analysisParticleParameters.m_fiducialHitFraction = LArAnalysisParticleHelper::GetFractionOfFiducialHits(this->GetPandora(), pInputPfo,
+        this->m_minCoordinates, this->m_maxCoordinates);
+        
     analysisParticleParameters.m_hasMcInfo = gotMcInformation;
 
     if (gotMcInformation)
@@ -140,7 +143,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         analysisParticleParameters.m_mcIsVertexFiducial = LArAnalysisParticleHelper::IsPointFiducial(mcVertexPosition, 
             this->m_minCoordinates, this->m_maxCoordinates);
             
-        analysisParticleParameters.m_mcIsContained      = (mcContainmentFraction > this->m_mcContainmentFractionLowerBound);
+        analysisParticleParameters.m_mcContainmentFraction = mcContainmentFraction;
         analysisParticleParameters.m_mcIsShower         = (mcType == LArAnalysisParticle::TYPE::SHOWER);
         analysisParticleParameters.m_mcPdgCode          = mcPdgCode;
         analysisParticleParameters.m_mcType             = mcType;
@@ -158,7 +161,6 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         
         float analysisEnergy(0.f);
         float energyFromCharge(0.f);
-        bool areAllHitsFiducial(true);
         CartesianVector analysisMomentum(0.f, 0.f, 0.f);
         unsigned numberOf3dHits(0U), numberOfCollectionPlaneHits(0U);
         
@@ -168,7 +170,6 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
             {
                 analysisEnergy              += pAnalysisPrimary->AnalysisEnergy();
                 energyFromCharge            += pAnalysisPrimary->EnergyFromCharge();
-                areAllHitsFiducial          &= pAnalysisPrimary->AreAllHitsFiducial();
                 analysisMomentum            += pAnalysisPrimary->AnalysisMomentum();
                 numberOf3dHits              += pAnalysisPrimary->NumberOf3dHits();
                 numberOfCollectionPlaneHits += pAnalysisPrimary->NumberOfCollectionPlaneHits();
@@ -180,7 +181,6 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         
         analysisParticleParameters.m_analysisEnergy              = analysisEnergy;
         analysisParticleParameters.m_energyFromCharge            = energyFromCharge;
-        analysisParticleParameters.m_areAllHitsFiducial          = areAllHitsFiducial;
         analysisParticleParameters.m_analysisMomentum            = analysisMomentum;
         analysisParticleParameters.m_numberOf3dHits              = numberOf3dHits;
         analysisParticleParameters.m_numberOfCollectionPlaneHits = numberOfCollectionPlaneHits;
@@ -213,14 +213,8 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         
         const LArAnalysisParticle::TYPE particleType = particleTypeMap.at(pInputPfo);
         
-        bool fiducialCutSatisfied = true;
-        
-        if (!LArAnalysisParticleHelper::RecursivelyCheckFiducialCut(pInputPfo, this->m_minCoordinates, this->m_maxCoordinates))
-            fiducialCutSatisfied = false;
-        
         analysisParticleParameters.m_analysisEnergy              = particleEnergy;
         analysisParticleParameters.m_energyFromCharge            = particleEnergyFromCharge;
-        analysisParticleParameters.m_areAllHitsFiducial          = fiducialCutSatisfied;
         analysisParticleParameters.m_directionCosines            = initialDirection;
         analysisParticleParameters.m_analysisMomentum            = initialDirection * particleEnergy;
         analysisParticleParameters.m_numberOf3dHits              = num3DHits;

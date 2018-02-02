@@ -20,7 +20,7 @@ LArAnalysisParticle::LArAnalysisParticle(const LArAnalysisParticleParameters &pa
     m_analysisEnergy(parameters.m_analysisEnergy),
     m_energyFromCharge(parameters.m_energyFromCharge),
     m_isVertexFiducial(parameters.m_isVertexFiducial),
-    m_areAllHitsFiducial(parameters.m_areAllHitsFiducial),
+    m_fiducialHitFraction(parameters.m_fiducialHitFraction),
     m_vertexPosition(parameters.m_vertexPosition),
     m_directionCosines(parameters.m_directionCosines),
     m_analysisMomentum(parameters.m_analysisMomentum),
@@ -36,7 +36,7 @@ LArAnalysisParticle::LArAnalysisParticle(const LArAnalysisParticleParameters &pa
     m_mcVertexPosition(parameters.m_mcVertexPosition),
     m_mcDirectionCosines(parameters.m_mcDirectionCosines),
     m_mcIsVertexFiducial(parameters.m_mcIsVertexFiducial),
-    m_mcIsContained(parameters.m_mcIsContained),
+    m_mcContainmentFraction(parameters.m_mcContainmentFraction),
     m_mcIsShower(parameters.m_mcIsShower),
     m_mcPdgCode(parameters.m_mcPdgCode),
     m_mcHitPurity(parameters.m_mcHitPurity),
@@ -63,10 +63,8 @@ void LArAnalysisParticle::Print() const
                                                      << TEXT_NORMAL << "\n"
               << "    - MC is vertex fiducial:     " << TEXT_RED_BOLD << std::boolalpha << this->m_mcIsVertexFiducial << std::noboolalpha
                                                      << TEXT_NORMAL << "\n"
-              << "    - Are all hits fiducial:     " << TEXT_RED_BOLD << std::boolalpha << this->m_areAllHitsFiducial << std::noboolalpha
-                                                     << TEXT_NORMAL << "\n"
-              << "    - MC is contained:           " << TEXT_RED_BOLD << std::boolalpha << this->m_mcIsContained << std::noboolalpha
-                                                     << TEXT_NORMAL << "\n"
+              << "    - Fiducial hit fraction:     " << TEXT_RED_BOLD << 100.f * this->m_fiducialHitFraction << TEXT_NORMAL << "%\n"
+              << "    - MC containment fraction:   " << TEXT_RED_BOLD << 100.f * this->m_mcContainmentFraction << TEXT_NORMAL << "%\n"
               << "    - Vertex:                    " << "(" << this->m_vertexPosition.GetX() << ", " << this->m_vertexPosition.GetY() 
                                                      << ", " << this->m_vertexPosition.GetZ() << ")\n"
               << "    - MC vertex:                 " << "(" << this->m_mcVertexPosition.GetX() << ", " << this->m_mcVertexPosition.GetY()
@@ -105,8 +103,7 @@ void LArAnalysisParticle::Print() const
                   << "    - Energy from charge:        " << 1000.f * this->m_energyFromCharge << "MeV\n"
                   << "    - Is vertex fiducial:        " << TEXT_RED_BOLD << std::boolalpha << this->m_isVertexFiducial << std::noboolalpha
                                                          << TEXT_NORMAL << "\n"
-                  << "    - Are all hits fiducial:     " << TEXT_RED_BOLD << std::boolalpha << this->m_areAllHitsFiducial 
-                                                         << std::noboolalpha << TEXT_NORMAL << "\n"
+                  << "    - Fiducial hit fraction:     " << TEXT_RED_BOLD << 100.f * this->m_fiducialHitFraction << TEXT_NORMAL << "%\n"
                   << "    - Vertex:                    " << "(" << this->m_vertexPosition.GetX() << ", " << this->m_vertexPosition.GetY()
                                                          << ", " << this->m_vertexPosition.GetZ() << ")\n"
                   << "    - Direction cosines:         " << "(" << this->m_directionCosines.GetX() << ", "
@@ -178,7 +175,7 @@ LArAnalysisParticleParameters::LArAnalysisParticleParameters() noexcept :
     m_analysisEnergy(0.f),
     m_energyFromCharge(0.f),
     m_isVertexFiducial(false),
-    m_areAllHitsFiducial(false),
+    m_fiducialHitFraction(0.f),
     m_vertexPosition(CartesianVector(0.f, 0.f, 0.f)),
     m_directionCosines(CartesianVector(0.f, 0.f, 0.f)),
     m_analysisMomentum(CartesianVector(0.f, 0.f, 0.f)),
@@ -194,7 +191,7 @@ LArAnalysisParticleParameters::LArAnalysisParticleParameters() noexcept :
     m_mcVertexPosition(CartesianVector(0.f, 0.f, 0.f)),
     m_mcDirectionCosines(CartesianVector(0.f, 0.f, 0.f)),
     m_mcIsVertexFiducial(false),
-    m_mcIsContained(false),
+    m_mcContainmentFraction(0.f),
     m_mcIsShower(false),
     m_mcPdgCode(0),
     m_mcHitPurity(0.f),

@@ -213,6 +213,22 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const Pandora &pandora, const ParticleFlowObject *const pPfo, 
+    const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates)
+{
+    PfoList downstreamPfos;
+    LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
+    
+    unsigned fiducialHits(0U), totalHits(0U);
+    LArAnalysisParticleHelper::CountFiducialHits(pandora, downstreamPfos, minCoordinates, maxCoordinates, TPC_VIEW_U, fiducialHits, totalHits);
+    LArAnalysisParticleHelper::CountFiducialHits(pandora, downstreamPfos, minCoordinates, maxCoordinates, TPC_VIEW_V, fiducialHits, totalHits);
+    LArAnalysisParticleHelper::CountFiducialHits(pandora, downstreamPfos, minCoordinates, maxCoordinates, TPC_VIEW_W, fiducialHits, totalHits);
+
+    return static_cast<float>(fiducialHits) / static_cast<float>(totalHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArAnalysisParticleHelper::RecursivelyCheckFiducialCut(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
     const CartesianVector &maxCoordinates)
 {
@@ -686,6 +702,27 @@ LArAnalysisParticle::TYPE LArAnalysisParticleHelper::GetMcParticleType(const MCP
     }
     
     return LArAnalysisParticle::TYPE::UNKNOWN;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArAnalysisParticleHelper::CountFiducialHits(const Pandora &pandora, const PfoList &pfoList, 
+    const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates, const HitType hitType, unsigned &fiducialHits, 
+    unsigned &totalHits)
+{
+    CaloHitList caloHitList;
+    LArPfoHelper::GetCaloHits(pfoList, hitType, caloHitList);
+    
+    const CartesianVector projectedMinCoordinates(LArGeometryHelper::ProjectPosition(pandora, minCoordinates, hitType));
+    const CartesianVector projectedMaxCoordinates(LArGeometryHelper::ProjectPosition(pandora, maxCoordinates, hitType));
+    
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        if (LArAnalysisParticleHelper::IsPointFiducial(pCaloHit->GetPositionVector(), projectedMinCoordinates, projectedMaxCoordinates))
+            ++fiducialHits;
+    }
+    
+    totalHits += caloHitList.size();
 }
 
 } // namespace lar_physics_content

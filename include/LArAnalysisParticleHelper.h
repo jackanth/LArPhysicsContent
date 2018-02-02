@@ -98,6 +98,13 @@ public:
      *  @brief ...
      * 
      */
+    static float GetFractionOfFiducialHits(const Pandora &pandora, const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
+        const CartesianVector &maxCoordinates);
+        
+    /**
+     *  @brief ...
+     * 
+     */
     static bool RecursivelyCheckFiducialCut(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
     
     /**
@@ -207,6 +214,13 @@ private:
      * 
      */
     static LArAnalysisParticle::TYPE GetMcParticleType(const MCParticle *const pMCParticle);
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    static void CountFiducialHits(const Pandora &pandora, const PfoList &pfoList, const CartesianVector &minCoordinates, 
+        const CartesianVector &maxCoordinates, const HitType hitType, unsigned &fiducialHits, unsigned &totalHits);
 };
 } // namespace lar_physics_content
 

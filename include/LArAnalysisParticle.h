@@ -152,12 +152,12 @@ public:
     bool IsVertexFiducial() const noexcept;
     
     /**
-     *  @brief  Get whether the fiducial cut is satisfied
+     *  @brief  Get the fraction of fiducial hits
      * 
-     *  @return whether the fiducial cut is satisfied
+     *  @return the fraction of fiducial hits
      * 
      */
-    bool AreAllHitsFiducial() const noexcept;
+    float FiducialHitFraction() const noexcept;
 
     /**
      *  @brief  Get the vertex position
@@ -280,12 +280,12 @@ public:
     bool McIsVertexFiducial() const;
     
     /**
-     *  @brief  Get the MC vertex position
+     *  @brief  Get the MC containment fraction
      * 
-     *  @return the MC vertex position
+     *  @return the MC containment fraction
      * 
      */
-    bool McIsContained() const;
+    float McContainmentFraction() const;
 
     /**
      *  @brief  Get whether the particle is a shower (MC)
@@ -359,7 +359,7 @@ private:
     float              m_analysisEnergy;                 ///< The particle energy in GeV
     float              m_energyFromCharge;               ///< The particle energy in GeV, calculated only using charge
     bool               m_isVertexFiducial;               ///< Whether the vertex is fiducial
-    bool               m_areAllHitsFiducial;             ///< Whether all the hits are fiducial
+    float              m_fiducialHitFraction;            ///< The fraction of hits that are fiducial
     CartesianVector    m_vertexPosition;                 ///< The vertex position
     CartesianVector    m_directionCosines;               ///< The direction cosines at the vertex
     CartesianVector    m_analysisMomentum;               ///< The momentum at the vertex
@@ -375,7 +375,7 @@ private:
     CartesianVector    m_mcVertexPosition;               ///< The MC vertex position
     CartesianVector    m_mcDirectionCosines;             ///< The MC direction cosines
     bool               m_mcIsVertexFiducial;             ///< Whether the vertex is fiducial (MC quantity)
-    bool               m_mcIsContained;                  ///< Whether the particle is contained (MC quantity)
+    float              m_mcContainmentFraction;          ///< The fraction of the particle that is contained (MC quantity)
     bool               m_mcIsShower;                     ///< Whether the particle is a shower (MC quantity)
     int                m_mcPdgCode;                      ///< The PDG code of the particle (MC quantity)
     float              m_mcHitPurity;                    ///< The hit number purity (MC quantity)
@@ -414,7 +414,7 @@ public:
     float                            m_analysisEnergy;             
     float                            m_energyFromCharge;           
     bool                             m_isVertexFiducial;           
-    bool                             m_areAllHitsFiducial;         
+    float                            m_fiducialHitFraction;         
     CartesianVector                  m_vertexPosition;             
     CartesianVector                  m_directionCosines;           
     CartesianVector                  m_analysisMomentum;                   
@@ -430,7 +430,7 @@ public:
     CartesianVector                  m_mcVertexPosition; 
     CartesianVector                  m_mcDirectionCosines;
     bool                             m_mcIsVertexFiducial;         
-    bool                             m_mcIsContained;              
+    float                            m_mcContainmentFraction;              
     bool                             m_mcIsShower;                 
     int                              m_mcPdgCode;     
     float                            m_mcHitPurity;
@@ -516,9 +516,9 @@ inline bool LArAnalysisParticle::IsVertexFiducial() const noexcept
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool LArAnalysisParticle::AreAllHitsFiducial() const noexcept
+inline float LArAnalysisParticle::FiducialHitFraction() const noexcept
 {
-    return this->m_areAllHitsFiducial;
+    return this->m_fiducialHitFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -635,10 +635,10 @@ inline bool LArAnalysisParticle::McIsVertexFiducial() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool LArAnalysisParticle::McIsContained() const
+inline float LArAnalysisParticle::McContainmentFraction() const
 {
     ThrowIfNoMcInfo(); 
-    return this->m_mcIsContained;
+    return this->m_mcContainmentFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -39,7 +39,8 @@ WriteAnalysisParticlesAlgorithm::WriteAnalysisParticlesAlgorithm() :
     m_fiducialCutZMargin(10.f),
     m_minCoordinates(0.f, 0.f, 0.f),
     m_maxCoordinates(0.f, 0.f, 0.f),
-    m_mcContainmentFractionLowerBound(0.9f)
+    m_mcContainmentFractionLowerBound(0.9f),
+    m_fiducialHitFractionLowerBound(0.9f)
 {
 }
 
@@ -179,7 +180,6 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
             const bool mcIsVertexFiducial = LArAnalysisParticleHelper::IsPointFiducial(mcVertexPosition, this->m_minCoordinates,
                 this->m_maxCoordinates);
                 
-            const bool mcIsContained = (mcContainmentFraction > this->m_mcContainmentFractionLowerBound);
             CartesianVector mcDirectionCosines(0.f, 0.f, 0.f);
             
             if (mcMomentum.GetMagnitude() < std::numeric_limits<float>::epsilon())
@@ -201,21 +201,21 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
                 this->m_treeParameters.m_nu_HasMcInfo = true;
                 
                 this->PopulateNeutrinoMcParameters(pMCPrimary, mcEnergy, mcVertexPosition, mcDirectionCosines, mcMomentum, 
-                    mcIsVertexFiducial, mcIsContained, mcPdgCode, pMCParticleList, pCaloHitList, 0.f, 0.f);
+                    mcIsVertexFiducial, mcContainmentFraction, mcPdgCode, pMCParticleList, pCaloHitList, 0.f, 0.f);
             }
                 
             else if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary))
             {
                 ++this->m_treeParameters.m_primary_Number;
                 this->AddMcOnlyPrimaryDaughterRecord(pMCPrimary, mcEnergy, mcVertexPosition, mcDirectionCosines, mcMomentum, 
-                    mcIsVertexFiducial, mcIsContained, mcType, mcIsShower, mcPdgCode);
+                    mcIsVertexFiducial, mcContainmentFraction, mcType, mcIsShower, mcPdgCode);
             }
             
             else if (pMCPrimary->GetParticleId() == MU_MINUS)
             {
                 ++this->m_treeParameters.m_cr_Number;
                 this->AddMcOnlyCosmicRayRecord(pMCPrimary, mcEnergy, mcVertexPosition, mcDirectionCosines, mcMomentum,
-                    mcIsVertexFiducial, mcIsContained);
+                    mcIsVertexFiducial, mcContainmentFraction);
             }
         }
     }
@@ -235,7 +235,8 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
     // m_nu_WasReconstructed is dealt with by the calling method.
     
     this->m_treeParameters.m_nu_IsVertexFiducial            = neutrinoAnalysisParticle.IsVertexFiducial();
-    this->m_treeParameters.m_nu_AreAllHitsFiducial          = neutrinoAnalysisParticle.AreAllHitsFiducial();
+    this->m_treeParameters.m_nu_IsContained                 = (neutrinoAnalysisParticle.FiducialHitFraction() >= this->m_fiducialHitFractionLowerBound);
+    this->m_treeParameters.m_nu_FiducialHitFraction         = neutrinoAnalysisParticle.FiducialHitFraction();
     this->m_treeParameters.m_nu_HasMcInfo                   = neutrinoAnalysisParticle.HasMcInfo();
     this->m_treeParameters.m_nu_Energy                      = neutrinoAnalysisParticle.AnalysisEnergy();
     this->m_treeParameters.m_nu_EnergyFromChargeOnly        = neutrinoAnalysisParticle.EnergyFromCharge();
@@ -268,7 +269,7 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
     {
         this->PopulateNeutrinoMcParameters(neutrinoAnalysisParticle.McMainMCParticle(), neutrinoAnalysisParticle.McEnergy(),
             neutrinoAnalysisParticle.McVertexPosition(), neutrinoAnalysisParticle.McDirectionCosines(), 
-            neutrinoAnalysisParticle.McMomentum(), neutrinoAnalysisParticle.McIsVertexFiducial(), neutrinoAnalysisParticle.McIsContained(), 
+            neutrinoAnalysisParticle.McMomentum(), neutrinoAnalysisParticle.McIsVertexFiducial(), neutrinoAnalysisParticle.McContainmentFraction(), 
             neutrinoAnalysisParticle.McPdgCode(), pMCParticleList, pCaloHitList, neutrinoAnalysisParticle.McHitPurity(), 
             neutrinoAnalysisParticle.McHitCompleteness());
     }
@@ -278,7 +279,7 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
 
 void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParticle *const pMainMcParticle, const float mcEnergy,
     const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum,
-    const bool mcIsVertexFiducial, const bool mcIsContained, const int mcPdgCode, const MCParticleList *const pMCParticleList, 
+    const bool mcIsVertexFiducial, const float mcContainmentFraction, const int mcPdgCode, const MCParticleList *const pMCParticleList, 
     const CaloHitList *const pCaloHitList, const float mcHitPurity, const float mcHitCompleteness) const
 {
     if (pMainMcParticle)
@@ -298,7 +299,8 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
     this->m_treeParameters.m_nu_mc_MomentumY        = mcMomentum.GetY();
     this->m_treeParameters.m_nu_mc_MomentumZ        = mcMomentum.GetZ();
     this->m_treeParameters.m_nu_mc_IsVertexFiducial = mcIsVertexFiducial;
-    this->m_treeParameters.m_nu_mc_IsContained      = mcIsContained;
+    this->m_treeParameters.m_nu_mc_IsContained      = (mcContainmentFraction >= m_mcContainmentFractionLowerBound);
+    this->m_treeParameters.m_nu_mc_ContainmentFraction = mcContainmentFraction;
     this->m_treeParameters.m_nu_mc_PdgCode          = mcPdgCode;
     this->m_treeParameters.m_nu_mc_HitPurity        = mcHitPurity;
     this->m_treeParameters.m_nu_mc_HitCompleteness  = mcHitCompleteness;
@@ -402,7 +404,8 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
     
     PUSH_TREE_RECORD(m_primary_WasReconstructed,            true);
     PUSH_TREE_RECORD(m_primary_IsVertexFiducial,            primaryAnalysisParticle.IsVertexFiducial());
-    PUSH_TREE_RECORD(m_primary_AreAllHitsFiducial,          primaryAnalysisParticle.AreAllHitsFiducial());
+    PUSH_TREE_RECORD(m_primary_IsContained,                (primaryAnalysisParticle.FiducialHitFraction() >= this->m_fiducialHitFractionLowerBound));
+    PUSH_TREE_RECORD(m_primary_FiducialHitFraction,         primaryAnalysisParticle.FiducialHitFraction());
     PUSH_TREE_RECORD(m_primary_HasMcInfo,                   primaryAnalysisParticle.HasMcInfo());
     PUSH_TREE_RECORD(m_primary_Energy,                      primaryAnalysisParticle.AnalysisEnergy());
     PUSH_TREE_RECORD(m_primary_EnergyFromChargeOnly,        primaryAnalysisParticle.EnergyFromCharge());
@@ -443,7 +446,8 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
         PUSH_TREE_RECORD(m_primary_mc_MomentumY,                primaryAnalysisParticle.McMomentum().GetY());
         PUSH_TREE_RECORD(m_primary_mc_MomentumZ,                primaryAnalysisParticle.McMomentum().GetZ());
         PUSH_TREE_RECORD(m_primary_mc_IsVertexFiducial,         primaryAnalysisParticle.McIsVertexFiducial());
-        PUSH_TREE_RECORD(m_primary_mc_IsContained,              primaryAnalysisParticle.McIsContained());
+        PUSH_TREE_RECORD(m_primary_mc_IsContained,             (primaryAnalysisParticle.McContainmentFraction() >= this->m_mcContainmentFractionLowerBound));
+        PUSH_TREE_RECORD(m_primary_mc_ContainmentFraction,      primaryAnalysisParticle.McContainmentFraction());
         PUSH_TREE_RECORD(m_primary_mc_ParticleType,             static_cast<int>(primaryAnalysisParticle.McType()));
         PUSH_TREE_RECORD(m_primary_mc_IsShower,                 primaryAnalysisParticle.McIsShower());
         PUSH_TREE_RECORD(m_primary_mc_PdgCode,                  primaryAnalysisParticle.McPdgCode());
@@ -466,6 +470,7 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
         PUSH_TREE_RECORD(m_primary_mc_MomentumZ,                0.f);
         PUSH_TREE_RECORD(m_primary_mc_IsVertexFiducial,         false);
         PUSH_TREE_RECORD(m_primary_mc_IsContained,              false);
+        PUSH_TREE_RECORD(m_primary_mc_ContainmentFraction,      0.f);
         PUSH_TREE_RECORD(m_primary_mc_ParticleType,             static_cast<int>(LArAnalysisParticle::TYPE::UNKNOWN));
         PUSH_TREE_RECORD(m_primary_mc_IsShower,                 false);
         PUSH_TREE_RECORD(m_primary_mc_PdgCode,                  0);
@@ -478,12 +483,13 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
 
 void WriteAnalysisParticlesAlgorithm::AddMcOnlyPrimaryDaughterRecord(const MCParticle *const pMainMcParticle, const float mcEnergy,
     const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum,
-    const bool mcIsVertexFiducial, const bool mcIsContained, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, 
+    const bool mcIsVertexFiducial, const float mcContainmentFraction, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, 
     const int mcPdgCode) const
 {
     PUSH_TREE_RECORD(m_primary_WasReconstructed,            false);
     PUSH_TREE_RECORD(m_primary_IsVertexFiducial,            false);
-    PUSH_TREE_RECORD(m_primary_AreAllHitsFiducial,          false);
+    PUSH_TREE_RECORD(m_primary_IsContained,                 false);
+    PUSH_TREE_RECORD(m_primary_FiducialHitFraction,         0.f);
     PUSH_TREE_RECORD(m_primary_HasMcInfo,                   true);
     PUSH_TREE_RECORD(m_primary_Energy,                      0.f);
     PUSH_TREE_RECORD(m_primary_EnergyFromChargeOnly,        0.f);
@@ -522,7 +528,8 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyPrimaryDaughterRecord(const MCPar
     PUSH_TREE_RECORD(m_primary_mc_MomentumY,                mcMomentum.GetY());
     PUSH_TREE_RECORD(m_primary_mc_MomentumZ,                mcMomentum.GetZ());
     PUSH_TREE_RECORD(m_primary_mc_IsVertexFiducial,         mcIsVertexFiducial);
-    PUSH_TREE_RECORD(m_primary_mc_IsContained,              mcIsContained);
+    PUSH_TREE_RECORD(m_primary_mc_IsContained,             (mcContainmentFraction >= this->m_mcContainmentFractionLowerBound));
+    PUSH_TREE_RECORD(m_primary_mc_ContainmentFraction,      mcContainmentFraction);
     PUSH_TREE_RECORD(m_primary_mc_ParticleType,             static_cast<int>(mcType));
     PUSH_TREE_RECORD(m_primary_mc_IsShower,                 mcIsShower);
     PUSH_TREE_RECORD(m_primary_mc_PdgCode,                  mcPdgCode);
@@ -538,7 +545,8 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
     
     PUSH_TREE_RECORD(m_cr_WasReconstructed,            true);
     PUSH_TREE_RECORD(m_cr_IsVertexFiducial,            cosmicRayAnalysisParticle.IsVertexFiducial());
-    PUSH_TREE_RECORD(m_cr_AreAllHitsFiducial,          cosmicRayAnalysisParticle.AreAllHitsFiducial());
+    PUSH_TREE_RECORD(m_cr_IsContained,                (cosmicRayAnalysisParticle.FiducialHitFraction() >= this->m_fiducialHitFractionLowerBound));
+    PUSH_TREE_RECORD(m_cr_FiducialHitFraction,         cosmicRayAnalysisParticle.FiducialHitFraction());
     PUSH_TREE_RECORD(m_cr_HasMcInfo,                   cosmicRayAnalysisParticle.HasMcInfo());
     PUSH_TREE_RECORD(m_cr_Energy,                      cosmicRayAnalysisParticle.AnalysisEnergy());
     PUSH_TREE_RECORD(m_cr_EnergyFromChargeOnly,        cosmicRayAnalysisParticle.EnergyFromCharge());
@@ -577,7 +585,8 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
         PUSH_TREE_RECORD(m_cr_mc_MomentumY,                cosmicRayAnalysisParticle.McMomentum().GetY());
         PUSH_TREE_RECORD(m_cr_mc_MomentumZ,                cosmicRayAnalysisParticle.McMomentum().GetZ());
         PUSH_TREE_RECORD(m_cr_mc_IsVertexFiducial,         cosmicRayAnalysisParticle.McIsVertexFiducial());
-        PUSH_TREE_RECORD(m_cr_mc_IsContained,              cosmicRayAnalysisParticle.McIsContained());
+        PUSH_TREE_RECORD(m_cr_mc_IsContained,             (cosmicRayAnalysisParticle.McContainmentFraction() >= this->m_mcContainmentFractionLowerBound));
+        PUSH_TREE_RECORD(m_cr_mc_ContainmentFraction,      cosmicRayAnalysisParticle.McContainmentFraction());
         PUSH_TREE_RECORD(m_cr_mc_HitPurity,                cosmicRayAnalysisParticle.McHitPurity());
         PUSH_TREE_RECORD(m_cr_mc_HitCompleteness,          cosmicRayAnalysisParticle.McHitCompleteness());
     }
@@ -597,6 +606,7 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
         PUSH_TREE_RECORD(m_cr_mc_MomentumZ,                0.f);
         PUSH_TREE_RECORD(m_cr_mc_IsVertexFiducial,         false);
         PUSH_TREE_RECORD(m_cr_mc_IsContained,              false);
+        PUSH_TREE_RECORD(m_cr_mc_ContainmentFraction,      0.f);
         PUSH_TREE_RECORD(m_cr_mc_HitPurity,                0.f);
         PUSH_TREE_RECORD(m_cr_mc_HitCompleteness,          0.f);
     }
@@ -606,13 +616,14 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
 
 void WriteAnalysisParticlesAlgorithm::AddMcOnlyCosmicRayRecord(const MCParticle *const pMainMcParticle, const float mcEnergy,
     const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum,
-    const bool mcIsVertexFiducial, const bool mcIsContained) const
+    const bool mcIsVertexFiducial, const float mcContainmentFraction) const
 {
     // m_cr_Number is dealt with by the calling method.
     
     PUSH_TREE_RECORD(m_cr_WasReconstructed,            false);
     PUSH_TREE_RECORD(m_cr_IsVertexFiducial,            false);
-    PUSH_TREE_RECORD(m_cr_AreAllHitsFiducial,          false);
+    PUSH_TREE_RECORD(m_cr_IsContained,                 false);
+    PUSH_TREE_RECORD(m_cr_FiducialHitFraction,         0.f);
     PUSH_TREE_RECORD(m_cr_HasMcInfo,                   true);
     PUSH_TREE_RECORD(m_cr_Energy,                      0.f);
     PUSH_TREE_RECORD(m_cr_EnergyFromChargeOnly,        0.f);
@@ -649,7 +660,8 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyCosmicRayRecord(const MCParticle 
     PUSH_TREE_RECORD(m_cr_mc_MomentumY,                mcMomentum.GetY());
     PUSH_TREE_RECORD(m_cr_mc_MomentumZ,                mcMomentum.GetZ());
     PUSH_TREE_RECORD(m_cr_mc_IsVertexFiducial,         mcIsVertexFiducial);
-    PUSH_TREE_RECORD(m_cr_mc_IsContained,              mcIsContained);
+    PUSH_TREE_RECORD(m_cr_mc_IsContained,             (mcContainmentFraction >= m_mcContainmentFractionLowerBound));
+    PUSH_TREE_RECORD(m_cr_mc_ContainmentFraction,      mcContainmentFraction);
     PUSH_TREE_RECORD(m_cr_mc_HitPurity,                0.f);
     PUSH_TREE_RECORD(m_cr_mc_HitCompleteness,          0.f);
 }
@@ -663,7 +675,8 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
     std::cout << "Pandora Tree dump:\n";
     std::cout << nuLabel << "Was reconstructed:         " << std::boolalpha << this->m_treeParameters.m_nu_WasReconstructed << std::noboolalpha << '\n';
     std::cout << nuLabel << "Is vertex fiducial:        " << std::boolalpha << this->m_treeParameters.m_nu_IsVertexFiducial << std::noboolalpha << '\n';
-    std::cout << nuLabel << "Are all hits fiducial:     " << std::boolalpha << this->m_treeParameters.m_nu_AreAllHitsFiducial << std::noboolalpha << '\n';
+    std::cout << nuLabel << "Is contained:              " << std::boolalpha << this->m_treeParameters.m_nu_IsContained << std::noboolalpha << '\n';
+    std::cout << nuLabel << "Fiducial hit fraction:     " << 100.f * this->m_treeParameters.m_nu_FiducialHitFraction << "%\n";
     std::cout << nuLabel << "Has MC info:               " << std::boolalpha << this->m_treeParameters.m_nu_HasMcInfo << std::noboolalpha << '\n';
     std::cout << nuLabel << "Energy:                    " << 1000.f * this->m_treeParameters.m_nu_Energy << " MeV\n";
     std::cout << nuLabel << "Energy from charge only:   " << 1000.f * this->m_treeParameters.m_nu_EnergyFromChargeOnly << " MeV\n";
@@ -699,6 +712,7 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
     std::cout << nuLabel << "MC momentum z:             " << 1000.f * this->m_treeParameters.m_nu_mc_MomentumZ << " MeV/c\n";
     std::cout << nuLabel << "MC is vertex fiducial:     " << std::boolalpha << this->m_treeParameters.m_nu_mc_IsVertexFiducial << std::noboolalpha << '\n';
     std::cout << nuLabel << "MC is contained:           " << std::boolalpha << this->m_treeParameters.m_nu_mc_IsContained << std::noboolalpha << '\n';
+    std::cout << nuLabel << "MC containment fraction:   " << 100.f * this->m_treeParameters.m_nu_mc_ContainmentFraction << "%\n";
     std::cout << nuLabel << "MC interaction type:       " << this->m_treeParameters.m_nu_mc_InteractionType << '\n';
     std::cout << nuLabel << "MC is charged-current:     " << std::boolalpha << this->m_treeParameters.m_nu_mc_IsChargedCurrent << std::noboolalpha << '\n';
     std::cout << nuLabel << "MC visible energy frac:    " << 100.f * this->m_treeParameters.m_nu_mc_VisibleEnergyFraction << "%\n";
@@ -714,7 +728,8 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         
         std::cout << label << "Was reconstructed:         " << std::boolalpha << this->m_treeParameters.m_primary_WasReconstructed.at(i) << std::noboolalpha << '\n';
         std::cout << label << "Is vertex fiducial:        " << std::boolalpha << this->m_treeParameters.m_primary_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Are all hits fiducial:     " << std::boolalpha << this->m_treeParameters.m_primary_AreAllHitsFiducial.at(i) << std::noboolalpha << '\n';
+        std::cout << label << "Is contained:              " << std::boolalpha << this->m_treeParameters.m_primary_IsContained.at(i) << std::noboolalpha << '\n';
+        std::cout << label << "Fiducial hit fraction:     " << 100.f * this->m_treeParameters.m_primary_FiducialHitFraction.at(i) << "%\n";
         std::cout << label << "Has MC info:               " << std::boolalpha << this->m_treeParameters.m_primary_HasMcInfo.at(i) << std::noboolalpha << '\n';
         std::cout << label << "Energy:                    " << 1000.f * this->m_treeParameters.m_primary_Energy.at(i) << " MeV\n";
         std::cout << label << "Energy from charge only:   " << 1000.f * this->m_treeParameters.m_primary_EnergyFromChargeOnly.at(i) << " MeV\n";
@@ -746,6 +761,7 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         std::cout << label << "MC momentum z:             " << 1000.f * this->m_treeParameters.m_primary_mc_MomentumZ.at(i) << " MeV/c\n";
         std::cout << label << "MC is vertex fiducial:     " << std::boolalpha << this->m_treeParameters.m_primary_mc_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
         std::cout << label << "MC is contained:           " << std::boolalpha << this->m_treeParameters.m_primary_mc_IsContained.at(i) << std::noboolalpha << '\n';
+        std::cout << label << "Containment fraction:      " << 100.f * this->m_treeParameters.m_primary_mc_ContainmentFraction.at(i) << "%\n";
         std::cout << label << "MC particle type:          " << this->m_treeParameters.m_primary_mc_ParticleType.at(i) << " (" << 
             LArAnalysisParticle::TypeAsString(static_cast<LArAnalysisParticle::TYPE>(this->m_treeParameters.m_primary_mc_ParticleType.at(i))) << ")\n";
         std::cout << label << "MC is shower:              " << std::boolalpha << this->m_treeParameters.m_primary_mc_IsShower.at(i) << std::noboolalpha << '\n';
@@ -762,7 +778,8 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         
         std::cout << label << "Was reconstructed:         " << std::boolalpha << this->m_treeParameters.m_cr_WasReconstructed.at(i) << std::noboolalpha << '\n';
         std::cout << label << "Is vertex fiducial:        " << std::boolalpha << this->m_treeParameters.m_cr_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Are all hits fiducial:     " << std::boolalpha << this->m_treeParameters.m_cr_AreAllHitsFiducial.at(i) << std::noboolalpha << '\n';
+        std::cout << label << "Is contained:              " << std::boolalpha << this->m_treeParameters.m_cr_IsContained.at(i) << std::noboolalpha << '\n';
+        std::cout << label << "Fiducial hit fraction:     " << 100.f * this->m_treeParameters.m_cr_FiducialHitFraction.at(i) << "%\n";
         std::cout << label << "Has MC info:               " << std::boolalpha << this->m_treeParameters.m_cr_HasMcInfo.at(i) << std::noboolalpha << '\n';
         std::cout << label << "Energy:                    " << 1000.f * this->m_treeParameters.m_cr_Energy.at(i) << " MeV\n";
         std::cout << label << "Energy from charge only:   " << 1000.f * this->m_treeParameters.m_cr_EnergyFromChargeOnly.at(i) << " MeV\n";
@@ -791,6 +808,7 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         std::cout << label << "MC momentum z:             " << 1000.f * this->m_treeParameters.m_cr_mc_MomentumZ.at(i) << " MeV/c\n";
         std::cout << label << "MC is vertex fiducial:     " << std::boolalpha << this->m_treeParameters.m_cr_mc_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
         std::cout << label << "MC is contained:           " << std::boolalpha << this->m_treeParameters.m_cr_mc_IsContained.at(i) << std::noboolalpha << '\n';
+        std::cout << label << "Containment fraction:      " << 100.f * this->m_treeParameters.m_cr_mc_ContainmentFraction.at(i) << "%\n";
         std::cout << label << "MC hit purity:             " << 100.f * this->m_treeParameters.m_cr_mc_HitPurity.at(i) << "%\n";
         std::cout << label << "MC hit completeness:       " << 100.f * this->m_treeParameters.m_cr_mc_HitCompleteness.at(i) << "%\n";
     }
@@ -890,6 +908,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutYMargin", this->m_fiducialCutYMargin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutZMargin", this->m_fiducialCutZMargin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McContainmentFractionLowerBound", this->m_mcContainmentFractionLowerBound));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialHitFractionLowerBound", this->m_fiducialHitFractionLowerBound));
     
     
     // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
@@ -902,7 +921,8 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     // Neutrino parameters.
     this->m_pOutputTree->Branch("nu_WasReconstructed",                 &this->m_treeParameters.m_nu_WasReconstructed);
     this->m_pOutputTree->Branch("nu_IsVertexFiducial",                 &this->m_treeParameters.m_nu_IsVertexFiducial);
-    this->m_pOutputTree->Branch("nu_AreAllHitsFiducial",               &this->m_treeParameters.m_nu_AreAllHitsFiducial);
+    this->m_pOutputTree->Branch("nu_isContained",                      &this->m_treeParameters.m_nu_IsContained);
+    this->m_pOutputTree->Branch("nu_FiducialHitFraction",              &this->m_treeParameters.m_nu_FiducialHitFraction);
     this->m_pOutputTree->Branch("nu_HasMcInfo",                        &this->m_treeParameters.m_nu_HasMcInfo);
     this->m_pOutputTree->Branch("nu_Energy",                           &this->m_treeParameters.m_nu_Energy);
     this->m_pOutputTree->Branch("nu_EnergyFromChargeOnly",             &this->m_treeParameters.m_nu_EnergyFromChargeOnly);
@@ -938,6 +958,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     this->m_pOutputTree->Branch("nu_mc_MomentumZ",                     &this->m_treeParameters.m_nu_mc_MomentumZ);
     this->m_pOutputTree->Branch("nu_mc_IsVertexFiducial",              &this->m_treeParameters.m_nu_mc_IsVertexFiducial);
     this->m_pOutputTree->Branch("nu_mc_IsContained",                   &this->m_treeParameters.m_nu_mc_IsContained);
+    this->m_pOutputTree->Branch("nu_mc_ContainmentFraction",           &this->m_treeParameters.m_nu_mc_ContainmentFraction);
     this->m_pOutputTree->Branch("nu_mc_InteractionType",               &this->m_treeParameters.m_nu_mc_InteractionType);
     this->m_pOutputTree->Branch("nu_mc_IsChargedCurrent",              &this->m_treeParameters.m_nu_mc_IsChargedCurrent);
     this->m_pOutputTree->Branch("nu_mc_VisibleEnergyFraction",         &this->m_treeParameters.m_nu_mc_VisibleEnergyFraction);
@@ -950,7 +971,8 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     
     this->m_pOutputTree->Branch("primary_WasReconstructed",            &this->m_treeParameters.m_primary_WasReconstructed);
     this->m_pOutputTree->Branch("primary_IsVertexFiducial",            &this->m_treeParameters.m_primary_IsVertexFiducial);
-    this->m_pOutputTree->Branch("primary_AreAllHitsFiducial",          &this->m_treeParameters.m_primary_AreAllHitsFiducial);
+    this->m_pOutputTree->Branch("primary_IsContained",                 &this->m_treeParameters.m_primary_IsContained);
+    this->m_pOutputTree->Branch("primary_FiducialHitFraction",         &this->m_treeParameters.m_primary_FiducialHitFraction);
     this->m_pOutputTree->Branch("primary_HasMcInfo",                   &this->m_treeParameters.m_primary_HasMcInfo);
     this->m_pOutputTree->Branch("primary_Energy",                      &this->m_treeParameters.m_primary_Energy);
     this->m_pOutputTree->Branch("primary_EnergyFromChargeOnly",        &this->m_treeParameters.m_primary_EnergyFromChargeOnly);
@@ -981,6 +1003,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     this->m_pOutputTree->Branch("primary_mc_MomentumZ",                &this->m_treeParameters.m_primary_mc_MomentumZ);
     this->m_pOutputTree->Branch("primary_mc_IsVertexFiducial",         &this->m_treeParameters.m_primary_mc_IsVertexFiducial);
     this->m_pOutputTree->Branch("primary_mc_IsContained",              &this->m_treeParameters.m_primary_mc_IsContained);
+    this->m_pOutputTree->Branch("primary_mc_ContainmentFraction",      &this->m_treeParameters.m_primary_mc_ContainmentFraction);
     this->m_pOutputTree->Branch("primary_mc_ParticleType",             &this->m_treeParameters.m_primary_mc_ParticleType);
     this->m_pOutputTree->Branch("primary_mc_IsShower",                 &this->m_treeParameters.m_primary_mc_IsShower);
     this->m_pOutputTree->Branch("primary_mc_PdgCode",                  &this->m_treeParameters.m_primary_mc_PdgCode);
@@ -991,7 +1014,8 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     this->m_pOutputTree->Branch("cr_Number",                           &this->m_treeParameters.m_cr_Number);
     this->m_pOutputTree->Branch("cr_WasReconstructed",                 &this->m_treeParameters.m_cr_WasReconstructed);
     this->m_pOutputTree->Branch("cr_IsVertexFiducial",                 &this->m_treeParameters.m_cr_IsVertexFiducial);
-    this->m_pOutputTree->Branch("cr_AreAllHitsFiducial",               &this->m_treeParameters.m_cr_AreAllHitsFiducial);
+    this->m_pOutputTree->Branch("cr_IsContained",                      &this->m_treeParameters.m_cr_IsContained);
+    this->m_pOutputTree->Branch("cr_FiducialHitFraction",              &this->m_treeParameters.m_cr_FiducialHitFraction);
     this->m_pOutputTree->Branch("cr_HasMcInfo",                        &this->m_treeParameters.m_cr_HasMcInfo);
     this->m_pOutputTree->Branch("cr_Energy",                           &this->m_treeParameters.m_cr_Energy);
     this->m_pOutputTree->Branch("cr_EnergyFromChargeOnly",             &this->m_treeParameters.m_cr_EnergyFromChargeOnly);
@@ -1020,6 +1044,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     this->m_pOutputTree->Branch("cr_mc_MomentumZ",                     &this->m_treeParameters.m_cr_mc_MomentumZ);
     this->m_pOutputTree->Branch("cr_mc_IsVertexFiducial",              &this->m_treeParameters.m_cr_mc_IsVertexFiducial);
     this->m_pOutputTree->Branch("cr_mc_IsContained",                   &this->m_treeParameters.m_cr_mc_IsContained);
+    this->m_pOutputTree->Branch("cr_mc_ContainmentFraction",           &this->m_treeParameters.m_cr_mc_ContainmentFraction);
     this->m_pOutputTree->Branch("cr_mc_HitPurity",                     &this->m_treeParameters.m_cr_mc_HitPurity);
     this->m_pOutputTree->Branch("cr_mc_HitCompleteness",               &this->m_treeParameters.m_cr_mc_HitCompleteness);
 
@@ -1032,7 +1057,8 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 TreeParameters::TreeParameters() noexcept :
     m_nu_WasReconstructed(false),
     m_nu_IsVertexFiducial(false),
-    m_nu_AreAllHitsFiducial(false),
+    m_nu_IsContained(false),
+    m_nu_FiducialHitFraction(0.f),
     m_nu_HasMcInfo(false),
     m_nu_Energy(0.f),
     m_nu_EnergyFromChargeOnly(0.f),
@@ -1068,6 +1094,7 @@ TreeParameters::TreeParameters() noexcept :
     m_nu_mc_MomentumZ(0.f),
     m_nu_mc_IsVertexFiducial(false),
     m_nu_mc_IsContained(false),
+    m_nu_mc_ContainmentFraction(0.f),
     m_nu_mc_InteractionType(0),
     m_nu_mc_IsChargedCurrent(false),
     m_nu_mc_VisibleEnergyFraction(0.f),
@@ -1077,7 +1104,8 @@ TreeParameters::TreeParameters() noexcept :
     m_primary_Number(0U),
     m_primary_WasReconstructed(),
     m_primary_IsVertexFiducial(),
-    m_primary_AreAllHitsFiducial(),
+    m_primary_IsContained(),
+    m_primary_FiducialHitFraction(),
     m_primary_HasMcInfo(),
     m_primary_Energy(),
     m_primary_EnergyFromChargeOnly(),
@@ -1108,6 +1136,7 @@ TreeParameters::TreeParameters() noexcept :
     m_primary_mc_MomentumZ(),
     m_primary_mc_IsVertexFiducial(),
     m_primary_mc_IsContained(),
+    m_primary_mc_ContainmentFraction(),
     m_primary_mc_ParticleType(),
     m_primary_mc_IsShower(),
     m_primary_mc_PdgCode(),
@@ -1116,7 +1145,8 @@ TreeParameters::TreeParameters() noexcept :
     m_cr_Number(0U),
     m_cr_WasReconstructed(),
     m_cr_IsVertexFiducial(),
-    m_cr_AreAllHitsFiducial(),
+    m_cr_IsContained(),
+    m_cr_FiducialHitFraction(),
     m_cr_HasMcInfo(),
     m_cr_Energy(),
     m_cr_EnergyFromChargeOnly(),
@@ -1145,6 +1175,7 @@ TreeParameters::TreeParameters() noexcept :
     m_cr_mc_MomentumZ(),
     m_cr_mc_IsVertexFiducial(),
     m_cr_mc_IsContained(),
+    m_cr_mc_ContainmentFraction(),
     m_cr_mc_HitPurity(),
     m_cr_mc_HitCompleteness()
 {
