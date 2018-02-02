@@ -56,6 +56,7 @@ public:
     float             m_nu_DirectionCosineX;                          ///< The direction cosine of the neutrino in the x-direction
     float             m_nu_DirectionCosineY;                          ///< The direction cosine of the neutrino in the y-direction
     float             m_nu_DirectionCosineZ;                          ///< The direction cosine of the neutrino in the z-direction
+    float             m_nu_Momentum;                                  ///< The momentum of the neutrino
     float             m_nu_MomentumX;                                 ///< The momentum of the neutrino in the x-direction
     float             m_nu_MomentumY;                                 ///< The momentum of the neutrino in the y-direction
     float             m_nu_MomentumZ;                                 ///< The momentum of the neutrino in the z-direction
@@ -76,6 +77,7 @@ public:
     float             m_nu_mc_DirectionCosineX;                       ///< The MC direction cosine of the neutrino in the x-direction
     float             m_nu_mc_DirectionCosineY;                       ///< The MC direction cosine of the neutrino in the y-direction
     float             m_nu_mc_DirectionCosineZ;                       ///< The MC direction cosine of the neutrino in the z-direction
+    float             m_nu_mc_Momentum;                               ///< The MC momentum of the neutrino
     float             m_nu_mc_MomentumX;                              ///< The MC momentum of the neutrino in the x-direction
     float             m_nu_mc_MomentumY;                              ///< The MC momentum of the neutrino in the y-direction
     float             m_nu_mc_MomentumZ;                              ///< The MC momentum of the neutrino in the z-direction
@@ -110,6 +112,7 @@ public:
     FloatVector       m_primary_DirectionCosineX;                     ///< The direction cosine of each primary daughter in the x-direction
     FloatVector       m_primary_DirectionCosineY;                     ///< The direction cosine of each primary daughter in the y-direction
     FloatVector       m_primary_DirectionCosineZ;                     ///< The direction cosine of each primary daughter in the z-direction
+    FloatVector       m_primary_Momentum;                             ///< The momentum of each primary daughter
     FloatVector       m_primary_MomentumX;                            ///< The momentum of each primary daughter in the x-direction
     FloatVector       m_primary_MomentumY;                            ///< The momentum of each primary daughter in the y-direction
     FloatVector       m_primary_MomentumZ;                            ///< The momentum of each primary daughter in the z-direction
@@ -130,6 +133,7 @@ public:
     FloatVector       m_primary_mc_DirectionCosineX;                  ///< The MC direction cosine of each primary daughter in the x-direction
     FloatVector       m_primary_mc_DirectionCosineY;                  ///< The MC direction cosine of each primary daughter in the y-direction
     FloatVector       m_primary_mc_DirectionCosineZ;                  ///< The MC direction cosine of each primary daughter in the z-direction
+    FloatVector       m_primary_mc_Momentum;                          ///< The MC momentum of each primary daughter
     FloatVector       m_primary_mc_MomentumX;                         ///< The MC momentum of each primary daughter in the x-direction
     FloatVector       m_primary_mc_MomentumY;                         ///< The MC momentum of each primary daughter in the y-direction
     FloatVector       m_primary_mc_MomentumZ;                         ///< The MC momentum of each primary daughter in the z-direction
@@ -166,6 +170,7 @@ public:
     FloatVector       m_cr_DirectionCosineX;                          ///< The direction cosine of each cosmic ray in the x-direction
     FloatVector       m_cr_DirectionCosineY;                          ///< The direction cosine of each cosmic ray in the y-direction
     FloatVector       m_cr_DirectionCosineZ;                          ///< The direction cosine of each cosmic ray in the z-direction
+    FloatVector       m_cr_Momentum;                                  ///< The momentum of each cosmic ray
     FloatVector       m_cr_MomentumX;                                 ///< The momentum of each cosmic ray in the x-direction
     FloatVector       m_cr_MomentumY;                                 ///< The momentum of each cosmic ray in the y-direction
     FloatVector       m_cr_MomentumZ;                                 ///< The momentum of each cosmic ray in the z-direction
@@ -182,6 +187,7 @@ public:
     FloatVector       m_cr_mc_DirectionCosineX;                       ///< The MC direction cosine of each cosmic ray in the x-direction
     FloatVector       m_cr_mc_DirectionCosineY;                       ///< The MC direction cosine of each cosmic ray in the y-direction
     FloatVector       m_cr_mc_DirectionCosineZ;                       ///< The MC direction cosine of each cosmic ray in the z-direction
+    FloatVector       m_cr_mc_Momentum;                               ///< The MC momentum of each cosmic ray
     FloatVector       m_cr_mc_MomentumX;                              ///< The MC momentum of each cosmic ray in the x-direction
     FloatVector       m_cr_mc_MomentumY;                              ///< The MC momentum of each cosmic ray in the y-direction
     FloatVector       m_cr_mc_MomentumZ;                              ///< The MC momentum of each cosmic ray in the z-direction

@@ -261,6 +261,7 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
     this->m_treeParameters.m_nu_DirectionCosineX            = neutrinoAnalysisParticle.DirectionCosines().GetX();
     this->m_treeParameters.m_nu_DirectionCosineY            = neutrinoAnalysisParticle.DirectionCosines().GetY();
     this->m_treeParameters.m_nu_DirectionCosineZ            = neutrinoAnalysisParticle.DirectionCosines().GetZ();
+    this->m_treeParameters.m_nu_Momentum                    = neutrinoAnalysisParticle.AnalysisMomentum().GetMagnitude();
     this->m_treeParameters.m_nu_MomentumX                   = neutrinoAnalysisParticle.AnalysisMomentum().GetX();
     this->m_treeParameters.m_nu_MomentumY                   = neutrinoAnalysisParticle.AnalysisMomentum().GetY();
     this->m_treeParameters.m_nu_MomentumZ                   = neutrinoAnalysisParticle.AnalysisMomentum().GetZ();
@@ -273,13 +274,9 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
     
     // For other particles, we define the direction cosines by normalizing the momentum vector. In this case, since the neutrino isn't visible,
     // we define the neutrino momentum to be the sum of the momenta of its reconstructed daughters, and its direction to be along z.
-    const CartesianVector zDirectionVector = CartesianVector{0.f, 0.f, 1.f};
-    
-    const float longitudinalEnergy = neutrinoAnalysisParticle.AnalysisMomentum().GetDotProduct(zDirectionVector);
-    this->m_treeParameters.m_nu_LongitudinalEnergy = longitudinalEnergy;
-    
-    const CartesianVector transverseMomentum = neutrinoAnalysisParticle.AnalysisMomentum().GetCrossProduct(zDirectionVector);
-    this->m_treeParameters.m_nu_TransverseEnergy = transverseMomentum.GetMagnitude();
+
+    this->m_treeParameters.m_nu_LongitudinalEnergy = neutrinoAnalysisParticle.AnalysisMomentum().GetZ();
+    this->m_treeParameters.m_nu_TransverseEnergy   = neutrinoAnalysisParticle.AnalysisMomentum().GetCrossProduct(CartesianVector{0.f, 0.f, 1.f}).GetMagnitude();
     
     if (neutrinoAnalysisParticle.HasMcInfo())
     {
@@ -313,6 +310,7 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
     this->m_treeParameters.m_nu_mc_DirectionCosineX = mcDirectionCosines.GetX();
     this->m_treeParameters.m_nu_mc_DirectionCosineY = mcDirectionCosines.GetY();
     this->m_treeParameters.m_nu_mc_DirectionCosineZ = mcDirectionCosines.GetZ();
+    this->m_treeParameters.m_nu_mc_Momentum         = mcMomentum.GetMagnitude();
     this->m_treeParameters.m_nu_mc_MomentumX        = mcMomentum.GetX();
     this->m_treeParameters.m_nu_mc_MomentumY        = mcMomentum.GetY();
     this->m_treeParameters.m_nu_mc_MomentumZ        = mcMomentum.GetZ();
@@ -356,21 +354,17 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
         }
     }
 
-    CartesianVector apparentInitialDirection(0.f, 0.f, 0.f);
+    CartesianVector visibleMomentum(0.f, 0.f, 0.f);
     float visibleEnergy(0.f);
     
     for (const MCParticle *const pMCPrimary : mcPrimarySet)
     {
         const float primaryVisibleEnergy = pMCPrimary->GetEnergy() - PdgTable::GetParticleMass(pMCPrimary->GetParticleId());
         visibleEnergy += primaryVisibleEnergy;
-
-        const CartesianVector &mcPrimaryMomentum(pMCPrimary->GetMomentum());
         
-        if (mcPrimaryMomentum.GetMagnitude() > std::numeric_limits<float>::epsilon())
-            apparentInitialDirection += mcPrimaryMomentum.GetUnitVector() * primaryVisibleEnergy;
+        if (pMCPrimary->GetMomentum().GetMagnitude() > std::numeric_limits<float>::epsilon())
+            visibleMomentum += pMCPrimary->GetMomentum().GetUnitVector() * primaryVisibleEnergy;
     }
-    
-    apparentInitialDirection = apparentInitialDirection.GetUnitVector();
     
     const LArInteractionTypeHelper::InteractionType interactionType = this->GetInteractionType(pMCParticleList, pCaloHitList);
     
@@ -380,11 +374,17 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
     this->m_treeParameters.m_nu_mc_LongitudinalEnergy        = mcMomentum.GetDotProduct(zDirectionVector);
     this->m_treeParameters.m_nu_mc_TransverseEnergy          = mcMomentum.GetCrossProduct(zDirectionVector).GetMagnitude();
     this->m_treeParameters.m_nu_mc_VisibleEnergy             = visibleEnergy;
-    this->m_treeParameters.m_nu_mc_VisibleLongitudinalEnergy = apparentInitialDirection.GetZ() * visibleEnergy;
-    this->m_treeParameters.m_nu_mc_VisibleTransverseEnergy   = apparentInitialDirection.GetCrossProduct(zDirectionVector).GetMagnitude() * visibleEnergy;
+    this->m_treeParameters.m_nu_mc_VisibleLongitudinalEnergy = visibleMomentum.GetDotProduct(zDirectionVector);
+    this->m_treeParameters.m_nu_mc_VisibleTransverseEnergy   = visibleMomentum.GetCrossProduct(zDirectionVector).GetMagnitude();
     this->m_treeParameters.m_nu_mc_InteractionType           = LArInteractionTypeHelper::ToString(interactionType);
     this->m_treeParameters.m_nu_mc_IsChargedCurrent          = this->IsChargedCurrent(interactionType);
-    this->m_treeParameters.m_nu_mc_VisibleEnergyFraction     = visibleEnergy / mcEnergy;
+    
+    float visibleEnergyFraction(0.f);
+    
+    if (mcEnergy > std::numeric_limits<float>::epsilon())
+        visibleEnergyFraction = visibleEnergy / mcEnergy;
+
+    this->m_treeParameters.m_nu_mc_VisibleEnergyFraction = visibleEnergyFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -443,6 +443,7 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
     PUSH_TREE_RECORD(m_primary_DirectionCosineX,            primaryAnalysisParticle.DirectionCosines().GetX());
     PUSH_TREE_RECORD(m_primary_DirectionCosineY,            primaryAnalysisParticle.DirectionCosines().GetY());
     PUSH_TREE_RECORD(m_primary_DirectionCosineZ,            primaryAnalysisParticle.DirectionCosines().GetZ());
+    PUSH_TREE_RECORD(m_primary_Momentum,                    primaryAnalysisParticle.AnalysisMomentum().GetMagnitude());
     PUSH_TREE_RECORD(m_primary_MomentumX,                   primaryAnalysisParticle.AnalysisMomentum().GetX());
     PUSH_TREE_RECORD(m_primary_MomentumY,                   primaryAnalysisParticle.AnalysisMomentum().GetY());
     PUSH_TREE_RECORD(m_primary_MomentumZ,                   primaryAnalysisParticle.AnalysisMomentum().GetZ());
@@ -479,6 +480,7 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
         PUSH_TREE_RECORD(m_primary_mc_DirectionCosineX,         primaryAnalysisParticle.McDirectionCosines().GetX());
         PUSH_TREE_RECORD(m_primary_mc_DirectionCosineY,         primaryAnalysisParticle.McDirectionCosines().GetY());
         PUSH_TREE_RECORD(m_primary_mc_DirectionCosineZ,         primaryAnalysisParticle.McDirectionCosines().GetZ());
+        PUSH_TREE_RECORD(m_primary_mc_Momentum,                 primaryAnalysisParticle.McMomentum().GetMagnitude());
         PUSH_TREE_RECORD(m_primary_mc_MomentumX,                primaryAnalysisParticle.McMomentum().GetX());
         PUSH_TREE_RECORD(m_primary_mc_MomentumY,                primaryAnalysisParticle.McMomentum().GetY());
         PUSH_TREE_RECORD(m_primary_mc_MomentumZ,                primaryAnalysisParticle.McMomentum().GetZ());
@@ -509,6 +511,7 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
         PUSH_TREE_RECORD(m_primary_mc_DirectionCosineX,         0.f);
         PUSH_TREE_RECORD(m_primary_mc_DirectionCosineY,         0.f);
         PUSH_TREE_RECORD(m_primary_mc_DirectionCosineZ,         0.f);
+        PUSH_TREE_RECORD(m_primary_mc_Momentum,                 0.f);
         PUSH_TREE_RECORD(m_primary_mc_MomentumX,                0.f);
         PUSH_TREE_RECORD(m_primary_mc_MomentumY,                0.f);
         PUSH_TREE_RECORD(m_primary_mc_MomentumZ,                0.f);
@@ -553,6 +556,7 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyPrimaryDaughterRecord(const MCPar
     PUSH_TREE_RECORD(m_primary_DirectionCosineX,            0.f);
     PUSH_TREE_RECORD(m_primary_DirectionCosineY,            0.f);
     PUSH_TREE_RECORD(m_primary_DirectionCosineZ,            0.f);
+    PUSH_TREE_RECORD(m_primary_Momentum,                    0.f);
     PUSH_TREE_RECORD(m_primary_MomentumX,                   0.f);
     PUSH_TREE_RECORD(m_primary_MomentumY,                   0.f);
     PUSH_TREE_RECORD(m_primary_MomentumZ,                   0.f);
@@ -582,6 +586,7 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyPrimaryDaughterRecord(const MCPar
     PUSH_TREE_RECORD(m_primary_mc_DirectionCosineX,         mcDirectionCosines.GetX());
     PUSH_TREE_RECORD(m_primary_mc_DirectionCosineY,         mcDirectionCosines.GetY());
     PUSH_TREE_RECORD(m_primary_mc_DirectionCosineZ,         mcDirectionCosines.GetZ());
+    PUSH_TREE_RECORD(m_primary_mc_Momentum,                 mcMomentum.GetMagnitude());
     PUSH_TREE_RECORD(m_primary_mc_MomentumX,                mcMomentum.GetX());
     PUSH_TREE_RECORD(m_primary_mc_MomentumY,                mcMomentum.GetY());
     PUSH_TREE_RECORD(m_primary_mc_MomentumZ,                mcMomentum.GetZ());
@@ -625,6 +630,7 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
     PUSH_TREE_RECORD(m_cr_DirectionCosineX,            cosmicRayAnalysisParticle.DirectionCosines().GetX());
     PUSH_TREE_RECORD(m_cr_DirectionCosineY,            cosmicRayAnalysisParticle.DirectionCosines().GetY());
     PUSH_TREE_RECORD(m_cr_DirectionCosineZ,            cosmicRayAnalysisParticle.DirectionCosines().GetZ());
+    PUSH_TREE_RECORD(m_cr_Momentum,                    cosmicRayAnalysisParticle.AnalysisMomentum().GetMagnitude());
     PUSH_TREE_RECORD(m_cr_MomentumX,                   cosmicRayAnalysisParticle.AnalysisMomentum().GetX());
     PUSH_TREE_RECORD(m_cr_MomentumY,                   cosmicRayAnalysisParticle.AnalysisMomentum().GetY());
     PUSH_TREE_RECORD(m_cr_MomentumZ,                   cosmicRayAnalysisParticle.AnalysisMomentum().GetZ());
@@ -657,6 +663,7 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
         PUSH_TREE_RECORD(m_cr_mc_DirectionCosineX,         cosmicRayAnalysisParticle.McDirectionCosines().GetX());
         PUSH_TREE_RECORD(m_cr_mc_DirectionCosineY,         cosmicRayAnalysisParticle.McDirectionCosines().GetY());
         PUSH_TREE_RECORD(m_cr_mc_DirectionCosineZ,         cosmicRayAnalysisParticle.McDirectionCosines().GetZ());
+        PUSH_TREE_RECORD(m_cr_mc_Momentum,                 cosmicRayAnalysisParticle.McMomentum().GetMagnitude());
         PUSH_TREE_RECORD(m_cr_mc_MomentumX,                cosmicRayAnalysisParticle.McMomentum().GetX());
         PUSH_TREE_RECORD(m_cr_mc_MomentumY,                cosmicRayAnalysisParticle.McMomentum().GetY());
         PUSH_TREE_RECORD(m_cr_mc_MomentumZ,                cosmicRayAnalysisParticle.McMomentum().GetZ());
@@ -687,6 +694,7 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
         PUSH_TREE_RECORD(m_cr_mc_DirectionCosineX,         0.f);
         PUSH_TREE_RECORD(m_cr_mc_DirectionCosineY,         0.f);
         PUSH_TREE_RECORD(m_cr_mc_DirectionCosineZ,         0.f);
+        PUSH_TREE_RECORD(m_cr_mc_Momentum,                 0.f);
         PUSH_TREE_RECORD(m_cr_mc_MomentumX,                0.f);
         PUSH_TREE_RECORD(m_cr_mc_MomentumY,                0.f);
         PUSH_TREE_RECORD(m_cr_mc_MomentumZ,                0.f);
@@ -733,6 +741,7 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyCosmicRayRecord(const MCParticle 
     PUSH_TREE_RECORD(m_cr_DirectionCosineX,            0.f);
     PUSH_TREE_RECORD(m_cr_DirectionCosineY,            0.f);
     PUSH_TREE_RECORD(m_cr_DirectionCosineZ,            0.f);
+    PUSH_TREE_RECORD(m_cr_Momentum,                    0.f);
     PUSH_TREE_RECORD(m_cr_MomentumX,                   0.f);
     PUSH_TREE_RECORD(m_cr_MomentumY,                   0.f);
     PUSH_TREE_RECORD(m_cr_MomentumZ,                   0.f);
@@ -758,6 +767,7 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyCosmicRayRecord(const MCParticle 
     PUSH_TREE_RECORD(m_cr_mc_DirectionCosineX,         mcDirectionCosines.GetX());
     PUSH_TREE_RECORD(m_cr_mc_DirectionCosineY,         mcDirectionCosines.GetY());
     PUSH_TREE_RECORD(m_cr_mc_DirectionCosineZ,         mcDirectionCosines.GetZ());
+    PUSH_TREE_RECORD(m_cr_mc_Momentum,                 mcMomentum.GetMagnitude());
     PUSH_TREE_RECORD(m_cr_mc_MomentumX,                mcMomentum.GetX());
     PUSH_TREE_RECORD(m_cr_mc_MomentumY,                mcMomentum.GetY());
     PUSH_TREE_RECORD(m_cr_mc_MomentumZ,                mcMomentum.GetZ());
@@ -803,6 +813,7 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
     std::cout << nuLabel << "Dir cosine x:                     " << this->m_treeParameters.m_nu_DirectionCosineX << '\n';
     std::cout << nuLabel << "Dir cosine y:                     " << this->m_treeParameters.m_nu_DirectionCosineY << '\n';
     std::cout << nuLabel << "Dir cosine z:                     " << this->m_treeParameters.m_nu_DirectionCosineZ << '\n';
+    std::cout << nuLabel << "Momentum:                         " << 1000.f * this->m_treeParameters.m_nu_Momentum << " MeV/c\n";
     std::cout << nuLabel << "Momentum x:                       " << 1000.f * this->m_treeParameters.m_nu_MomentumX << " MeV/c\n";
     std::cout << nuLabel << "Momentum y:                       " << 1000.f * this->m_treeParameters.m_nu_MomentumY << " MeV/c\n";
     std::cout << nuLabel << "Momentum z:                       " << 1000.f * this->m_treeParameters.m_nu_MomentumZ << " MeV/c\n";
@@ -823,6 +834,7 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
     std::cout << nuLabel << "MC dir cosine x:                  " << this->m_treeParameters.m_nu_mc_DirectionCosineX << '\n';
     std::cout << nuLabel << "MC dir cosine y:                  " << this->m_treeParameters.m_nu_mc_DirectionCosineY << '\n';
     std::cout << nuLabel << "MC dir cosine z:                  " << this->m_treeParameters.m_nu_mc_DirectionCosineZ << '\n';
+    std::cout << nuLabel << "MC momentum:                      " << 1000.f * this->m_treeParameters.m_nu_mc_Momentum << " MeV/c\n";
     std::cout << nuLabel << "MC momentum x:                    " << 1000.f * this->m_treeParameters.m_nu_mc_MomentumX << " MeV/c\n";
     std::cout << nuLabel << "MC momentum y:                    " << 1000.f * this->m_treeParameters.m_nu_mc_MomentumY << " MeV/c\n";
     std::cout << nuLabel << "MC momentum z:                    " << 1000.f * this->m_treeParameters.m_nu_mc_MomentumZ << " MeV/c\n";
@@ -862,6 +874,7 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         std::cout << label << "Dir cosine x:                     " << this->m_treeParameters.m_primary_DirectionCosineX.at(i) << '\n';
         std::cout << label << "Dir cosine y:                     " << this->m_treeParameters.m_primary_DirectionCosineY.at(i) << '\n';
         std::cout << label << "Dir cosine z:                     " << this->m_treeParameters.m_primary_DirectionCosineZ.at(i) << '\n';
+        std::cout << label << "Momentum:                         " << 1000.f * this->m_treeParameters.m_primary_Momentum.at(i) << " MeV/c\n";
         std::cout << label << "Momentum x:                       " << 1000.f * this->m_treeParameters.m_primary_MomentumX.at(i) << " MeV/c\n";
         std::cout << label << "Momentum y:                       " << 1000.f * this->m_treeParameters.m_primary_MomentumY.at(i) << " MeV/c\n";
         std::cout << label << "Momentum z:                       " << 1000.f * this->m_treeParameters.m_primary_MomentumZ.at(i) << " MeV/c\n";
@@ -882,6 +895,7 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         std::cout << label << "MC dir cosine x:                  " << this->m_treeParameters.m_primary_mc_DirectionCosineX.at(i) << '\n';
         std::cout << label << "MC dir cosine y:                  " << this->m_treeParameters.m_primary_mc_DirectionCosineY.at(i) << '\n';
         std::cout << label << "MC dir cosine z:                  " << this->m_treeParameters.m_primary_mc_DirectionCosineZ.at(i) << '\n';
+        std::cout << label << "MC momentum:                      " << 1000.f * this->m_treeParameters.m_primary_mc_Momentum.at(i) << " MeV/c\n";
         std::cout << label << "MC momentum x:                    " << 1000.f * this->m_treeParameters.m_primary_mc_MomentumX.at(i) << " MeV/c\n";
         std::cout << label << "MC momentum y:                    " << 1000.f * this->m_treeParameters.m_primary_mc_MomentumY.at(i) << " MeV/c\n";
         std::cout << label << "MC momentum z:                    " << 1000.f * this->m_treeParameters.m_primary_mc_MomentumZ.at(i) << " MeV/c\n";
@@ -924,6 +938,7 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         std::cout << label << "Dir cosine x:                     " << this->m_treeParameters.m_cr_DirectionCosineX.at(i) << '\n';
         std::cout << label << "Dir cosine y:                     " << this->m_treeParameters.m_cr_DirectionCosineY.at(i) << '\n';
         std::cout << label << "Dir cosine z:                     " << this->m_treeParameters.m_cr_DirectionCosineZ.at(i) << '\n';
+        std::cout << label << "Momentum:                         " << 1000.f * this->m_treeParameters.m_cr_Momentum.at(i) << " MeV/c\n";
         std::cout << label << "Momentum x:                       " << 1000.f * this->m_treeParameters.m_cr_MomentumX.at(i) << " MeV/c\n";
         std::cout << label << "Momentum y:                       " << 1000.f * this->m_treeParameters.m_cr_MomentumY.at(i) << " MeV/c\n";
         std::cout << label << "Momentum z:                       " << 1000.f * this->m_treeParameters.m_cr_MomentumZ.at(i) << " MeV/c\n";
@@ -940,6 +955,7 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         std::cout << label << "MC dir cosine x:                  " << this->m_treeParameters.m_cr_mc_DirectionCosineX.at(i) << '\n';
         std::cout << label << "MC dir cosine y:                  " << this->m_treeParameters.m_cr_mc_DirectionCosineY.at(i) << '\n';
         std::cout << label << "MC dir cosine z:                  " << this->m_treeParameters.m_cr_mc_DirectionCosineZ.at(i) << '\n';
+        std::cout << label << "MC momentum:                      " << 1000.f * this->m_treeParameters.m_cr_mc_Momentum.at(i) << " MeV/c\n";
         std::cout << label << "MC momentum x:                    " << 1000.f * this->m_treeParameters.m_cr_mc_MomentumX.at(i) << " MeV/c\n";
         std::cout << label << "MC momentum y:                    " << 1000.f * this->m_treeParameters.m_cr_mc_MomentumY.at(i) << " MeV/c\n";
         std::cout << label << "MC momentum z:                    " << 1000.f * this->m_treeParameters.m_cr_mc_MomentumZ.at(i) << " MeV/c\n";
@@ -1089,6 +1105,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     this->m_pOutputTree->Branch("nu_DirectionCosineX",                 &this->m_treeParameters.m_nu_DirectionCosineX);
     this->m_pOutputTree->Branch("nu_DirectionCosineY",                 &this->m_treeParameters.m_nu_DirectionCosineY);
     this->m_pOutputTree->Branch("nu_DirectionCosineZ",                 &this->m_treeParameters.m_nu_DirectionCosineZ);
+    this->m_pOutputTree->Branch("nu_Momentum",                         &this->m_treeParameters.m_nu_Momentum);
     this->m_pOutputTree->Branch("nu_MomentumX",                        &this->m_treeParameters.m_nu_MomentumX);
     this->m_pOutputTree->Branch("nu_MomentumY",                        &this->m_treeParameters.m_nu_MomentumY);
     this->m_pOutputTree->Branch("nu_MomentumZ",                        &this->m_treeParameters.m_nu_MomentumZ);
@@ -1109,6 +1126,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     this->m_pOutputTree->Branch("nu_mc_DirectionCosineX",              &this->m_treeParameters.m_nu_mc_DirectionCosineX);
     this->m_pOutputTree->Branch("nu_mc_DirectionCosineY",              &this->m_treeParameters.m_nu_mc_DirectionCosineY);
     this->m_pOutputTree->Branch("nu_mc_DirectionCosineZ",              &this->m_treeParameters.m_nu_mc_DirectionCosineZ);
+    this->m_pOutputTree->Branch("nu_mc_Momentum",                      &this->m_treeParameters.m_nu_mc_Momentum);
     this->m_pOutputTree->Branch("nu_mc_MomentumX",                     &this->m_treeParameters.m_nu_mc_MomentumX);
     this->m_pOutputTree->Branch("nu_mc_MomentumY",                     &this->m_treeParameters.m_nu_mc_MomentumY);
     this->m_pOutputTree->Branch("nu_mc_MomentumZ",                     &this->m_treeParameters.m_nu_mc_MomentumZ);
@@ -1145,6 +1163,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     this->m_pOutputTree->Branch("primary_DirectionCosineX",            &this->m_treeParameters.m_primary_DirectionCosineX);
     this->m_pOutputTree->Branch("primary_DirectionCosineY",            &this->m_treeParameters.m_primary_DirectionCosineY);
     this->m_pOutputTree->Branch("primary_DirectionCosineZ",            &this->m_treeParameters.m_primary_DirectionCosineZ);
+    this->m_pOutputTree->Branch("primary_Momentum",                    &this->m_treeParameters.m_primary_Momentum);
     this->m_pOutputTree->Branch("primary_MomentumX",                   &this->m_treeParameters.m_primary_MomentumX);
     this->m_pOutputTree->Branch("primary_MomentumY",                   &this->m_treeParameters.m_primary_MomentumY);
     this->m_pOutputTree->Branch("primary_MomentumZ",                   &this->m_treeParameters.m_primary_MomentumZ);
@@ -1165,6 +1184,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     this->m_pOutputTree->Branch("primary_mc_DirectionCosineX",         &this->m_treeParameters.m_primary_mc_DirectionCosineX);
     this->m_pOutputTree->Branch("primary_mc_DirectionCosineY",         &this->m_treeParameters.m_primary_mc_DirectionCosineY);
     this->m_pOutputTree->Branch("primary_mc_DirectionCosineZ",         &this->m_treeParameters.m_primary_mc_DirectionCosineZ);
+    this->m_pOutputTree->Branch("primary_mc_Momentum",                 &this->m_treeParameters.m_primary_mc_Momentum);
     this->m_pOutputTree->Branch("primary_mc_MomentumX",                &this->m_treeParameters.m_primary_mc_MomentumX);
     this->m_pOutputTree->Branch("primary_mc_MomentumY",                &this->m_treeParameters.m_primary_mc_MomentumY);
     this->m_pOutputTree->Branch("primary_mc_MomentumZ",                &this->m_treeParameters.m_primary_mc_MomentumZ);
@@ -1202,6 +1222,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     this->m_pOutputTree->Branch("cr_DirectionCosineX",                 &this->m_treeParameters.m_cr_DirectionCosineX);
     this->m_pOutputTree->Branch("cr_DirectionCosineY",                 &this->m_treeParameters.m_cr_DirectionCosineY);
     this->m_pOutputTree->Branch("cr_DirectionCosineZ",                 &this->m_treeParameters.m_cr_DirectionCosineZ);
+    this->m_pOutputTree->Branch("cr_Momentum",                         &this->m_treeParameters.m_cr_Momentum);
     this->m_pOutputTree->Branch("cr_MomentumX",                        &this->m_treeParameters.m_cr_MomentumX);
     this->m_pOutputTree->Branch("cr_MomentumY",                        &this->m_treeParameters.m_cr_MomentumY);
     this->m_pOutputTree->Branch("cr_MomentumZ",                        &this->m_treeParameters.m_cr_MomentumZ);
@@ -1218,6 +1239,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     this->m_pOutputTree->Branch("cr_mc_DirectionCosineX",              &this->m_treeParameters.m_cr_mc_DirectionCosineX);
     this->m_pOutputTree->Branch("cr_mc_DirectionCosineY",              &this->m_treeParameters.m_cr_mc_DirectionCosineY);
     this->m_pOutputTree->Branch("cr_mc_DirectionCosineZ",              &this->m_treeParameters.m_cr_mc_DirectionCosineZ);
+    this->m_pOutputTree->Branch("cr_mc_Momentum",                      &this->m_treeParameters.m_cr_mc_Momentum);
     this->m_pOutputTree->Branch("cr_mc_MomentumX",                     &this->m_treeParameters.m_cr_mc_MomentumX);
     this->m_pOutputTree->Branch("cr_mc_MomentumY",                     &this->m_treeParameters.m_cr_mc_MomentumY);
     this->m_pOutputTree->Branch("cr_mc_MomentumZ",                     &this->m_treeParameters.m_cr_mc_MomentumZ);
@@ -1262,6 +1284,7 @@ TreeParameters::TreeParameters() noexcept :
     m_nu_DirectionCosineX(0.f),
     m_nu_DirectionCosineY(0.f),
     m_nu_DirectionCosineZ(0.f),
+    m_nu_Momentum(0.f),
     m_nu_MomentumX(0.f),
     m_nu_MomentumY(0.f),
     m_nu_MomentumZ(0.f),
@@ -1282,6 +1305,7 @@ TreeParameters::TreeParameters() noexcept :
     m_nu_mc_DirectionCosineX(0.f),
     m_nu_mc_DirectionCosineY(0.f),
     m_nu_mc_DirectionCosineZ(0.f),
+    m_nu_mc_Momentum(0.f),
     m_nu_mc_MomentumX(0.f),
     m_nu_mc_MomentumY(0.f),
     m_nu_mc_MomentumZ(0.f),
@@ -1315,6 +1339,7 @@ TreeParameters::TreeParameters() noexcept :
     m_primary_DirectionCosineX(),
     m_primary_DirectionCosineY(),
     m_primary_DirectionCosineZ(),
+    m_primary_Momentum(),
     m_primary_MomentumX(),
     m_primary_MomentumY(),
     m_primary_MomentumZ(),
@@ -1335,6 +1360,7 @@ TreeParameters::TreeParameters() noexcept :
     m_primary_mc_DirectionCosineX(),
     m_primary_mc_DirectionCosineY(),
     m_primary_mc_DirectionCosineZ(),
+    m_primary_mc_Momentum(),
     m_primary_mc_MomentumX(),
     m_primary_mc_MomentumY(),
     m_primary_mc_MomentumZ(),
@@ -1370,6 +1396,7 @@ TreeParameters::TreeParameters() noexcept :
     m_cr_DirectionCosineX(),
     m_cr_DirectionCosineY(),
     m_cr_DirectionCosineZ(),
+    m_cr_Momentum(),
     m_cr_MomentumX(),
     m_cr_MomentumY(),
     m_cr_MomentumZ(),
@@ -1386,6 +1413,7 @@ TreeParameters::TreeParameters() noexcept :
     m_cr_mc_DirectionCosineX(),
     m_cr_mc_DirectionCosineY(),
     m_cr_mc_DirectionCosineZ(),
+    m_cr_mc_Momentum(),
     m_cr_mc_MomentumX(),
     m_cr_mc_MomentumY(),
     m_cr_mc_MomentumZ(),
