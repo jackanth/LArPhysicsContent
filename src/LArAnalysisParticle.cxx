@@ -45,6 +45,8 @@ LArAnalysisParticle::LArAnalysisParticle(const LArAnalysisParticleParameters &pa
     m_mcPdgCode(parameters.m_mcPdgCode),
     m_mcHitPurity(parameters.m_mcHitPurity),
     m_mcHitCompleteness(parameters.m_mcHitCompleteness),
+    m_mcCollectionPlaneHitPurity(parameters.m_mcCollectionPlaneHitPurity),
+    m_mcCollectionPlaneHitCompleteness(parameters.m_mcCollectionPlaneHitCompleteness),
     m_pMcMainMCParticle(parameters.m_pMcMainMCParticle)
 {
 }
@@ -97,6 +99,8 @@ void LArAnalysisParticle::Print() const
               << "    - MC PDG code:               " << this->m_mcPdgCode << "\n"
               << "    - MC hit purity:             " << 100.f * this->m_mcHitPurity << "%\n"
               << "    - MC hit completeness:       " << 100.f * this->m_mcHitCompleteness << "%\n"
+              << "    - MC hit purity (W):         " << 100.f * this->m_mcCollectionPlaneHitPurity << "%\n"
+              << "    - MC hit completeness (W):   " << 100.f * this->m_mcCollectionPlaneHitCompleteness << "%\n"
               << "    - MC main MC particle at:    " << this->m_pMcMainMCParticle
               << std::endl;
     }
@@ -212,6 +216,8 @@ LArAnalysisParticleParameters::LArAnalysisParticleParameters() noexcept :
     m_mcPdgCode(0),
     m_mcHitPurity(0.f),
     m_mcHitCompleteness(0.f),
+    m_mcCollectionPlaneHitPurity(0.f),
+    m_mcCollectionPlaneHitCompleteness(0.f),
     m_pMcMainMCParticle(nullptr)
 {
 }

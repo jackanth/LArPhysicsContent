@@ -58,9 +58,12 @@ private:
     bool          m_produceEnergyFromRangeData;          ///< 
     bool          m_producePidData;                      ///< 
     std::string   m_pfoListName;                         ///<
-    float         m_fiducialCutXMargin;                  ///< 
-    float         m_fiducialCutYMargin;                  ///< 
-    float         m_fiducialCutZMargin;                  ///< 
+    float         m_fiducialCutLowXMargin;                 ///< 
+    float         m_fiducialCutHighXMargin;                 ///< 
+    float         m_fiducialCutLowYMargin;                 ///< 
+    float         m_fiducialCutHighYMargin;                 ///< 
+    float         m_fiducialCutLowZMargin;                 ///< 
+    float         m_fiducialCutHighZMargin;                 ///< 
     unsigned int  m_trackSlidingFitWindow;               ///< 
     std::string   m_rootDataFileName;                    ///<
     TFile        *m_pRootDataFile;                       ///<

@@ -352,6 +352,22 @@ public:
     float McHitCompleteness() const;
     
     /**
+     *  @brief  Get the MC hit purity in the collection plane
+     * 
+     *  @return the MC hit purity
+     * 
+     */
+    float McCollectionPlaneHitPurity() const;
+    
+    /**
+     *  @brief  Get the MC hit completeness in the collection plane
+     * 
+     *  @return the MC hit completeness
+     * 
+     */
+    float McCollectionPlaneHitCompleteness() const;
+    
+    /**
      *  @brief  Get the address of the main MC particle
      * 
      *  @return the address of the MC particle
@@ -416,6 +432,8 @@ private:
     int                m_mcPdgCode;                                ///< The PDG code of the particle (MC quantity)
     float              m_mcHitPurity;                              ///< The hit number purity (MC quantity)
     float              m_mcHitCompleteness;                        ///< The hit number completeness (MC quantity)
+    float              m_mcCollectionPlaneHitPurity;               ///< The hit number purity in the collection plane (MC quantity)
+    float              m_mcCollectionPlaneHitCompleteness;         ///< The hit number completeness in the collection plane (MC quantity)
     const MCParticle * m_pMcMainMCParticle;                        ///< Address of the main MC particle (MC quantity)
     
     /**
@@ -475,6 +493,8 @@ public:
     int                              m_mcPdgCode;     
     float                            m_mcHitPurity;
     float                            m_mcHitCompleteness;
+    float                            m_mcCollectionPlaneHitPurity;
+    float                            m_mcCollectionPlaneHitCompleteness;
     const MCParticle *               m_pMcMainMCParticle;                  
 };
 
@@ -739,6 +759,22 @@ inline float LArAnalysisParticle::McHitCompleteness() const
 {
     ThrowIfNoMcInfo(); 
     return this->m_mcHitCompleteness;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisParticle::McCollectionPlaneHitPurity() const
+{
+    ThrowIfNoMcInfo(); 
+    return this->m_mcCollectionPlaneHitPurity;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisParticle::McCollectionPlaneHitCompleteness() const
+{
+    ThrowIfNoMcInfo(); 
+    return this->m_mcCollectionPlaneHitCompleteness;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

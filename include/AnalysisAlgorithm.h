@@ -68,9 +68,12 @@ private:
     using EnergyFromRangeDataVector = std::vector<EnergyFromRangeData>;
     
     std::string   m_mcParticleListName;
-    float         m_fiducialCutXMargin;                 ///< 
-    float         m_fiducialCutYMargin;                 ///< 
-    float         m_fiducialCutZMargin;                 ///< 
+    float         m_fiducialCutLowXMargin;                 ///< 
+    float         m_fiducialCutHighXMargin;                 ///< 
+    float         m_fiducialCutLowYMargin;                 ///< 
+    float         m_fiducialCutHighYMargin;                 ///< 
+    float         m_fiducialCutLowZMargin;                 ///< 
+    float         m_fiducialCutHighZMargin;                 ///< 
     unsigned int  m_trackSlidingFitWindow;              ///< 
     TFile        *m_pLArAnalysisParticleFile;              ///<
     TNtuple      *m_pLArAnalysisParticleNtuple;            ///< 
@@ -196,14 +199,20 @@ private:
      */
     bool GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree, 
         LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode, const bool isNeutrino,
-        float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle, float &mcHitPurity, float &mcHitCompleteness) const;
+        float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle, float &mcHitPurity, float &mcHitCompleteness,
+        float &mcCollectionPlaneHitPurity, float &mcCollectionPlaneHitCompleteness) const;
     
     /**
      *  @brief ...
      * 
      */
     void CalculateHitPurityAndCompleteness(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle, 
-        const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness) const;
+        const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, float &mcCollectionPlaneHitPurity,
+        float &mcCollectionPlaneHitCompleteness) const;
+    
+    void CalculateHitPurityAndCompleteness(const CaloHitList &pfoAssociatedCaloHits, const MCParticle *const pMCParticle, 
+        const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, 
+        const bool useCollectionPlaneOnly) const;
     
     /**
      *  @brief ...

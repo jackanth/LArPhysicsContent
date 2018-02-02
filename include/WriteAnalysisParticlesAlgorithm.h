@@ -59,6 +59,7 @@ public:
     float             m_nu_MomentumX;                                 ///< The momentum of the neutrino in the x-direction
     float             m_nu_MomentumY;                                 ///< The momentum of the neutrino in the y-direction
     float             m_nu_MomentumZ;                                 ///< The momentum of the neutrino in the z-direction
+    std::string       m_nu_TypeTree;                                  ///< The neutrino type tree
     unsigned          m_nu_NumberOf3dHits;                            ///< The number of 3D hits in the neutrino
     unsigned          m_nu_NumberOfCollectionPlaneHits;               ///< The number of collection-plane hits in the neutrino
     unsigned          m_nu_NumberOfDownstreamParticles;               ///< The number of particles downstream of the neutrino
@@ -81,12 +82,15 @@ public:
     bool              m_nu_mc_IsVertexFiducial;                       ///< Whether the neutrino vertex is fiducial (MC quantity)
     bool              m_nu_mc_IsContained;                            ///< Whether the neutrino is contained (MC quantity)
     float             m_nu_mc_ContainmentFraction;                    ///< The fraction of the neutrino that is contained (MC quantity)
-    int               m_nu_mc_InteractionType;                        ///< The neutrino interaction type (MC quantity)
+    std::string       m_nu_mc_TypeTree;                               ///< The neutrino's MC type tree
+    std::string       m_nu_mc_InteractionType;                        ///< The neutrino interaction type (MC quantity)
     bool              m_nu_mc_IsChargedCurrent;                       ///< Whether the interaction is charged-current (MC quantity)
     float             m_nu_mc_VisibleEnergyFraction;                  ///< The fraction of the neutrino's energy that is visible (MC quantity)
     int               m_nu_mc_PdgCode;                                ///< The neutrino's PDG code (MC quantity)
     float             m_nu_mc_HitPurity;                              ///< The neutrino's hit number purity (MC quantity)
     float             m_nu_mc_HitCompleteness;                        ///< The neutrino's hit number completeness (MC quantity)
+    float             m_nu_mc_CollectionPlaneHitPurity;               ///< The neutrino's hit number purity in the collection plane (MC quantity)
+    float             m_nu_mc_CollectionPlaneHitCompleteness;         ///< The neutrino's hit number completeness in the collection plane (MC quantity)
                                                                       
     unsigned          m_primary_Number;                               ///< The number of primary daughters
     BoolVector        m_primary_WasReconstructed;                     ///< Whether each primary daughter has been reconstructed
@@ -109,6 +113,7 @@ public:
     FloatVector       m_primary_MomentumX;                            ///< The momentum of each primary daughter in the x-direction
     FloatVector       m_primary_MomentumY;                            ///< The momentum of each primary daughter in the y-direction
     FloatVector       m_primary_MomentumZ;                            ///< The momentum of each primary daughter in the z-direction
+    StringVector      m_primary_TypeTree;                             ///< The type tree of each primary daughter
     BoolVector        m_primary_IsShower;                             ///< Whether each primary daughter is a shower
     BoolVector        m_primary_IsTrack;                              ///< Whether each primary daughter is a track
     BoolVector        m_primary_IsProton;                             ///< Whether each primary daughter is a proton
@@ -131,6 +136,7 @@ public:
     BoolVector        m_primary_mc_IsVertexFiducial;                  ///< Whether each primary daughter's vertex is fiducial (MC quantity)
     BoolVector        m_primary_mc_IsContained;                       ///< Whether each primary daughter is contained (MC quantity)
     FloatVector       m_primary_mc_ContainmentFraction;               ///< The fraction of the primary that is contained (MC quantity)
+    StringVector      m_primary_mc_TypeTree;                          ///< The MC type tree for each primary daughter
     BoolVector        m_primary_mc_IsShower;                          ///< Whether each primary daughter is a shower (MC quantity)
     BoolVector        m_primary_mc_IsTrack;                           ///< Whether each primary daughter is a track (MC quantity)
     BoolVector        m_primary_mc_IsProton;                          ///< Whether each primary daughter is a proton (MC quantity)
@@ -139,7 +145,9 @@ public:
     IntVector         m_primary_mc_PdgCode;                           ///< The primary daughter's PDG code (MC quantity)
     FloatVector       m_primary_mc_HitPurity;                         ///< The primary daughter's hit number purity (MC quantity)
     FloatVector       m_primary_mc_HitCompleteness;                   ///< The primary daughter's hit number completeness (MC quantity)
-                                                                      
+    FloatVector       m_primary_mc_CollectionPlaneHitPurity;          ///< The primary daughter's hit number purity in the collection plane (MC quantity)
+    FloatVector       m_primary_mc_CollectionPlaneHitCompleteness;    ///< The primary daughter's hit number completeness in the collection plane (MC quantity)
+                                                                  
     unsigned          m_cr_Number;                                    ///< The number of cosmic rays
     BoolVector        m_cr_WasReconstructed;                          ///< Whether each cosmic ray has been reconstructed
     BoolVector        m_cr_IsVertexFiducial;                          ///< Whether each cosmic ray's vertex is fiducial
@@ -161,6 +169,7 @@ public:
     FloatVector       m_cr_MomentumX;                                 ///< The momentum of each cosmic ray in the x-direction
     FloatVector       m_cr_MomentumY;                                 ///< The momentum of each cosmic ray in the y-direction
     FloatVector       m_cr_MomentumZ;                                 ///< The momentum of each cosmic ray in the z-direction
+    StringVector      m_cr_TypeTree;                                  ///< The type tree of each cosmic ray
     UnsignedVector    m_cr_NumberOf3dHits;                            ///< The number of 3D hits in each cosmic ray
     UnsignedVector    m_cr_NumberOfCollectionPlaneHits;               ///< The number of collection-plane hits in each cosmic ray
     UnsignedVector    m_cr_NumberOfDownstreamParticles;               ///< The number of particles downstream of each cosmic ray
@@ -179,14 +188,17 @@ public:
     BoolVector        m_cr_mc_IsVertexFiducial;                       ///< Whether each cosmic ray's vertex is fiducial (MC quantity)
     BoolVector        m_cr_mc_IsContained;                            ///< Whether each cosmic ray is contained (MC quantity)
     FloatVector       m_cr_mc_ContainmentFraction;                    ///< The fraction of the CR that is contained (MC quantity)
-    BoolVector        m_cr_mc_IsShower;                          ///< Whether each cosmic ray is a shower (MC quantity)
-    BoolVector        m_cr_mc_IsTrack;                           ///< Whether each cosmic ray is a track (MC quantity)
-    BoolVector        m_cr_mc_IsProton;                          ///< Whether each cosmic ray is a proton (MC quantity)
-    BoolVector        m_cr_mc_IsPionOrMuon;                      ///< Whether each cosmic ray is a pion or muon (MC quantity)
-    BoolVector        m_cr_mc_IsCosmicRay;                       ///< Whether each cosmic ray is a cosmic ray (MC quantity)
-    IntVector         m_cr_mc_PdgCode;                           ///< The cosmic ray's PDG code (MC quantity)
+    StringVector      m_cr_mc_TypeTree;                               ///< The MC type tree for each cosmic ray
+    BoolVector        m_cr_mc_IsShower;                               ///< Whether each cosmic ray is a shower (MC quantity)
+    BoolVector        m_cr_mc_IsTrack;                                ///< Whether each cosmic ray is a track (MC quantity)
+    BoolVector        m_cr_mc_IsProton;                               ///< Whether each cosmic ray is a proton (MC quantity)
+    BoolVector        m_cr_mc_IsPionOrMuon;                           ///< Whether each cosmic ray is a pion or muon (MC quantity)
+    BoolVector        m_cr_mc_IsCosmicRay;                            ///< Whether each cosmic ray is a cosmic ray (MC quantity)
+    IntVector         m_cr_mc_PdgCode;                                ///< The cosmic ray's PDG code (MC quantity)
     FloatVector       m_cr_mc_HitPurity;                              ///< The cosmic ray's hit number purity (MC quantity)
     FloatVector       m_cr_mc_HitCompleteness;                        ///< The cosmic ray's hit number completeness (MC quantity)
+    FloatVector       m_cr_mc_CollectionPlaneHitPurity;               ///< The cosmic ray's hit number purity in the collection plane (MC quantity)
+    FloatVector       m_cr_mc_CollectionPlaneHitCompleteness;         ///< The cosmic ray's hit number completeness in the collection plane (MC quantity)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -231,7 +243,8 @@ private:
     void PopulateNeutrinoMcParameters(const MCParticle *const pMainMcParticle, const float mcEnergy, const CartesianVector &mcVertexPosition, 
         const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, 
         const float mcContainmentFraction, const int mcPdgCode, const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
-        const float mcHitPurity, const float mcHitCompleteness) const;
+        const float mcHitPurity, const float mcHitCompleteness, const float mcCollectionPlaneHitPurity, 
+        const float mcCollectionPlaneHitCompleteness, const LArAnalysisParticle::TypeTree mcTypeTree) const;
     
     /**
      *  @brief  ...
@@ -252,7 +265,7 @@ private:
     void AddMcOnlyPrimaryDaughterRecord(const MCParticle *const pMainMcParticle, const float mcEnergy, 
         const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum,
         const bool mcIsVertexFiducial, const float mcContainmentFraction, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, 
-        const int mcPdgCode) const;
+        const int mcPdgCode, const LArAnalysisParticle::TypeTree mcTypeTree) const;
         
     /**
      *  @brief  Add a cosmic ray record to the tree parameters
@@ -266,7 +279,8 @@ private:
      */
     void AddMcOnlyCosmicRayRecord(const MCParticle *const pMainMcParticle, const float mcEnergy, const CartesianVector &mcVertexPosition,
         const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, 
-        const float mcContainmentFraction, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, const int mcPdgCode) const;
+        const float mcContainmentFraction, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, const int mcPdgCode,
+        const LArAnalysisParticle::TypeTree mcTypeTree) const;
     
     /**
      *  @brief  Dump the tree parameters
@@ -290,13 +304,18 @@ private:
     mutable TreeParameters    m_treeParameters;    ///< The tree parameters
     std::string               m_mcParticleListName; ///< ...
     std::string               m_caloHitListName; ///< ...
-    float         m_fiducialCutXMargin;                 ///< 
-    float         m_fiducialCutYMargin;                 ///< 
-    float         m_fiducialCutZMargin;                 ///< 
+    float         m_fiducialCutLowXMargin;                 ///< 
+    float         m_fiducialCutHighXMargin;                 ///< 
+    float         m_fiducialCutLowYMargin;                 ///< 
+    float         m_fiducialCutHighYMargin;                 ///< 
+    float         m_fiducialCutLowZMargin;                 ///< 
+    float         m_fiducialCutHighZMargin;                 ///< 
     CartesianVector m_minCoordinates;
     CartesianVector m_maxCoordinates;
     float m_mcContainmentFractionLowerBound;
     float m_fiducialHitFractionLowerBound;
+    float m_mcOnlyParticleContainmentCut;
+    float m_mcOnlyParticleEnergyCut;
 };
 
 } // namespace lar_physics_content

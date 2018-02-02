@@ -40,8 +40,10 @@ public:
      *  @brief  ...
      * 
      */
-    static void GetFiducialCutParameters(const Pandora &pandoraInstance, const float fiducialCutXMargin, const float fiducialCutYMargin, const float fiducialCutZMargin,
-        CartesianVector &minCoordinates, CartesianVector &maxCoordinates);
+    static void GetFiducialCutParameters(const Pandora &pandoraInstance, const float fiducialCutLowXMargin, 
+        const float fiducialCutHighXMargin, const float fiducialCutLowYMargin, const float fiducialCutHighYMargin,
+        const float fiducialCutLowZMargin, const float fiducialCutHighZMargin, CartesianVector &minCoordinates, 
+        CartesianVector &maxCoordinates);
     
     /**
      *  @brief  ...
@@ -99,7 +101,7 @@ public:
      *  @brief ...
      * 
      */
-    static float GetFractionOfFiducialHits(const Pandora &pandora, const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
+    static float GetFractionOfFiducialHits(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
         const CartesianVector &maxCoordinates);
         
     /**
@@ -208,20 +210,13 @@ private:
      *  @brief ...
      * 
      */
-    static LArAnalysisParticle::TypeTree CreateMcTypeTree(const MCParticle *const pMCParticle);
+    static bool CreateMcTypeTree(const MCParticle *const pMCParticle, LArAnalysisParticle::TypeTree &typeTree);
     
     /**
      *  @brief ...
      * 
      */
     static LArAnalysisParticle::TYPE GetMcParticleType(const MCParticle *const pMCParticle);
-    
-    /**
-     *  @brief ...
-     * 
-     */
-    static void CountFiducialHits(const Pandora &pandora, const PfoList &pfoList, const CartesianVector &minCoordinates, 
-        const CartesianVector &maxCoordinates, const HitType hitType, unsigned &fiducialHits, unsigned &totalHits);
 };
 } // namespace lar_physics_content
 

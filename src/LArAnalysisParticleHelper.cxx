@@ -30,8 +30,9 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
-void LArAnalysisParticleHelper::GetFiducialCutParameters(const Pandora &pandoraInstance, const float fiducialCutXMargin, const float fiducialCutYMargin,
-    const float fiducialCutZMargin, CartesianVector &minCoordinates, CartesianVector &maxCoordinates)
+void LArAnalysisParticleHelper::GetFiducialCutParameters(const Pandora &pandoraInstance, const float fiducialCutLowXMargin, 
+    const float fiducialCutHighXMargin, const float fiducialCutLowYMargin, const float fiducialCutHighYMargin,
+    const float fiducialCutLowZMargin, const float fiducialCutHighZMargin, CartesianVector &minCoordinates, CartesianVector &maxCoordinates)
 {
     const LArTPCMap &larTPCMap(pandoraInstance.GetGeometry()->GetLArTPCMap());
 
@@ -43,13 +44,13 @@ void LArAnalysisParticleHelper::GetFiducialCutParameters(const Pandora &pandoraI
 
     const LArTPC *const pLArTPC(larTPCMap.begin()->second);
 
-    const float xMin = pLArTPC->GetCenterX() - (0.5f * pLArTPC->GetWidthX()) + fiducialCutXMargin;
-    const float yMin = pLArTPC->GetCenterY() - (0.5f * pLArTPC->GetWidthY()) + fiducialCutYMargin;
-    const float zMin = pLArTPC->GetCenterZ() - (0.5f * pLArTPC->GetWidthZ()) + fiducialCutZMargin;
+    const float xMin = pLArTPC->GetCenterX() - (0.5f * pLArTPC->GetWidthX()) + fiducialCutLowXMargin;
+    const float yMin = pLArTPC->GetCenterY() - (0.5f * pLArTPC->GetWidthY()) + fiducialCutLowYMargin;
+    const float zMin = pLArTPC->GetCenterZ() - (0.5f * pLArTPC->GetWidthZ()) + fiducialCutLowZMargin;
 
-    const float xMax = pLArTPC->GetCenterX() + (0.5f * pLArTPC->GetWidthX()) - fiducialCutXMargin;
-    const float yMax = pLArTPC->GetCenterY() + (0.5f * pLArTPC->GetWidthY()) - fiducialCutYMargin;
-    const float zMax = pLArTPC->GetCenterZ() + (0.5f * pLArTPC->GetWidthZ()) - fiducialCutZMargin;
+    const float xMax = pLArTPC->GetCenterX() + (0.5f * pLArTPC->GetWidthX()) - fiducialCutHighXMargin;
+    const float yMax = pLArTPC->GetCenterY() + (0.5f * pLArTPC->GetWidthY()) - fiducialCutHighYMargin;
+    const float zMax = pLArTPC->GetCenterZ() + (0.5f * pLArTPC->GetWidthZ()) - fiducialCutHighZMargin;
     
     minCoordinates = CartesianVector(xMin, yMin, zMin);
     maxCoordinates = CartesianVector(xMax, yMax, zMax);
@@ -217,18 +218,24 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const Pandora &pandora, const ParticleFlowObject *const pPfo, 
-    const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates)
+float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates, 
+    const CartesianVector &maxCoordinates)
 {
     PfoList downstreamPfos;
     LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
     
-    unsigned fiducialHits(0U), totalHits(0U);
-    LArAnalysisParticleHelper::CountFiducialHits(pandora, downstreamPfos, minCoordinates, maxCoordinates, TPC_VIEW_U, fiducialHits, totalHits);
-    LArAnalysisParticleHelper::CountFiducialHits(pandora, downstreamPfos, minCoordinates, maxCoordinates, TPC_VIEW_V, fiducialHits, totalHits);
-    LArAnalysisParticleHelper::CountFiducialHits(pandora, downstreamPfos, minCoordinates, maxCoordinates, TPC_VIEW_W, fiducialHits, totalHits);
+    CaloHitList caloHitList;
+    LArPfoHelper::GetCaloHits(downstreamPfos, TPC_3D, caloHitList);
+    
+    unsigned fiducialHits(0U);
+    
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        if (LArAnalysisParticleHelper::IsPointFiducial(pCaloHit->GetPositionVector(), minCoordinates, maxCoordinates))
+            ++fiducialHits;
+    }
 
-    return static_cast<float>(fiducialHits) / static_cast<float>(totalHits);
+    return static_cast<float>(fiducialHits) / static_cast<float>(caloHitList.size());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -489,7 +496,7 @@ bool LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCPart
     if (!pMCParticle)
         return false;
     
-    typeTree         = LArAnalysisParticleHelper::CreateMcTypeTree(pMCParticle);
+    LArAnalysisParticleHelper::CreateMcTypeTree(pMCParticle, typeTree);
     mcEnergy         = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
     mcType           = typeTree.Type();
     mcVertexPosition = pMCParticle->GetVertex();
@@ -675,22 +682,31 @@ void LArAnalysisParticleHelper::AdjustMusForContainmentFraction(const CartesianV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
         
-LArAnalysisParticle::TypeTree LArAnalysisParticleHelper::CreateMcTypeTree(const MCParticle *const pMCParticle)
+bool LArAnalysisParticleHelper::CreateMcTypeTree(const MCParticle *const pMCParticle, LArAnalysisParticle::TypeTree &typeTree)
 {
     LArAnalysisParticle::TypeTree::List daughterTypeTrees;
     
     const LArAnalysisParticle::TYPE type = LArAnalysisParticleHelper::GetMcParticleType(pMCParticle);
     
-    if (type != LArAnalysisParticle::TYPE::SHOWER && type != LArAnalysisParticle::TYPE::UNKNOWN)
+    if (type == LArAnalysisParticle::TYPE::UNKNOWN)
+        return false;
+    
+    if (type != LArAnalysisParticle::TYPE::SHOWER)
     {
         for (const MCParticle *const pDaughterParticle : pMCParticle->GetDaughterList())
         {
             if (pDaughterParticle->GetEnergy() > 0.05f)
-                daughterTypeTrees.push_back(LArAnalysisParticleHelper::CreateMcTypeTree(pDaughterParticle));
+            {
+                LArAnalysisParticle::TypeTree daughterTypeTree;
+                
+                if (LArAnalysisParticleHelper::CreateMcTypeTree(pDaughterParticle, daughterTypeTree))
+                    daughterTypeTrees.push_back(daughterTypeTree);
+            }
         }
     }
     
-    return {type, daughterTypeTrees};
+    typeTree = LArAnalysisParticle::TypeTree(type, daughterTypeTrees);
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -717,27 +733,6 @@ LArAnalysisParticle::TYPE LArAnalysisParticleHelper::GetMcParticleType(const MCP
     }
     
     return LArAnalysisParticle::TYPE::UNKNOWN;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArAnalysisParticleHelper::CountFiducialHits(const Pandora &pandora, const PfoList &pfoList, 
-    const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates, const HitType hitType, unsigned &fiducialHits, 
-    unsigned &totalHits)
-{
-    CaloHitList caloHitList;
-    LArPfoHelper::GetCaloHits(pfoList, hitType, caloHitList);
-    
-    const CartesianVector projectedMinCoordinates(LArGeometryHelper::ProjectPosition(pandora, minCoordinates, hitType));
-    const CartesianVector projectedMaxCoordinates(LArGeometryHelper::ProjectPosition(pandora, maxCoordinates, hitType));
-    
-    for (const CaloHit *const pCaloHit : caloHitList)
-    {
-        if (LArAnalysisParticleHelper::IsPointFiducial(pCaloHit->GetPositionVector(), projectedMinCoordinates, projectedMaxCoordinates))
-            ++fiducialHits;
-    }
-    
-    totalHits += caloHitList.size();
 }
 
 } // namespace lar_physics_content

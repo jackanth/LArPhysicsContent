@@ -27,9 +27,12 @@ AnalysisDataAlgorithm::AnalysisDataAlgorithm() :
     m_produceEnergyFromRangeData{true},
     m_producePidData{true},
     m_pfoListName{},         
-    m_fiducialCutXMargin{10.f},
-    m_fiducialCutYMargin{20.f},
-    m_fiducialCutZMargin{10.f},
+    m_fiducialCutLowXMargin(10.f),
+    m_fiducialCutHighXMargin(10.f),
+    m_fiducialCutLowYMargin(20.f),
+    m_fiducialCutHighYMargin(20.f),
+    m_fiducialCutLowZMargin(10.f),
+    m_fiducialCutHighZMargin(10.f),
     m_trackSlidingFitWindow{25U},
     m_rootDataFileName{},
     m_pRootDataFile{nullptr},
@@ -77,7 +80,8 @@ StatusCode AnalysisDataAlgorithm::Run()
     // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
     CartesianVector minCoordinates(0.f, 0.f, 0.f), maxCoordinates(0.f, 0.f, 0.f);
     
-    LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), this->m_fiducialCutXMargin, this->m_fiducialCutYMargin, this->m_fiducialCutZMargin,
+    LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), m_fiducialCutLowXMargin, m_fiducialCutHighXMargin,
+        m_fiducialCutLowYMargin, this->m_fiducialCutHighYMargin, m_fiducialCutLowZMargin, m_fiducialCutHighZMargin,
         minCoordinates, maxCoordinates);
     
     // Loop over the reconstructed neutrino PFOs and their primary daughters.
@@ -406,9 +410,12 @@ StatusCode AnalysisDataAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName",        this->m_pfoListName));
                                                                            
-     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutXMargin",  this->m_fiducialCutXMargin));
-     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutYMargin",  this->m_fiducialCutYMargin));
-     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutZMargin",  this->m_fiducialCutZMargin));
+     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowXMargin", this->m_fiducialCutLowXMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighXMargin", this->m_fiducialCutHighXMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowYMargin", this->m_fiducialCutLowYMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighYMargin", this->m_fiducialCutHighYMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowZMargin", this->m_fiducialCutLowZMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighZMargin", this->m_fiducialCutHighZMargin));
     
      PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrackSlidingFitWindow",
                                                                            this->m_trackSlidingFitWindow));

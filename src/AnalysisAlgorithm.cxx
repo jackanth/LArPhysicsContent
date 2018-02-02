@@ -25,9 +25,12 @@ namespace lar_physics_content
 {
 AnalysisAlgorithm::AnalysisAlgorithm() :
     m_mcParticleListName(),
-    m_fiducialCutXMargin(10.f),
-    m_fiducialCutYMargin(20.f),
-    m_fiducialCutZMargin(10.f),
+    m_fiducialCutLowXMargin(10.f),
+    m_fiducialCutHighXMargin(10.f),
+    m_fiducialCutLowYMargin(20.f),
+    m_fiducialCutHighYMargin(20.f),
+    m_fiducialCutLowZMargin(10.f),
+    m_fiducialCutHighZMargin(10.f),
     m_trackSlidingFitWindow(25U),
     m_pLArAnalysisParticleFile(nullptr),
     m_pLArAnalysisParticleNtuple(nullptr),
@@ -89,7 +92,8 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     const Vertex *const pVertex = pInputPfo->GetVertexList().front();
     bool gotMcInformation = false;
     
-    float mcEnergy = 0.f, mcContainmentFraction = 0.f, mcHitPurity = 0.f, mcHitCompleteness = 0.f;
+    float mcEnergy = 0.f, mcContainmentFraction = 0.f, mcHitPurity = 0.f, mcHitCompleteness = 0.f, mcCollectionPlaneHitPurity = 0.f,
+        mcCollectionPlaneHitCompleteness = 0.f;
     LArAnalysisParticle::TypeTree mcTypeTree;
     LArAnalysisParticle::TYPE mcType(LArAnalysisParticle::TYPE::UNKNOWN);
     CartesianVector mcVertexPosition(0.f, 0.f, 0.f), mcMomentum(0.f, 0.f, 0.f);
@@ -99,7 +103,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     if (this->m_addMcInformation)
     {
         gotMcInformation = this->GetMcInformation(pInputPfo, mcEnergy, mcTypeTree, mcType, mcVertexPosition, mcMomentum, mcPdgCode, isNeutrino, 
-            mcContainmentFraction, pMcMainMCParticle, mcHitPurity, mcHitCompleteness);
+            mcContainmentFraction, pMcMainMCParticle, mcHitPurity, mcHitCompleteness, mcCollectionPlaneHitPurity, mcCollectionPlaneHitCompleteness);
     }
     
     // Common parameter calculations.
@@ -121,7 +125,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     this->CountNumberOfDownstreamParticles(pInputPfo, numberOfDownstreamParticles);
     analysisParticleParameters.m_numberOfDownstreamParticles = numberOfDownstreamParticles;
         
-    analysisParticleParameters.m_fiducialHitFraction = LArAnalysisParticleHelper::GetFractionOfFiducialHits(this->GetPandora(), pInputPfo,
+    analysisParticleParameters.m_fiducialHitFraction = LArAnalysisParticleHelper::GetFractionOfFiducialHits(pInputPfo,
         this->m_minCoordinates, this->m_maxCoordinates);
         
     analysisParticleParameters.m_hasMcInfo = gotMcInformation;
@@ -148,8 +152,11 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         analysisParticleParameters.m_mcIsShower         = (mcType == LArAnalysisParticle::TYPE::SHOWER);
         analysisParticleParameters.m_mcPdgCode          = mcPdgCode;
         analysisParticleParameters.m_mcType             = mcType;
+        analysisParticleParameters.m_mcTypeTree         = mcTypeTree;
         analysisParticleParameters.m_mcHitPurity        = mcHitPurity;
         analysisParticleParameters.m_mcHitCompleteness  = mcHitCompleteness;
+        analysisParticleParameters.m_mcCollectionPlaneHitPurity        = mcCollectionPlaneHitPurity;
+        analysisParticleParameters.m_mcCollectionPlaneHitCompleteness  = mcCollectionPlaneHitCompleteness;
         analysisParticleParameters.m_pMcMainMCParticle  = pMcMainMCParticle;
     }
     
@@ -157,7 +164,6 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     if (isNeutrino)
     {
         analysisParticleParameters.m_type             = LArAnalysisParticle::TYPE::NEUTRINO;
-        analysisParticleParameters.m_typeTree         = LArAnalysisParticle::TypeTree(LArAnalysisParticle::TYPE::NEUTRINO);
         analysisParticleParameters.m_directionCosines = CartesianVector(0.f, 0.f, 1.f);
         
         float analysisEnergy(0.f), energyFromCharge(0.f), energySourcedFromRange(0.f), energySourcedFromCorrectedTrackCharge(0.f),
@@ -165,6 +171,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
             
         CartesianVector analysisMomentum(0.f, 0.f, 0.f);
         unsigned numberOf3dHits(0U), numberOfCollectionPlaneHits(0U);
+        LArAnalysisParticle::TypeTree::List primaryTypeTrees;
         
         for (const ParticleFlowObject *const pPrimary : pInputPfo->GetDaughterPfoList())
         {
@@ -179,6 +186,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
                 energySourcedFromCorrectedTrackCharge += pAnalysisPrimary->AnalysisEnergy() * pAnalysisPrimary->EnergyFromCorrectedTrackChargeFraction();
                 energySourcedFromTrackCharge          += pAnalysisPrimary->AnalysisEnergy() * pAnalysisPrimary->EnergyFromUncorrectedTrackChargeFraction();
                 energySourcedFromShowerCharge         += pAnalysisPrimary->AnalysisEnergy() * pAnalysisPrimary->EnergyFromShowerChargeFraction();
+                primaryTypeTrees.push_back(pAnalysisPrimary->GetTypeTree());
             }
             
             else
@@ -190,6 +198,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         analysisParticleParameters.m_analysisMomentum            = analysisMomentum;
         analysisParticleParameters.m_numberOf3dHits              = numberOf3dHits;
         analysisParticleParameters.m_numberOfCollectionPlaneHits = numberOfCollectionPlaneHits;
+        analysisParticleParameters.m_typeTree = LArAnalysisParticle::TypeTree(LArAnalysisParticle::TYPE::NEUTRINO, primaryTypeTrees);
                 
         if (analysisEnergy > std::numeric_limits<float>::epsilon())
         {
@@ -221,6 +230,13 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         
         // Derive a type for all PFOs.
         LArAnalysisParticle::PfoTypeMap particleTypeMap;
+        
+        if (isCosmicRay)
+            particleTypeMap.emplace(pInputPfo, LArAnalysisParticle::TYPE::COSMIC_RAY);
+            
+        else if (isPrimaryNeutrinoDaughter)
+            particleTypeMap.emplace(pInputPfo, this->EstimateParticleType(pInputPfo, trackHitEnergyMap, trackFitMap));
+        
         this->RecursivelyAppendParticleTypeMap(pInputPfo, particleTypeMap, trackHitEnergyMap, trackFitMap);
         
         float particleEnergy(0.f), particleEnergyFromCharge(0.f), energySourcedFromRange(0.f), energySourcedFromShowerCharge(0.f),
@@ -362,10 +378,11 @@ void AnalysisAlgorithm::RecursivelyAppendParticleTypeMap(const ParticleFlowObjec
                                                             const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap,
                                                             const LArAnalysisParticleHelper::TrackFitMap &trackFitMap) const
 {
-    pfoTypeMap.emplace(pPfo, this->EstimateParticleType(pPfo, trackHitEnergyMap, trackFitMap));
-    
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
+    {
+        pfoTypeMap.emplace(pDaughterPfo, this->EstimateParticleType(pDaughterPfo, trackHitEnergyMap, trackFitMap));
         RecursivelyAppendParticleTypeMap(pDaughterPfo, pfoTypeMap, trackHitEnergyMap, trackFitMap);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -374,7 +391,7 @@ LArAnalysisParticle::TYPE AnalysisAlgorithm::EstimateParticleType(const Particle
                                                                   const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap,
                                                                   const LArAnalysisParticleHelper::TrackFitMap &trackFitMap) const
 {
-    if (!LArPfoHelper::IsTrack(pPfo))
+    if (LArPfoHelper::IsShower(pPfo))
         return LArAnalysisParticle::TYPE::SHOWER;
         
     const auto trackHitFindIter = trackHitEnergyMap.find(pPfo);
@@ -440,6 +457,7 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
             return;
         }
         
+        case LArAnalysisParticle::TYPE::COSMIC_RAY:
         case LArAnalysisParticle::TYPE::PION_MUON:
         case LArAnalysisParticle::TYPE::PROTON:   
         {
@@ -561,6 +579,7 @@ float AnalysisAlgorithm::EstimateTrackEnergyFromRange(const ParticleFlowObject *
     
     switch (particleType)
     {
+        case LArAnalysisParticle::TYPE::COSMIC_RAY:
         case LArAnalysisParticle::TYPE::PION_MUON:
         case LArAnalysisParticle::TYPE::PROTON:
         {
@@ -638,7 +657,8 @@ CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject
 
 bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree,
     LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode, const bool isNeutrino,
-    float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle, float &mcHitPurity, float &mcHitCompleteness) const
+    float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle, float &mcHitPurity, float &mcHitCompleteness,
+    float &mcCollectionPlaneHitPurity, float &mcCollectionPlaneHitCompleteness) const
 {
     if (isNeutrino)
     {
@@ -680,7 +700,8 @@ bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, f
         return false;
     }
         
-    this->CalculateHitPurityAndCompleteness(pPfo, pMcMainMCParticle, pCaloHitList, isNeutrino, mcHitPurity, mcHitCompleteness);
+    this->CalculateHitPurityAndCompleteness(pPfo, pMcMainMCParticle, pCaloHitList, isNeutrino, mcHitPurity, mcHitCompleteness,
+        mcCollectionPlaneHitPurity, mcCollectionPlaneHitCompleteness);
         
     return LArAnalysisParticleHelper::GetMcInformation(pMcMainMCParticle, mcEnergy, typeTree, mcType, mcVertexPosition, mcMomentum, 
         mcPdgCode, mcContainmentFraction, this->m_minCoordinates, this->m_maxCoordinates);
@@ -689,27 +710,45 @@ bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, f
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void AnalysisAlgorithm::CalculateHitPurityAndCompleteness(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle, 
-    const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness) const
+    const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, float &collectionPlaneHitPurity,
+    float &collectionPlaneHitCompleteness) const
 {
-    // Purity       = (num 2D hits assoc with PFO or its descendents && assoc with MC particle or its descendents) / 
-    //                (num 2D hits assoc with PFO or its descendents)
-    
-    // Completeness = (num 2D hits assoc with PFO or its descendents && assoc with MC particle or its descendents) / 
-    //                (num 2D hits assoc with MC particle or its descendents)
-    
     PfoList downstreamPfos;
     LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
     
     CaloHitList pfoAssociatedCaloHits;
     LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_U, pfoAssociatedCaloHits);
     LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_V, pfoAssociatedCaloHits);
-    LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_W, pfoAssociatedCaloHits);
     
+    CaloHitList pfoAssociatedWCaloHits;
+    LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_W, pfoAssociatedWCaloHits);
+    pfoAssociatedCaloHits.insert(pfoAssociatedCaloHits.end(), pfoAssociatedWCaloHits.begin(), pfoAssociatedWCaloHits.end());
+    
+    this->CalculateHitPurityAndCompleteness(pfoAssociatedCaloHits, pMCParticle, pCaloHitList, isNeutrino, hitPurity, hitCompleteness, false);
+    this->CalculateHitPurityAndCompleteness(pfoAssociatedWCaloHits, pMCParticle, pCaloHitList, isNeutrino, collectionPlaneHitPurity, 
+        collectionPlaneHitCompleteness, true);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void AnalysisAlgorithm::CalculateHitPurityAndCompleteness(const CaloHitList  &pfoAssociatedCaloHits, const MCParticle *const pMCParticle, 
+    const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, 
+    const bool useCollectionPlaneOnly) const
+{
+    // Purity       = (num 2D hits assoc with PFO or its descendents \cap assoc with MC particle or its descendents) / 
+    //                (num 2D hits assoc with PFO or its descendents)
+    
+    // Completeness = (num 2D hits assoc with PFO or its descendents \cap assoc with MC particle or its descendents) / 
+    //                (num 2D hits assoc with MC particle or its descendents)
+
     std::unordered_map<const CaloHit *, float> mcAssociatedCaloHits;
     float totalMcHitWeight(0.f);
     
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
+        if (useCollectionPlaneOnly && (pCaloHit->GetHitType() != TPC_VIEW_W))
+            continue;
+        
         for (const MCParticleWeightMap::value_type &mapPair : pCaloHit->GetMCParticleWeightMap())
         {
             try
@@ -768,9 +807,12 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", this->m_mcParticleListName));
     
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutXMargin", this->m_fiducialCutXMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutYMargin", this->m_fiducialCutYMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutZMargin", this->m_fiducialCutZMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowXMargin", this->m_fiducialCutLowXMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighXMargin", this->m_fiducialCutHighXMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowYMargin", this->m_fiducialCutLowYMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighYMargin", this->m_fiducialCutHighYMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowZMargin", this->m_fiducialCutLowZMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighZMargin", this->m_fiducialCutHighZMargin));
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrackSlidingFitWindow", this->m_trackSlidingFitWindow));
     
@@ -868,8 +910,9 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     this->m_pTmvaReader->BookMVA("BDT", "/Users/jaw/Dropbox/PhD/weights/TMVAClassification_BDT.weights.xml"); 
         
     // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
-    LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), this->m_fiducialCutXMargin, this->m_fiducialCutYMargin,
-        this->m_fiducialCutZMargin, this->m_minCoordinates, this->m_maxCoordinates);
+    LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), m_fiducialCutLowXMargin, m_fiducialCutHighXMargin,
+        m_fiducialCutLowYMargin, this->m_fiducialCutHighYMargin, m_fiducialCutLowZMargin, m_fiducialCutHighZMargin, 
+        m_minCoordinates, m_maxCoordinates);
     
     AlgorithmTool *pAlgorithmTool(nullptr);
     
