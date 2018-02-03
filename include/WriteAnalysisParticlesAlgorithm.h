@@ -64,7 +64,7 @@ public:
     unsigned          m_nu_NumberOf3dHits;                            ///< The number of 3D hits in the neutrino
     unsigned          m_nu_NumberOfCollectionPlaneHits;               ///< The number of collection-plane hits in the neutrino
     unsigned          m_nu_NumberOfDownstreamParticles;               ///< The number of particles downstream of the neutrino
-    std::uint64_t     m_nu_mc_McParticleUid;                          ///< The UID of the MC particle
+    Long64_t          m_nu_mc_McParticleUid;                          ///< The UID of the MC particle
     float             m_nu_mc_Energy;                                 ///< The MC energy of the neutrino
     float             m_nu_mc_LongitudinalEnergy;                     ///< The MC longitudinal energy of the neutrino
     float             m_nu_mc_TransverseEnergy;                       ///< The MC transverse energy of the neutrino
