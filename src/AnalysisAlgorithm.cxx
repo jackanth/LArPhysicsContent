@@ -51,7 +51,8 @@ AnalysisAlgorithm::AnalysisAlgorithm() :
     m_maxCoordinates(0.f, 0.f, 0.f),
     m_pBirksHitSelectionTool(nullptr),
     m_mcContainmentFractionLowerBound(0.9f),
-    m_caloHitListName()
+    m_caloHitListName(),
+    m_tmvaWeights()
 {
 }
 
@@ -830,6 +831,8 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McContainmentFractionLowerBound", this->m_mcContainmentFractionLowerBound));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", this->m_caloHitListName));
     
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TmvaWeights", this->m_tmvaWeights));
+    
     TNtuple *const pBirksNtuple = LArAnalysisParticleHelper::LoadNTupleFromFile(this->m_parametersFile, this->m_birksFitNtupleName);
     
     if (!pBirksNtuple)
@@ -907,7 +910,7 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     this->m_pTmvaReader = new TMVA::Reader("!Color:Silent");    
     this->m_pTmvaReader->AddVariable("TrackLength", &this->m_tmvaTrackLength);
     this->m_pTmvaReader->AddVariable("AvgEnergyDeposition := TrueEnergy/TrackLength", &this->m_tmvaAvgEnergyDeposition);
-    this->m_pTmvaReader->BookMVA("BDT", "/Users/jaw/Dropbox/PhD/weights/TMVAClassification_BDT.weights.xml"); 
+    this->m_pTmvaReader->BookMVA("BDT", m_tmvaWeights.c_str()); 
         
     // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
     LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), m_fiducialCutLowXMargin, m_fiducialCutHighXMargin,

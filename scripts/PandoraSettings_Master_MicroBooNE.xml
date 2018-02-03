@@ -93,6 +93,7 @@
         <CaloHitListName>CaloHitList2D</CaloHitListName>
         <VertexListName>RecreatedVertices</VertexListName>
         <ParametersFile>/Users/jaw/Dropbox/PhD/params.root</ParametersFile>
+        <TmvaWeights>/Users/jaw/Dropbox/PhD/weights/TMVAClassification_BDT.weights.xml</TmvaWeights>
         <McContainmentFractionLowerBound>0.9</McContainmentFractionLowerBound>
         <tool type = "LArBirksHitSelection" description = "BirksHitSelection">
             <BirksSelectionBinWidth>5.0</BirksSelectionBinWidth>

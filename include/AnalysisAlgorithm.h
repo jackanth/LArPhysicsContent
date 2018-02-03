@@ -97,6 +97,7 @@ private:
     BirksHitSelectionTool *m_pBirksHitSelectionTool;
     float m_mcContainmentFractionLowerBound;
     std::string m_caloHitListName; 
+    std::string m_tmvaWeights;
 
     /**
      *  @brief ...
