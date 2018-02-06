@@ -94,8 +94,20 @@ public:
      *  @brief ...
      * 
      */
-    static CartesianVector GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position,
-        const bool pointTowardsMiddle);
+    static CartesianVector GetFittedDirectionAtPrimaryVertex(const ThreeDSlidingFitResult &trackFit, const CartesianVector &primaryVertex,
+        const CartesianVector &neutrinoVertex);
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    static CartesianVector GetFittedDirectionAtCosmicRayVertex(const ThreeDSlidingFitResult &trackFit, const CartesianVector &primaryVertex);
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    static CartesianVector GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position);
     
     /**
      *  @brief ...
@@ -174,7 +186,7 @@ public:
      *  @brief ...
      * 
      */
-    static bool GetMcInformation(const MCParticle *const pMCParticle, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree,
+    static bool GetMcInformation(const MCParticle *const pMCParticle, float &mcEnergy, float &mcKineticEnergy, float &mcMass, LArAnalysisParticle::TypeTree &typeTree,
         LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode,
         float &mcContainmentFraction, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
     

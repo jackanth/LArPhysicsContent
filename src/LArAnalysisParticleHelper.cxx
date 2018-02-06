@@ -137,7 +137,7 @@ PfoList LArAnalysisParticleHelper::GetRecoNeutrinoList(const Algorithm &algorith
 float LArAnalysisParticleHelper::CaloHitToThreeDDistance(const Pandora &pandoraInstance, const CaloHit *const pCaloHit,
                                                  const ThreeDSlidingFitResult &trackFit)
 {
-    const CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, pCaloHit->GetPositionVector(), false);
+    const CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, pCaloHit->GetPositionVector());
     return LArAnalysisParticleHelper::CellToThreeDDistance(pCaloHit->GetCellSize1(), LArGeometryHelper::GetWirePitch(pandoraInstance, TPC_VIEW_W),
                                                    fitDirection);
 }
@@ -174,8 +174,32 @@ CaloHitList LArAnalysisParticleHelper::GetHitsOfType(const ParticleFlowObject *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position, 
-    const bool pointTowardsMiddle)
+CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPrimaryVertex(const ThreeDSlidingFitResult &trackFit, const CartesianVector &primaryVertex,
+    const CartesianVector &neutrinoVertex)
+{
+    CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, primaryVertex);
+    
+    if ((primaryVertex - neutrinoVertex).GetDotProduct(fitDirection) < 0.f)
+        fitDirection *= -1.f;
+    
+    return fitDirection;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtCosmicRayVertex(const ThreeDSlidingFitResult &trackFit, const CartesianVector &primaryVertex)
+{
+    CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, primaryVertex);
+    
+    if (fitDirection.GetDotProduct(CartesianVector(0.f, -1.f, 0.f)) < 0.f)
+        fitDirection *= -1.f;
+    
+    return fitDirection;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position)
 {
     const CartesianVector &minPosition = trackFit.GetGlobalMinLayerPosition();
     const CartesianVector &maxPosition = trackFit.GetGlobalMaxLayerPosition();
@@ -209,9 +233,6 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
                 fitDirection = maxDirection;
         }
     }
-    
-    if (pointTowardsMiddle && (maxCoordinate - displacementAlongFittedTrack) < (displacementAlongFittedTrack - minCoordinate))
-        fitDirection *= -1.f;
     
     return fitDirection;
 }
@@ -488,7 +509,7 @@ bool LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(const ParticleFlowObje
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCParticle, float &mcEnergy, 
+bool LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCParticle, float &mcEnergy, float &mcKineticEnergy, float &mcMass,
     LArAnalysisParticle::TypeTree &typeTree, LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition,
     CartesianVector &mcMomentum, int &mcPdgCode, float &mcContainmentFraction, const CartesianVector &minCoordinates,
     const CartesianVector &maxCoordinates)
@@ -497,7 +518,10 @@ bool LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCPart
         return false;
     
     LArAnalysisParticleHelper::CreateMcTypeTree(pMCParticle, typeTree);
-    mcEnergy         = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+    
+    mcEnergy         = pMCParticle->GetEnergy();
+    mcKineticEnergy  = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+    mcMass           = PdgTable::GetParticleMass(pMCParticle->GetParticleId());
     mcType           = typeTree.Type();
     mcVertexPosition = pMCParticle->GetVertex();
     mcMomentum       = pMCParticle->GetMomentum();
@@ -723,6 +747,7 @@ LArAnalysisParticle::TYPE LArAnalysisParticleHelper::GetMcParticleType(const MCP
     {
         case PROTON:   return LArAnalysisParticle::TYPE::PROTON;
         case MU_MINUS: 
+        case MU_PLUS: 
         case PI_MINUS:
         case PI_PLUS:  return LArAnalysisParticle::TYPE::PION_MUON;
         case PHOTON:

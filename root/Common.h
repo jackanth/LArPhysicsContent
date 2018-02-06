@@ -118,7 +118,7 @@ struct PlotSettings1D
 };
 
 const struct PlotSettings2D g_defaultPlotSettings2D = {"", "", "", 0.f, 0.f, 80, 0.f, 0.f, 80, HISTOGRAM, true, true, kBlack, kBlack, true};
-const struct PlotSettings1D g_defaultPlotSettings1D = {"", "", 0.f, 0.f, 80, HISTOGRAM, true, true, kBlack, kBlack, true};
+const struct PlotSettings1D g_defaultPlotSettings1D = {"", "", 0.f, 0.f, 80, HISTOGRAM, false, true, kBlack, kBlack, true};
 
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -17,25 +17,25 @@ LArAnalysisParticle::LArAnalysisParticle(const LArAnalysisParticleParameters &pa
     ParticleFlowObject(parameters),
     m_type(parameters.m_type),
     m_typeTree(parameters.m_typeTree),
-    m_analysisEnergy(parameters.m_analysisEnergy),
-    m_energyFromCharge(parameters.m_energyFromCharge),
+    m_kineticEnergy(parameters.m_kineticEnergy),
     m_isVertexFiducial(parameters.m_isVertexFiducial),
     m_fiducialHitFraction(parameters.m_fiducialHitFraction),
     m_vertexPosition(parameters.m_vertexPosition),
     m_directionCosines(parameters.m_directionCosines),
-    m_analysisMomentum(parameters.m_analysisMomentum),
     m_numberOf3dHits(parameters.m_numberOf3dHits),
     m_numberOfCollectionPlaneHits(parameters.m_numberOfCollectionPlaneHits),
     m_isShower(parameters.m_isShower),
     m_numberOfDownstreamParticles(parameters.m_numberOfDownstreamParticles),
-    m_energyFromRangeFraction(parameters.m_energyFromRangeFraction),
-    m_energyFromCorrectedTrackChargeFraction(parameters.m_energyFromCorrectedTrackChargeFraction),
-    m_energyFromUncorrectedTrackChargeFraction(parameters.m_energyFromUncorrectedTrackChargeFraction),
-    m_energyFromShowerChargeFraction(parameters.m_energyFromShowerChargeFraction),
+    m_kineticEnergyFromRangeFraction(parameters.m_kineticEnergyFromRangeFraction),
+    m_kineticEnergyFromCorrectedTrackChargeFraction(parameters.m_kineticEnergyFromCorrectedTrackChargeFraction),
+    m_kineticEnergyFromUncorrectedTrackChargeFraction(parameters.m_kineticEnergyFromUncorrectedTrackChargeFraction),
+    m_kineticEnergyFromShowerChargeFraction(parameters.m_kineticEnergyFromShowerChargeFraction),
     m_hasMcInfo(parameters.m_hasMcInfo),
     m_mcType(parameters.m_mcType),
     m_mcTypeTree(parameters.m_mcTypeTree),
     m_mcEnergy(parameters.m_mcEnergy),
+    m_mcKineticEnergy(parameters.m_mcKineticEnergy),
+    m_mcMass(parameters.m_mcMass),
     m_mcMomentum(parameters.m_mcMomentum),
     m_mcVertexPosition(parameters.m_mcVertexPosition),
     m_mcDirectionCosines(parameters.m_mcDirectionCosines),
@@ -62,13 +62,14 @@ void LArAnalysisParticle::Print() const
               << "    - MC type:                   " << this->TypeAsString(this->m_mcType) << "\n"
               << "    - Type tree:                 " << TEXT_GREEN_BOLD << this->TypeTreeAsString(this->m_typeTree) << TEXT_NORMAL << "\n"
               << "    - MC type tree:              " << TEXT_GREEN_BOLD << this->TypeTreeAsString(this->m_mcTypeTree) << TEXT_NORMAL << "\n"
-              << "    - Energy:                    " << TEXT_MAGENTA_BOLD << 1000.f * this->m_analysisEnergy << "MeV\n" << TEXT_NORMAL
+              << "    - Kinetic energy:            " << TEXT_MAGENTA_BOLD << 1000.f * this->m_kineticEnergy << "MeV\n" << TEXT_NORMAL
+              << "    - MC kinetic energy:         " << TEXT_MAGENTA_BOLD << 1000.f * this->m_mcKineticEnergy << "MeV\n" << TEXT_NORMAL
               << "    - MC energy:                 " << TEXT_MAGENTA_BOLD << 1000.f * this->m_mcEnergy << "MeV\n" << TEXT_NORMAL
-              << "    - Energy from charge:        " << 1000.f * this->m_energyFromCharge << "MeV\n"
-              << "    - E from range:              " << 100.f * m_energyFromRangeFraction << "%\n"
-              << "    - E from corr track charge:  " << 100.f * m_energyFromCorrectedTrackChargeFraction << "%\n"
-              << "    - E from track charge:       " << 100.f * m_energyFromUncorrectedTrackChargeFraction << "%\n"
-              << "    - E from shower charge:      " << 100.f * m_energyFromShowerChargeFraction << "%\n"
+              << "    - MC mass:                   " << TEXT_MAGENTA_BOLD << 1000.f * this->m_mcMass << "MeV/c^2\n" << TEXT_NORMAL
+              << "    - KE from range:             " << 100.f * m_kineticEnergyFromRangeFraction << "%\n"
+              << "    - KE from corr track charge: " << 100.f * m_kineticEnergyFromCorrectedTrackChargeFraction << "%\n"
+              << "    - KE from track charge:      " << 100.f * m_kineticEnergyFromUncorrectedTrackChargeFraction << "%\n"
+              << "    - KE from shower charge:     " << 100.f * m_kineticEnergyFromShowerChargeFraction << "%\n"
               << "    - Is vertex fiducial:        " << TEXT_RED_BOLD << std::boolalpha << this->m_isVertexFiducial << std::noboolalpha
                                                      << TEXT_NORMAL << "\n"
               << "    - MC is vertex fiducial:     " << TEXT_RED_BOLD << std::boolalpha << this->m_mcIsVertexFiducial << std::noboolalpha
@@ -76,17 +77,14 @@ void LArAnalysisParticle::Print() const
               << "    - Fiducial hit fraction:     " << TEXT_RED_BOLD << 100.f * this->m_fiducialHitFraction << TEXT_NORMAL << "%\n"
               << "    - MC containment fraction:   " << TEXT_RED_BOLD << 100.f * this->m_mcContainmentFraction << TEXT_NORMAL << "%\n"
               << "    - Vertex:                    " << "(" << this->m_vertexPosition.GetX() << ", " << this->m_vertexPosition.GetY() 
-                                                     << ", " << this->m_vertexPosition.GetZ() << ")\n"
+                                                     << ", " << this->m_vertexPosition.GetZ() << ") cm\n"
               << "    - MC vertex:                 " << "(" << this->m_mcVertexPosition.GetX() << ", " << this->m_mcVertexPosition.GetY()
-                                                     << ", " << this->m_mcVertexPosition.GetZ() << ")\n"
+                                                     << ", " << this->m_mcVertexPosition.GetZ() << ") cm\n"
               << "    - Direction cosines:         " << "(" << this->m_directionCosines.GetX() << ", " << this->m_directionCosines.GetY() 
                                                      << ", " << this->m_directionCosines.GetZ() << ")\n"
               << "    - MC direction cosines:      " << "(" << this->m_mcDirectionCosines.GetX() << ", " 
                                                      << this->m_mcDirectionCosines.GetY() << ", " << this->m_mcDirectionCosines.GetZ() 
                                                      << ")\n"
-              << "    - Momentum:                  " << "(" << 1000.f * this->m_analysisMomentum.GetX() << ", " 
-                                                     << 1000.f * this->m_analysisMomentum.GetY() << ", " 
-                                                     << 1000.f * this->m_analysisMomentum.GetZ() << ") MeV/c\n"
               << "    - MC momentum:               " << "(" << 1000.f * this->m_mcMomentum.GetX() << ", " 
                                                      << 1000.f * this->m_mcMomentum.GetY() << ", " << 1000.f * this->m_mcMomentum.GetZ()
                                                      << ") MeV/c\n"
@@ -111,23 +109,19 @@ void LArAnalysisParticle::Print() const
                   << "    - Type:                      " << this->TypeAsString(this->m_type) << "\n"
                   << "    - Type tree:                 " << TEXT_GREEN_BOLD << this->TypeTreeAsString(this->m_typeTree) << TEXT_NORMAL 
                                                          << "\n"
-                  << "    - Energy:                    " << TEXT_MAGENTA_BOLD << 1000.f * this->m_analysisEnergy << "MeV\n" << TEXT_NORMAL
-                  << "    - Energy from charge:        " << 1000.f * this->m_energyFromCharge << "MeV\n"
-                  << "    - E from range:              " << 100.f * m_energyFromRangeFraction << "%\n"
-                  << "    - E from corr track charge:  " << 100.f * m_energyFromCorrectedTrackChargeFraction << "%\n"
-                  << "    - E from track charge:       " << 100.f * m_energyFromUncorrectedTrackChargeFraction << "%\n"
-                  << "    - E from shower charge:      " << 100.f * m_energyFromShowerChargeFraction << "%\n"
+                  << "    - Kinetic energy:            " << TEXT_MAGENTA_BOLD << 1000.f * this->m_kineticEnergy << "MeV\n" << TEXT_NORMAL
+                  << "    - KE from range:             " << 100.f * m_kineticEnergyFromRangeFraction << "%\n"
+                  << "    - KE from corr track charge: " << 100.f * m_kineticEnergyFromCorrectedTrackChargeFraction << "%\n"
+                  << "    - KE from track charge:      " << 100.f * m_kineticEnergyFromUncorrectedTrackChargeFraction << "%\n"
+                  << "    - KE from shower charge:     " << 100.f * m_kineticEnergyFromShowerChargeFraction << "%\n"
                   << "    - Is vertex fiducial:        " << TEXT_RED_BOLD << std::boolalpha << this->m_isVertexFiducial << std::noboolalpha
                                                          << TEXT_NORMAL << "\n"
                   << "    - Fiducial hit fraction:     " << TEXT_RED_BOLD << 100.f * this->m_fiducialHitFraction << TEXT_NORMAL << "%\n"
                   << "    - Vertex:                    " << "(" << this->m_vertexPosition.GetX() << ", " << this->m_vertexPosition.GetY()
-                                                         << ", " << this->m_vertexPosition.GetZ() << ")\n"
+                                                         << ", " << this->m_vertexPosition.GetZ() << ") cm\n"
                   << "    - Direction cosines:         " << "(" << this->m_directionCosines.GetX() << ", "
                                                          << this->m_directionCosines.GetY() << ", " << this->m_directionCosines.GetZ() 
                                                          << ")\n"
-                  << "    - Momentum:                  " << "(" << 1000.f * this->m_analysisMomentum.GetX() << ", " 
-                                                         << 1000.f * this->m_analysisMomentum.GetY() << ", " 
-                                                         << 1000.f * this->m_analysisMomentum.GetZ() << ") MeV/c\n"
                   << "    - Num 3D hits:               " << this->m_numberOf3dHits << "\n"
                   << "    - Num collection-plane hits: " << this->m_numberOfCollectionPlaneHits << "\n"
                   << "    - Is shower:                 " << std::boolalpha << this->m_isShower << std::noboolalpha << "\n"
@@ -188,25 +182,25 @@ LArAnalysisParticleParameters::LArAnalysisParticleParameters() noexcept :
     object_creation::ParticleFlowObject::Parameters(),
     m_type(LArAnalysisParticle::TYPE::UNKNOWN),
     m_typeTree(),
-    m_analysisEnergy(0.f),
-    m_energyFromCharge(0.f),
+    m_kineticEnergy(0.f),
     m_isVertexFiducial(false),
     m_fiducialHitFraction(0.f),
     m_vertexPosition(CartesianVector(0.f, 0.f, 0.f)),
     m_directionCosines(CartesianVector(0.f, 0.f, 0.f)),
-    m_analysisMomentum(CartesianVector(0.f, 0.f, 0.f)),
     m_numberOf3dHits(0U),
     m_numberOfCollectionPlaneHits(0U),
     m_isShower(false),
     m_numberOfDownstreamParticles(0U),
-    m_energyFromRangeFraction(0.f),
-    m_energyFromCorrectedTrackChargeFraction(0.f),
-    m_energyFromUncorrectedTrackChargeFraction(0.f),
-    m_energyFromShowerChargeFraction(0.f),
+    m_kineticEnergyFromRangeFraction(0.f),
+    m_kineticEnergyFromCorrectedTrackChargeFraction(0.f),
+    m_kineticEnergyFromUncorrectedTrackChargeFraction(0.f),
+    m_kineticEnergyFromShowerChargeFraction(0.f),
     m_hasMcInfo(false),
     m_mcType(LArAnalysisParticle::TYPE::UNKNOWN),
     m_mcTypeTree(),
     m_mcEnergy(0.f),
+    m_mcKineticEnergy(0.f),
+    m_mcMass(0.f),
     m_mcMomentum(CartesianVector(0.f, 0.f, 0.f)),
     m_mcVertexPosition(CartesianVector(0.f, 0.f, 0.f)),
     m_mcDirectionCosines(CartesianVector(0.f, 0.f, 0.f)),

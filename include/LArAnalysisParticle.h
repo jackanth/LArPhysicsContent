@@ -128,20 +128,12 @@ public:
     const TypeTree & GetTypeTree() const noexcept;
 
     /**
-     *  @brief  Get the particle energy
+     *  @brief  Get the particle's reconstructed kinetic energy in GeV
      * 
-     *  @return the particle energy
-     * 
-     */
-    float AnalysisEnergy() const noexcept;
-    
-    /**
-     *  @brief  Get the particle energy from charge
-     * 
-     *  @return the particle energy from charge
+     *  @return the particle's reconstructed kinetic energy
      * 
      */
-    float EnergyFromCharge() const noexcept;
+    float KineticEnergy() const noexcept;
 
     /**
      *  @brief  Get whether the fiducial cut is satisfied
@@ -160,7 +152,7 @@ public:
     float FiducialHitFraction() const noexcept;
 
     /**
-     *  @brief  Get the vertex position
+     *  @brief  Get the vertex position in cm
      * 
      *  @return the vertex position
      * 
@@ -174,14 +166,6 @@ public:
      * 
      */
     const CartesianVector & DirectionCosines() const noexcept;
-    
-    /**
-     *  @brief  Get the initial direction
-     * 
-     *  @return the initial direction
-     * 
-     */
-    const CartesianVector & AnalysisMomentum() const noexcept;
 
     /**
      *  @brief  Get the number of 3D hits
@@ -216,36 +200,36 @@ public:
     unsigned NumberOfDownstreamParticles() const noexcept;
     
     /**
-     *  @brief  Get the fraction of the analysis energy sourced from range
+     *  @brief  Get the fraction of the reconstructed kinetic energy sourced from range
      * 
      *  @return the energy fraction
      * 
      */
-    float EnergyFromRangeFraction() const noexcept;
+    float KineticEnergyFromRangeFraction() const noexcept;
     
     /**
-     *  @brief  Get the fraction of the analysis energy sourced from recombination-corrected track charge
+     *  @brief  Get the fraction of the reconstructed kinetic energy sourced from recombination-corrected track charge
      * 
      *  @return the energy fraction
      * 
      */
-    float EnergyFromCorrectedTrackChargeFraction() const noexcept;
+    float KineticEnergyFromCorrectedTrackChargeFraction() const noexcept;
     
     /**
-     *  @brief  Get the fraction of the analysis energy sourced from uncorrected track charge
+     *  @brief  Get the fraction of the reconstructed kinetic energy sourced from uncorrected track charge
      * 
      *  @return the energy fraction
      * 
      */
-    float EnergyFromUncorrectedTrackChargeFraction() const noexcept;
+    float KineticEnergyFromUncorrectedTrackChargeFraction() const noexcept;
     
     /**
-     *  @brief  Get the fraction of the analysis energy sourced from shower charge
+     *  @brief  Get the fraction of the reconstructed kinetic energy sourced from shower charge
      * 
      *  @return the energy fraction
      * 
      */
-    float EnergyFromShowerChargeFraction() const noexcept;
+    float KineticEnergyFromShowerChargeFraction() const noexcept;
 
     /**
      *  @brief  Get whether the particle has MC info
@@ -272,7 +256,7 @@ public:
     const TypeTree & GetMcTypeTree() const;
 
     /**
-     *  @brief  Get the MC particle energy
+     *  @brief  Get the MC particle energy in GeV
      * 
      *  @return the MC particle energy
      * 
@@ -280,15 +264,31 @@ public:
     float McEnergy() const;
     
     /**
-     *  @brief  Get the MC vertex position
+     *  @brief  Get the MC particle kinetic energy in GeV
      * 
-     *  @return the MC vertex position
+     *  @return the MC particle kinetic energy
+     * 
+     */
+    float McKineticEnergy() const;
+    
+    /**
+     *  @brief  Get the MC particle mass in GeV/c^2
+     * 
+     *  @return the MC particle mass
+     * 
+     */
+    float McMass() const;
+    
+    /**
+     *  @brief  Get the MC momentum in GeV/c
+     * 
+     *  @return the MC momentum
      * 
      */
     const CartesianVector & McMomentum() const;
 
     /**
-     *  @brief  Get the MC vertex position
+     *  @brief  Get the MC vertex position in cm
      * 
      *  @return the MC vertex position
      * 
@@ -304,9 +304,9 @@ public:
     const CartesianVector & McDirectionCosines() const;
     
     /**
-     *  @brief  Get the MC vertex position
+     *  @brief  Get whether the MC vertex position is fiducial
      * 
-     *  @return the MC vertex position
+     *  @return whether the MC vertex position is fiducial
      * 
      */
     bool McIsVertexFiducial() const;
@@ -404,27 +404,27 @@ public:
 private:
     TYPE               m_type;                                     ///< The particle type
     TypeTree           m_typeTree;                                 ///< The type tree
-    float              m_analysisEnergy;                           ///< The particle energy in GeV
-    float              m_energyFromCharge;                         ///< The particle energy in GeV, calculated only using charge
+    float              m_kineticEnergy;                            ///< The particle's reconstructed energy in GeV
     bool               m_isVertexFiducial;                         ///< Whether the vertex is fiducial
     float              m_fiducialHitFraction;                      ///< The fraction of hits that are fiducial
-    CartesianVector    m_vertexPosition;                           ///< The vertex position
+    CartesianVector    m_vertexPosition;                           ///< The vertex position in cm
     CartesianVector    m_directionCosines;                         ///< The direction cosines at the vertex
-    CartesianVector    m_analysisMomentum;                         ///< The momentum at the vertex
     unsigned           m_numberOf3dHits;                           ///< The number of 3D hits
     unsigned           m_numberOfCollectionPlaneHits;              ///< The number of collection-plane hits
     bool               m_isShower;                                 ///< Whether the particle is a shower
     unsigned           m_numberOfDownstreamParticles;              ///< The number of downstream particles
-    float              m_energyFromRangeFraction;                  ///< The fraction of analysis energy calculated from particle range
-    float              m_energyFromCorrectedTrackChargeFraction;   ///< The fraction of analysis energy calculated from recombination-corrected track charge
-    float              m_energyFromUncorrectedTrackChargeFraction; ///< The fraction of analysis energy calculated from uncorrected track charge
-    float              m_energyFromShowerChargeFraction;           ///< The fraction of analysis energy calculated from shower charge
+    float              m_kineticEnergyFromRangeFraction;                  ///< The fraction of reconstructed kinetic energy calculated from particle range
+    float              m_kineticEnergyFromCorrectedTrackChargeFraction;   ///< The fraction of reconstructed kinetic energy calculated from recombination-corrected track charge
+    float              m_kineticEnergyFromUncorrectedTrackChargeFraction; ///< The fraction of reconstructed kinetic energy calculated from uncorrected track charge
+    float              m_kineticEnergyFromShowerChargeFraction;           ///< The fraction of reconstructed kinetic energy calculated from shower charge
     bool               m_hasMcInfo;                                ///< Whether the particle has MC info attached
     TYPE               m_mcType;                                   ///< The MC type
     TypeTree           m_mcTypeTree;                               ///< The MC type tree
-    float              m_mcEnergy;                                 ///< The MC energy
-    CartesianVector    m_mcMomentum;                               ///< The MC momentum at the vertex
-    CartesianVector    m_mcVertexPosition;                         ///< The MC vertex position
+    float              m_mcEnergy;                                 ///< The MC energy in GeV
+    float              m_mcKineticEnergy;                          ///< The MC kinetic energy in GeV
+    float              m_mcMass;                                   ///< The MC mass in GeV/c^2
+    CartesianVector    m_mcMomentum;                               ///< The MC momentum at the vertex in GeV/c
+    CartesianVector    m_mcVertexPosition;                         ///< The MC vertex position in cm
     CartesianVector    m_mcDirectionCosines;                       ///< The MC direction cosines
     bool               m_mcIsVertexFiducial;                       ///< Whether the vertex is fiducial (MC quantity)
     float              m_mcContainmentFraction;                    ///< The fraction of the particle that is contained (MC quantity)
@@ -465,25 +465,25 @@ public:
 
     LArAnalysisParticle::TYPE        m_type;                       
     LArAnalysisParticle::TypeTree    m_typeTree;                   
-    float                            m_analysisEnergy;             
-    float                            m_energyFromCharge;           
+    float                            m_kineticEnergy;             
     bool                             m_isVertexFiducial;           
     float                            m_fiducialHitFraction;         
     CartesianVector                  m_vertexPosition;             
     CartesianVector                  m_directionCosines;           
-    CartesianVector                  m_analysisMomentum;                   
     unsigned                         m_numberOf3dHits;             
     unsigned                         m_numberOfCollectionPlaneHits;
     bool                             m_isShower;                   
     unsigned                         m_numberOfDownstreamParticles;
-    float                            m_energyFromRangeFraction;
-    float                            m_energyFromCorrectedTrackChargeFraction;
-    float                            m_energyFromUncorrectedTrackChargeFraction; 
-    float                            m_energyFromShowerChargeFraction; 
+    float                            m_kineticEnergyFromRangeFraction;
+    float                            m_kineticEnergyFromCorrectedTrackChargeFraction;
+    float                            m_kineticEnergyFromUncorrectedTrackChargeFraction; 
+    float                            m_kineticEnergyFromShowerChargeFraction; 
     bool                             m_hasMcInfo;                  
     LArAnalysisParticle::TYPE        m_mcType;                     
     LArAnalysisParticle::TypeTree    m_mcTypeTree;                 
     float                            m_mcEnergy;                   
+    float                            m_mcKineticEnergy;                   
+    float                            m_mcMass;                   
     CartesianVector                  m_mcMomentum;                 
     CartesianVector                  m_mcVertexPosition; 
     CartesianVector                  m_mcDirectionCosines;
@@ -555,16 +555,9 @@ inline const LArAnalysisParticle::TypeTree & LArAnalysisParticle::GetTypeTree() 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float LArAnalysisParticle::AnalysisEnergy() const noexcept
+inline float LArAnalysisParticle::KineticEnergy() const noexcept
 {
-    return this->m_analysisEnergy;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float LArAnalysisParticle::EnergyFromCharge() const noexcept
-{
-    return this->m_energyFromCharge;
+    return this->m_kineticEnergy;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -597,13 +590,6 @@ inline const CartesianVector & LArAnalysisParticle::DirectionCosines() const noe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const CartesianVector & LArAnalysisParticle::AnalysisMomentum() const noexcept
-{
-    return this->m_analysisMomentum;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 inline unsigned LArAnalysisParticle::NumberOf3dHits() const noexcept
 {
     return this->m_numberOf3dHits;
@@ -632,30 +618,30 @@ inline unsigned LArAnalysisParticle::NumberOfDownstreamParticles() const noexcep
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float LArAnalysisParticle::EnergyFromRangeFraction() const noexcept
+inline float LArAnalysisParticle::KineticEnergyFromRangeFraction() const noexcept
 {
-    return m_energyFromRangeFraction;
+    return m_kineticEnergyFromRangeFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float LArAnalysisParticle::EnergyFromCorrectedTrackChargeFraction() const noexcept
+inline float LArAnalysisParticle::KineticEnergyFromCorrectedTrackChargeFraction() const noexcept
 {
-    return m_energyFromCorrectedTrackChargeFraction;
+    return m_kineticEnergyFromCorrectedTrackChargeFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float LArAnalysisParticle::EnergyFromUncorrectedTrackChargeFraction() const noexcept
+inline float LArAnalysisParticle::KineticEnergyFromUncorrectedTrackChargeFraction() const noexcept
 {
-    return m_energyFromUncorrectedTrackChargeFraction;
+    return m_kineticEnergyFromUncorrectedTrackChargeFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float LArAnalysisParticle::EnergyFromShowerChargeFraction() const noexcept
+inline float LArAnalysisParticle::KineticEnergyFromShowerChargeFraction() const noexcept
 {
-    return m_energyFromShowerChargeFraction;
+    return m_kineticEnergyFromShowerChargeFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -687,6 +673,22 @@ inline float LArAnalysisParticle::McEnergy() const
 {
     ThrowIfNoMcInfo(); 
     return this->m_mcEnergy;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisParticle::McKineticEnergy() const
+{
+    ThrowIfNoMcInfo(); 
+    return this->m_mcKineticEnergy;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisParticle::McMass() const
+{
+    ThrowIfNoMcInfo(); 
+    return this->m_mcMass;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

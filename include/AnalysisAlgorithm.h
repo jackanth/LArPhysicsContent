@@ -135,7 +135,7 @@ private:
     void EstimateParticleEnergy(const ParticleFlowObject *const pPfo, const LArAnalysisParticle::PfoTypeMap &typeMap,
                                  const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
                                  const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap, float &particleEnergy,
-    float &particleEnergyFromCharge, float &energySourcedFromRange, float &energySourcedFromShowerCharge, 
+    float &energySourcedFromRange, float &energySourcedFromShowerCharge, 
     float &energySourcedFromTrackCharge, float &energySourcedFromCorrectedTrackCharge) const;
     
     /**
@@ -191,14 +191,21 @@ private:
      *  @brief ...
      * 
      */
-    CartesianVector GetDirectionAtVertex(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, 
+    CartesianVector GetCosmicRayDirectionAtVertex(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, 
+                                         const Vertex *const pVertex) const;
+                                         
+    /**
+     *  @brief ...
+     * 
+     */
+    CartesianVector GetPrimaryDirectionAtVertex(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, 
                                          const Vertex *const pVertex) const;
     
     /**
      *  @brief ...
      * 
      */
-    bool GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, LArAnalysisParticle::TypeTree &typeTree, 
+    bool GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, float &mcKineticEnergy, float &mcMass, LArAnalysisParticle::TypeTree &typeTree, 
         LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode, const bool isNeutrino,
         float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle, float &mcHitPurity, float &mcHitCompleteness,
         float &mcCollectionPlaneHitPurity, float &mcCollectionPlaneHitCompleteness) const;
