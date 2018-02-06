@@ -22,7 +22,6 @@
 namespace lar_physics_content
 {
 AnalysisDataAlgorithm::AnalysisDataAlgorithm() :
-    m_eventNumber{0U},
     m_produceBirksFitData{true},
     m_produceEnergyFromRangeData{true},
     m_producePidData{true},
@@ -42,7 +41,8 @@ AnalysisDataAlgorithm::AnalysisDataAlgorithm() :
     m_pPidDataProtonsTTreeName{"PidDataProtons"},
     m_pPidDataMuonsPionsTTreeName{"PidDataMuonsPions"},
     m_uniquePlotIdentifier{0},
-    m_pBirksHitSelectionTool(nullptr)
+    m_pBirksHitSelectionTool(nullptr),
+    m_caloHitListName()
 {
 }
 
@@ -75,7 +75,31 @@ AnalysisDataAlgorithm::~AnalysisDataAlgorithm()
 
 StatusCode AnalysisDataAlgorithm::Run()
 {
-    COUT("Event number " << ++this->m_eventNumber);
+    const PfoList *pPfoList(nullptr);
+    
+    if ((PandoraContentApi::GetList(*this, this->m_pfoListName, pPfoList) != STATUS_CODE_SUCCESS) || !pPfoList)
+    {
+        std::cout << "AnalysisAlgorithm: failed to get the PFO list" << std::endl;
+        return STATUS_CODE_NOT_FOUND;
+    }
+    
+    const CaloHitList *pCaloHitList(nullptr);
+    
+    if ((PandoraContentApi::GetList(*this, this->m_caloHitListName, pCaloHitList) != STATUS_CODE_SUCCESS) || !pCaloHitList)
+    {
+        std::cout << "AnalysisDataAlgorithm: could not get MC information because no valid CaloHit list name was provided" << std::endl;
+        return STATUS_CODE_NOT_FOUND;
+    }
+    
+    PfoList pfoList;
+    
+    for (const ParticleFlowObject *const pPfo : *pPfoList)
+    {
+        if (LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(pPfo) || LArAnalysisParticleHelper::IsCosmicRay(pPfo))
+            pfoList.push_back(pPfo);
+    }
+    
+    // Move the below to ReadSettings
     
     // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
     CartesianVector minCoordinates(0.f, 0.f, 0.f), maxCoordinates(0.f, 0.f, 0.f);
@@ -84,47 +108,90 @@ StatusCode AnalysisDataAlgorithm::Run()
         m_fiducialCutLowYMargin, this->m_fiducialCutHighYMargin, m_fiducialCutLowZMargin, m_fiducialCutHighZMargin,
         minCoordinates, maxCoordinates);
     
-    // Loop over the reconstructed neutrino PFOs and their primary daughters.
-    const PfoList recoNeutrinoList = LArAnalysisParticleHelper::GetRecoNeutrinoList(*this, this->m_pfoListName);
-                                                                                  
-    for (const ParticleFlowObject *const pPfo : recoNeutrinoList)
+    for (const ParticleFlowObject *const pPfo : pfoList)
     {
-        for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
+        if (LArAnalysisParticleHelper::IsCosmicRay(pPfo))
+            std::cout << "Considering cosmic ray" << std::endl;
+            
+        else if (LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(pPfo))
+            std::cout << "Considering primary particle" << std::endl;
+        
+        // Try to get the corresponding MC particle. Skip this daughter if no MC particle can be found.
+        MCParticleMap mcParticleMap;
+        const MCParticle *pMCParticle(nullptr);
+
+        try
         {
-            // Check whether fiducial cut is satisfied. If not, ignore this primary PFO.
-            if (!LArAnalysisParticleHelper::RecursivelyCheckFiducialCut(pDaughterPfo, minCoordinates, maxCoordinates))
-            {
-                CERR("Fiducial cut was not satisfied so ignoring this primary");
-                continue;
-            }
-            
-            // For each tracklike PFO, try to perform a 3D sliding linear fit and store it in a map.
-            LArAnalysisParticleHelper::TrackFitMap trackFitMap;
-            LArAnalysisParticleHelper::RecursivelyAppendTrackFitMap(this->GetPandora(), pDaughterPfo, trackFitMap, this->m_trackSlidingFitWindow);
-            
-            // For each tracklike PFO, decide which hits we want to Birks-correct.
-            LArAnalysisParticleHelper::LArTrackHitEnergyMap trackHitEnergyMap;
-            this->RecursivelyAppendLArTrackHitEnergyMap(pDaughterPfo, trackHitEnergyMap, trackFitMap);
-            
-            // For each PFO, get its main MC particle and store it in a map.
-            MCParticleMap mcParticleMap;
-            RecursivelyAppendMCParticleMap(pDaughterPfo, mcParticleMap);
-            
-            if (this->m_produceBirksFitData)
-               this->ProduceBirksFitData(pDaughterPfo, trackFitMap, mcParticleMap, trackHitEnergyMap);
-               
-            if (this->m_produceEnergyFromRangeData)
-            {
-                this->RecursivelyProduceEnergyFromRangeData(pDaughterPfo, trackFitMap, mcParticleMap, 
-                                                            this->m_pEnergyFromRangeProtonDataNtuple, {PROTON});
-                                                 
-                this->RecursivelyProduceEnergyFromRangeData(pDaughterPfo, trackFitMap, mcParticleMap,
-                                                            this->m_pEnergyFromRangePionMuonDataNtuple, {PI_PLUS, PI_MINUS, MU_MINUS});
-            }
-   
-            if (this->m_producePidData)
-                this->RecursivelyProducePidData(pDaughterPfo, trackFitMap, mcParticleMap);
+            pMCParticle = LArAnalysisParticleHelper::GetMainMCParticle(pPfo);
         }
+
+        catch (...)
+        {
+            std::cout << "AnalysisDataAlgorithm: failed to get main MC particle" << std::endl;
+            continue;
+        }
+
+        if (!pMCParticle)
+        {
+            std::cout << "AnalysisDataAlgorithm: failed to get main MC particle" << std::endl;
+            continue;
+        }
+ 
+        mcParticleMap.emplace(pPfo, pMCParticle);
+        
+        float mcEnergy(0.f), mcKineticEnergy(0.f), mcMass(0.f), mcContainmentFraction(0.f), mcHitPurity(0.f), mcHitCompleteness(0.f),
+            mcCollectionPlaneHitPurity(0.f), mcCollectionPlaneHitCompleteness(0.f);
+            
+        LArAnalysisParticle::TypeTree mcTypeTree;
+        LArAnalysisParticle::TYPE mcType(LArAnalysisParticle::TYPE::UNKNOWN);
+        CartesianVector mcVertexPosition(0.f, 0.f, 0.f), mcMomentum(0.f, 0.f, 0.f);
+        int mcPdgCode(0);
+        
+        LArAnalysisParticleHelper::GetMcInformation(pMCParticle, mcEnergy, mcKineticEnergy, mcMass, mcTypeTree, mcType, mcVertexPosition, mcMomentum, 
+        mcPdgCode, mcContainmentFraction, minCoordinates, maxCoordinates);
+        
+        LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(pPfo, pMCParticle, pCaloHitList, false, mcHitPurity, mcHitCompleteness,
+            mcCollectionPlaneHitPurity, mcCollectionPlaneHitCompleteness);
+        
+        // Quality cuts.
+        std::cout << "Containment fraction is    " << 100.f * mcContainmentFraction << "%" << std::endl;
+        std::cout << "Hit purity is              " << 100.f * mcHitPurity << "%" << std::endl;
+        std::cout << "Hit completeness is        " << 100.f * mcHitCompleteness << "%" << std::endl;
+        std::cout << "W view hit purity is       " << 100.f * mcCollectionPlaneHitPurity << "%" << std::endl;
+        std::cout << "W view hit completeness is " << 100.f * mcCollectionPlaneHitCompleteness << "%" << std::endl;
+        
+        if (mcContainmentFraction < 0.95f || mcHitPurity < 0.95f || mcHitCompleteness < 0.95f || mcCollectionPlaneHitPurity < 0.95f || 
+            mcCollectionPlaneHitCompleteness < 0.95f)
+        {
+            std::cout << "Skipping..." << std::endl;
+            continue;
+        }
+        
+        // For each tracklike PFO, try to perform a 3D sliding linear fit and store it in a map.
+        LArAnalysisParticleHelper::TrackFitMap trackFitMap;
+        LArAnalysisParticleHelper::RecursivelyAppendTrackFitMap(this->GetPandora(), pPfo, trackFitMap, this->m_trackSlidingFitWindow);
+        
+        // For each tracklike PFO, decide which hits we want to Birks-correct.
+        LArAnalysisParticleHelper::LArTrackHitEnergyMap trackHitEnergyMap;
+        this->RecursivelyAppendLArTrackHitEnergyMap(pPfo, trackHitEnergyMap, trackFitMap);
+        
+        // For each PFO, get its main MC particle and store it in a map.
+        RecursivelyAppendMCParticleMap(pPfo, mcParticleMap);
+        
+        if (this->m_produceBirksFitData)
+           this->ProduceBirksFitData(pPfo, trackFitMap, mcParticleMap, trackHitEnergyMap);
+           
+        if (this->m_produceEnergyFromRangeData)
+        {
+            this->RecursivelyProduceEnergyFromRangeData(pPfo, trackFitMap, mcParticleMap, 
+                                                        this->m_pEnergyFromRangeProtonDataNtuple, {PROTON});
+                                             
+            this->RecursivelyProduceEnergyFromRangeData(pPfo, trackFitMap, mcParticleMap,
+                                                        this->m_pEnergyFromRangePionMuonDataNtuple, {PI_PLUS, PI_MINUS, MU_MINUS});
+        }
+
+        if (this->m_producePidData)
+            this->RecursivelyProducePidData(pPfo, trackFitMap, mcParticleMap, LArAnalysisParticleHelper::IsCosmicRay(pPfo));
     }
     
     return STATUS_CODE_SUCCESS;
@@ -175,24 +242,26 @@ LArTrackHitEnergy::Vector AnalysisDataAlgorithm::AppendLArTrackHitEnergyMap(cons
 
 void AnalysisDataAlgorithm::RecursivelyAppendMCParticleMap(const ParticleFlowObject *const pPfo, MCParticleMap &mcParticleMap) const
 {
-    // Try to get the corresponding MC particle. Skip this daughter if no MC particle can be found.
-    const MCParticle *pMCParticle = nullptr;
-
-    try
-    {
-        pMCParticle = LArAnalysisParticleHelper::GetMainMCParticle(pPfo);
-    }
-
-    catch (...)
-    {
-        CERR("Failed to find main MC particle");
-    }
-
-    if (pMCParticle)
-        mcParticleMap.emplace(pPfo, pMCParticle);
-    
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
+    {
+        // Try to get the corresponding MC particle. Skip this daughter if no MC particle can be found.
+        const MCParticle *pMCParticle = nullptr;
+
+        try
+        {
+            pMCParticle = LArAnalysisParticleHelper::GetMainMCParticle(pPfo);
+        }
+
+        catch (...)
+        {
+            CERR("Failed to find main MC particle");
+        }
+
+        if (pMCParticle)
+            mcParticleMap.emplace(pPfo, pMCParticle);
+            
         this->RecursivelyAppendMCParticleMap(pDaughterPfo, mcParticleMap);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -349,7 +418,7 @@ float AnalysisDataAlgorithm::GetTrueEnergy(const MCParticle *pMCParticle) const
 
 void AnalysisDataAlgorithm::RecursivelyProducePidData(const ParticleFlowObject *const pPfo,
                                                          const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
-                                                         const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap) const
+                                                         const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap, const bool isCosmicRay) const
 {
     const auto trackFitFindIter   = trackFitMap.find(pPfo);
     const auto mcParticleFindIter = mcParticleMap.find(pPfo);
@@ -362,11 +431,13 @@ void AnalysisDataAlgorithm::RecursivelyProducePidData(const ParticleFlowObject *
             {
                 float range      = LArAnalysisParticleHelper::GetParticleRange(pPfo, trackFitFindIter->second);
                 float trueEnergy = this->GetTrueEnergy(mcParticleFindIter->second);
+                int   isCosmicRayInt = static_cast<int>(isCosmicRay);
                 
                 if (range > 0.f && trueEnergy > 0.f)
                 {
                     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_pPidDataProtonsTTreeName.c_str(), "TrackLength", range));
                     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_pPidDataProtonsTTreeName.c_str(), "TrueEnergy", trueEnergy));
+                    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_pPidDataProtonsTTreeName.c_str(), "IsCosmicRay", isCosmicRayInt));
                     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_pPidDataProtonsTTreeName.c_str()));
                 }
                 
@@ -379,11 +450,13 @@ void AnalysisDataAlgorithm::RecursivelyProducePidData(const ParticleFlowObject *
             {
                 float range      = LArAnalysisParticleHelper::GetParticleRange(pPfo, trackFitFindIter->second);
                 float trueEnergy = this->GetTrueEnergy(mcParticleFindIter->second);
+                int   isCosmicRayInt = static_cast<int>(isCosmicRay);
                 
                 if (range > 0.f && trueEnergy > 0.f)
                 {
                     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_pPidDataMuonsPionsTTreeName.c_str(), "TrackLength", range));
                     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_pPidDataMuonsPionsTTreeName.c_str(), "TrueEnergy", trueEnergy));
+                    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_pPidDataMuonsPionsTTreeName.c_str(), "IsCosmicRay", isCosmicRayInt));
                     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_pPidDataMuonsPionsTTreeName.c_str()));
                 }
                 
@@ -395,7 +468,7 @@ void AnalysisDataAlgorithm::RecursivelyProducePidData(const ParticleFlowObject *
     }
     
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
-        this->RecursivelyProducePidData(pDaughterPfo, trackFitMap, mcParticleMap);
+        this->RecursivelyProducePidData(pDaughterPfo, trackFitMap, mcParticleMap, false);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -421,6 +494,8 @@ StatusCode AnalysisDataAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
                                                                            this->m_trackSlidingFitWindow));
     
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RootDataFileName", this->m_rootDataFileName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", this->m_caloHitListName));
+    
           
     this->m_pRootDataFile = new TFile(this->m_rootDataFileName.c_str(), "UPDATE");
           

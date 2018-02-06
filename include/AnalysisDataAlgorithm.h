@@ -53,7 +53,6 @@ private:
     using MCParticleMap = std::unordered_map<const ParticleFlowObject *, const MCParticle *>; /// Alias for a map to MC particles.
     using PdgCodeSet    = std::unordered_set<int>;                                            ///< ...
 
-    unsigned int  m_eventNumber;                         ///<
     bool          m_produceBirksFitData;                 ///< 
     bool          m_produceEnergyFromRangeData;          ///< 
     bool          m_producePidData;                      ///< 
@@ -74,6 +73,7 @@ private:
     std::string   m_pPidDataMuonsPionsTTreeName;         ///<
     mutable int   m_uniquePlotIdentifier;                ///<
     BirksHitSelectionTool *m_pBirksHitSelectionTool;
+    std::string m_caloHitListName;
     
     /**
      *  @brief ...
@@ -142,7 +142,7 @@ private:
      * 
      */
     void RecursivelyProducePidData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
-                                   const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap) const;
+                                   const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap, const bool isCosmicRay) const;
 };
 } // namespace lar_physics_content
 

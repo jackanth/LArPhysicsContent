@@ -189,6 +189,14 @@ public:
     static bool GetMcInformation(const MCParticle *const pMCParticle, float &mcEnergy, float &mcKineticEnergy, float &mcMass, LArAnalysisParticle::TypeTree &typeTree,
         LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum, int &mcPdgCode,
         float &mcContainmentFraction, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
+        
+    /**
+     *  @brief ...
+     * 
+     */
+    static void CalculateHitPurityAndCompleteness(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle, 
+        const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, float &mcCollectionPlaneHitPurity,
+        float &mcCollectionPlaneHitCompleteness);
     
 private:
     /**
@@ -229,6 +237,14 @@ private:
      * 
      */
     static LArAnalysisParticle::TYPE GetMcParticleType(const MCParticle *const pMCParticle);
+    
+    /**
+     *  @brief ...
+     * 
+     */
+    static void CalculateHitPurityAndCompleteness(const CaloHitList &pfoAssociatedCaloHits, const MCParticle *const pMCParticle, 
+        const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, 
+        const bool useCollectionPlaneOnly);
 };
 } // namespace lar_physics_content
 

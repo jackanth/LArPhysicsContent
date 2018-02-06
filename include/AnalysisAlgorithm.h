@@ -214,18 +214,6 @@ private:
      *  @brief ...
      * 
      */
-    void CalculateHitPurityAndCompleteness(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle, 
-        const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, float &mcCollectionPlaneHitPurity,
-        float &mcCollectionPlaneHitCompleteness) const;
-    
-    void CalculateHitPurityAndCompleteness(const CaloHitList &pfoAssociatedCaloHits, const MCParticle *const pMCParticle, 
-        const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, 
-        const bool useCollectionPlaneOnly) const;
-    
-    /**
-     *  @brief ...
-     * 
-     */
     void CountNumberOfDownstreamParticles(const ParticleFlowObject *const pPfo, unsigned &numberOfParticles) const;
     
     /**
