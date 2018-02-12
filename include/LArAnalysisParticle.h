@@ -15,8 +15,6 @@
 
 #include "Pandora/ObjectFactory.h"
 
-#include "DebugDefinitions.h"
-
 using namespace pandora;
 
 namespace lar_physics_content
@@ -380,72 +378,41 @@ public:
      * 
      */
     void Print() const;
-        
-    /**
-     *  @brief  Get the particle type as a string
-     * 
-     *  @param  type the type
-     * 
-     *  @return the string type
-     * 
-     */
-    static std::string TypeAsString(const TYPE type);
-    
-    /**
-     *  @brief  Get the particle type tree as a string
-     * 
-     *  @param  typeTree the typeTree
-     * 
-     *  @return the string type
-     * 
-     */
-    static std::string TypeTreeAsString(const TypeTree &typeTree);
 
 private:
-    TYPE               m_type;                                     ///< The particle type
-    TypeTree           m_typeTree;                                 ///< The type tree
-    float              m_kineticEnergy;                            ///< The particle's reconstructed energy in GeV
-    bool               m_isVertexFiducial;                         ///< Whether the vertex is fiducial
-    float              m_fiducialHitFraction;                      ///< The fraction of hits that are fiducial
-    CartesianVector    m_vertexPosition;                           ///< The vertex position in cm
-    CartesianVector    m_directionCosines;                         ///< The direction cosines at the vertex
-    unsigned           m_numberOf3dHits;                           ///< The number of 3D hits
-    unsigned           m_numberOfCollectionPlaneHits;              ///< The number of collection-plane hits
-    bool               m_isShower;                                 ///< Whether the particle is a shower
-    unsigned           m_numberOfDownstreamParticles;              ///< The number of downstream particles
+    TYPE               m_type;                                            ///< The particle type
+    TypeTree           m_typeTree;                                        ///< The type tree
+    float              m_kineticEnergy;                                   ///< The particle's reconstructed energy in GeV
+    bool               m_isVertexFiducial;                                ///< Whether the vertex is fiducial
+    float              m_fiducialHitFraction;                             ///< The fraction of hits that are fiducial
+    CartesianVector    m_vertexPosition;                                  ///< The vertex position in cm
+    CartesianVector    m_directionCosines;                                ///< The direction cosines at the vertex
+    unsigned           m_numberOf3dHits;                                  ///< The number of 3D hits
+    unsigned           m_numberOfCollectionPlaneHits;                     ///< The number of collection-plane hits
+    bool               m_isShower;                                        ///< Whether the particle is a shower
+    unsigned           m_numberOfDownstreamParticles;                     ///< The number of downstream particles
     float              m_kineticEnergyFromRangeFraction;                  ///< The fraction of reconstructed kinetic energy calculated from particle range
     float              m_kineticEnergyFromCorrectedTrackChargeFraction;   ///< The fraction of reconstructed kinetic energy calculated from recombination-corrected track charge
     float              m_kineticEnergyFromUncorrectedTrackChargeFraction; ///< The fraction of reconstructed kinetic energy calculated from uncorrected track charge
     float              m_kineticEnergyFromShowerChargeFraction;           ///< The fraction of reconstructed kinetic energy calculated from shower charge
-    bool               m_hasMcInfo;                                ///< Whether the particle has MC info attached
-    TYPE               m_mcType;                                   ///< The MC type
-    TypeTree           m_mcTypeTree;                               ///< The MC type tree
-    float              m_mcEnergy;                                 ///< The MC energy in GeV
-    float              m_mcKineticEnergy;                          ///< The MC kinetic energy in GeV
-    float              m_mcMass;                                   ///< The MC mass in GeV/c^2
-    CartesianVector    m_mcMomentum;                               ///< The MC momentum at the vertex in GeV/c
-    CartesianVector    m_mcVertexPosition;                         ///< The MC vertex position in cm
-    CartesianVector    m_mcDirectionCosines;                       ///< The MC direction cosines
-    bool               m_mcIsVertexFiducial;                       ///< Whether the vertex is fiducial (MC quantity)
-    float              m_mcContainmentFraction;                    ///< The fraction of the particle that is contained (MC quantity)
-    bool               m_mcIsShower;                               ///< Whether the particle is a shower (MC quantity)
-    int                m_mcPdgCode;                                ///< The PDG code of the particle (MC quantity)
-    float              m_mcHitPurity;                              ///< The hit number purity (MC quantity)
-    float              m_mcHitCompleteness;                        ///< The hit number completeness (MC quantity)
-    float              m_mcCollectionPlaneHitPurity;               ///< The hit number purity in the collection plane (MC quantity)
-    float              m_mcCollectionPlaneHitCompleteness;         ///< The hit number completeness in the collection plane (MC quantity)
-    const MCParticle * m_pMcMainMCParticle;                        ///< Address of the main MC particle (MC quantity)
-    
-    /**
-     *  @brief  Get the particle type tree as a string (implementation)
-     * 
-     *  @param  typeTree the typeTree
-     *  @param  printTrailingDelimiter whether to print the trailing delimiter
-     * 
-     *  @return the string type
-     * 
-     */
-    static std::string TypeTreeAsStringImpl(const TypeTree &typeTree, const bool printTrailingDelimiter);
+    bool               m_hasMcInfo;                                       ///< Whether the particle has MC info attached
+    TYPE               m_mcType;                                          ///< The MC type
+    TypeTree           m_mcTypeTree;                                      ///< The MC type tree
+    float              m_mcEnergy;                                        ///< The MC energy in GeV
+    float              m_mcKineticEnergy;                                 ///< The MC kinetic energy in GeV
+    float              m_mcMass;                                          ///< The MC mass in GeV/c^2
+    CartesianVector    m_mcMomentum;                                      ///< The MC momentum at the vertex in GeV/c
+    CartesianVector    m_mcVertexPosition;                                ///< The MC vertex position in cm
+    CartesianVector    m_mcDirectionCosines;                              ///< The MC direction cosines
+    bool               m_mcIsVertexFiducial;                              ///< Whether the vertex is fiducial (MC quantity)
+    float              m_mcContainmentFraction;                           ///< The fraction of the particle that is contained (MC quantity)
+    bool               m_mcIsShower;                                      ///< Whether the particle is a shower (MC quantity)
+    int                m_mcPdgCode;                                       ///< The PDG code of the particle (MC quantity)
+    float              m_mcHitPurity;                                     ///< The hit number purity (MC quantity)
+    float              m_mcHitCompleteness;                               ///< The hit number completeness (MC quantity)
+    float              m_mcCollectionPlaneHitPurity;                      ///< The hit number purity in the collection plane (MC quantity)
+    float              m_mcCollectionPlaneHitCompleteness;                ///< The hit number completeness in the collection plane (MC quantity)
+    const MCParticle * m_pMcMainMCParticle;                               ///< Address of the main MC particle (MC quantity)
     
     /**
      *  @brief  Print an error message and throw if there is no MC information present
@@ -785,13 +752,6 @@ inline const MCParticle * LArAnalysisParticle::McMainMCParticle() const
 {
     ThrowIfNoMcInfo(); 
     return this->m_pMcMainMCParticle;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline std::string LArAnalysisParticle::TypeTreeAsString(const TypeTree &typeTree)
-{
-    return TypeTreeAsStringImpl(typeTree, false);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

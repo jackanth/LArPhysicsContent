@@ -15,7 +15,6 @@
 
 #include "LArAnalysisParticleHelper.h"
 #include "LArAnalysisParticle.h"
-#include "DebugDefinitions.h"
 #include "LArTrackHitEnergy.h"
 #include "BirksHitSelectionTool.h"
 

@@ -24,6 +24,7 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
+    
 /**
  *  @brief LArAnalysisParticleHelper class.
  * 
@@ -35,6 +36,26 @@ public:
     using HitProjectionPair   = std::pair<const CaloHit *, float>;
     using HitProjectionVector = std::vector<HitProjectionPair>;
     using TrackFitMap = std::unordered_map<const ParticleFlowObject *, ThreeDSlidingFitResult>; ///< Alias for map from PFOs to track fits.
+
+    /**
+     *  @brief  Get the particle type as a string
+     * 
+     *  @param  type the type
+     * 
+     *  @return the string type
+     * 
+     */
+    static std::string TypeAsString(const LArAnalysisParticle::TYPE type);
+    
+    /**
+     *  @brief  Get the particle type tree as a string
+     * 
+     *  @param  typeTree the typeTree
+     * 
+     *  @return the string type
+     * 
+     */
+    static std::string TypeTreeAsString(const LArAnalysisParticle::TypeTree &typeTree);
 
     /**
      *  @brief  ...
@@ -232,7 +253,27 @@ private:
     static void CalculateHitPurityAndCompleteness(const CaloHitList &pfoAssociatedCaloHits, const MCParticle *const pMCParticle, 
         const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, 
         const bool useCollectionPlaneOnly);
+        
+    /**
+     *  @brief  Get the particle type tree as a string (implementation)
+     * 
+     *  @param  typeTree the typeTree
+     *  @param  printTrailingDelimiter whether to print the trailing delimiter
+     * 
+     *  @return the string type
+     * 
+     */
+    static std::string TypeTreeAsStringImpl(const LArAnalysisParticle::TypeTree &typeTree, const bool printTrailingDelimiter);
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline std::string LArAnalysisParticleHelper::TypeTreeAsString(const LArAnalysisParticle::TypeTree &typeTree)
+{
+    return LArAnalysisParticleHelper::TypeTreeAsStringImpl(typeTree, false);
+}
+
 } // namespace lar_physics_content
 
 #endif // #ifndef LEE_ANALYSIS_HELPER_H

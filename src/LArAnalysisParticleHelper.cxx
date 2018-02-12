@@ -8,8 +8,6 @@
 
 #include "LArAnalysisParticleHelper.h"
 
-#include "DebugDefinitions.h"
-
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
@@ -30,6 +28,25 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
+
+std::string LArAnalysisParticleHelper::TypeAsString(const LArAnalysisParticle::TYPE type)
+{
+    switch (type)
+    {
+        case LArAnalysisParticle::TYPE::PION_MUON:  return "PION_MUON";
+        case LArAnalysisParticle::TYPE::PROTON:     return "PROTON";
+        case LArAnalysisParticle::TYPE::SHOWER:     return "SHOWER";
+        case LArAnalysisParticle::TYPE::TRACK:      return "TRACK";
+        case LArAnalysisParticle::TYPE::NEUTRINO:   return "NEUTRINO";
+        case LArAnalysisParticle::TYPE::COSMIC_RAY: return "COSMIC_RAY";
+        default:               break;
+    }
+    
+    return "UNKNOWN";
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
 void LArAnalysisParticleHelper::GetFiducialCutParameters(const Pandora &pandoraInstance, const float fiducialCutLowXMargin, 
     const float fiducialCutHighXMargin, const float fiducialCutLowYMargin, const float fiducialCutHighYMargin,
     const float fiducialCutLowZMargin, const float fiducialCutHighZMargin, CartesianVector &minCoordinates, CartesianVector &maxCoordinates)
@@ -38,7 +55,7 @@ void LArAnalysisParticleHelper::GetFiducialCutParameters(const Pandora &pandoraI
 
     if (larTPCMap.size() != 1)
     {
-        CERR("The number of LArTPCs was not equal to 1 (" << larTPCMap.size() << ")");
+        std::cout << "LArAnalysisParticleHelper: the number of LArTPCs was not equal to 1" << std::endl;
         throw STATUS_CODE_NOT_FOUND;
     }
 
@@ -70,7 +87,7 @@ void LArAnalysisParticleHelper::RecursivelyAppendTrackFitMap(const Pandora &pand
         
         catch (...)
         {
-            CERR("Failed to perform track fit");
+            std::cout << "LArAnalysisParticleHelper: failed to perform track fit" << std::endl;
         }
     }
     
@@ -89,7 +106,7 @@ ThreeDSlidingFitResult LArAnalysisParticleHelper::PerformSlidingTrackFit(const P
 
     if (threeDClusterList.empty())
     {
-        CERR("Could not get track length because there were no 3D clusters");
+        std::cout << "LArAnalysisParticleHelper: could not get track length because there were no 3D clusters" << std::endl;
         throw STATUS_CODE_NOT_FOUND;
     }
 
@@ -105,7 +122,7 @@ ThreeDSlidingFitResult LArAnalysisParticleHelper::PerformSlidingTrackFit(const P
 
     if (coordinateVector.empty())
     {
-        CERR("Could not get track length because there were no points in the 3D clusters");
+        std::cout << "LArAnalysisParticleHelper: Could not get track length because there were no points in the 3D clusters" << std::endl;
         throw STATUS_CODE_NOT_FOUND;
     }
 
@@ -321,7 +338,7 @@ float LArAnalysisParticleHelper::GetParticleRange(const ParticleFlowObject *cons
 
         if (trackFit.GetGlobalFitPosition(projectionPair.second, position) != STATUS_CODE_SUCCESS)
         {
-            CERR("Could not add CaloHit position because it was not within the fit");
+            std::cout << "LArAnalysisParticleHelper: could not add CaloHit position because it was not within the fit" << std::endl;
             continue;
         }
 
@@ -330,7 +347,7 @@ float LArAnalysisParticleHelper::GetParticleRange(const ParticleFlowObject *cons
 
     if (pointVector.empty())
     {
-        CERR("Could not get track length because point vector was empty");
+        std::cout << "LArAnalysisParticleHelper: could not get track length because point vector was empty" << std::endl;
         return 0.f;
     }
 
@@ -346,7 +363,7 @@ float LArAnalysisParticleHelper::GetParticleRange(const ParticleFlowObject *cons
             totalLength += increment;
             
         else
-            CERR("Range increment was " << increment);
+            std::cout << "LArAnalysisParticleHelper: Range increment was " << increment << std::endl;
             
         currentPosition = position;
     }
@@ -395,13 +412,13 @@ TNtuple * LArAnalysisParticleHelper::LoadNTupleFromFile(const std::string &fileP
     
     if (!pFile->IsOpen())
     {
-        CERR("Failed to open file at " << filePath);
+        std::cout << "LArAnalysisParticleHelper: failed to open file at " << filePath << std::endl;
         return NULL;
     }
     
     if (!pFile->GetListOfKeys()->Contains(nTupleName.c_str()))
     {
-        CERR("Data file at " << filePath << " did not contain key '" << nTupleName << "'");
+        std::cout << "LArAnalysisParticleHelper: data file at " << filePath << " did not contain key '" << nTupleName << "'" << std::endl;
         return NULL;
     }
     
@@ -828,6 +845,34 @@ void LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(const CaloHitL
     
     hitPurity       = numerator / static_cast<float>(pfoAssociatedCaloHits.size());
     hitCompleteness = numerator / totalMcHitWeight;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::string LArAnalysisParticleHelper::TypeTreeAsStringImpl(const LArAnalysisParticle::TypeTree &typeTree, 
+    const bool printTrailingDelimiter)
+{
+    const std::string delimiter = " - ";
+    std::string typeTreeString = TypeAsString(typeTree.Type());
+    
+    if (!typeTree.Daughters().empty())
+    {
+        typeTreeString += delimiter;
+        typeTreeString += "[ ";
+        
+        for (auto iter = typeTree.Daughters().begin(); iter != typeTree.Daughters().end(); ++iter)
+        {
+            const bool isLast = (std::next(iter, 1) == typeTree.Daughters().end());
+            typeTreeString += TypeTreeAsStringImpl(*iter, !isLast);
+        }
+            
+        typeTreeString += " ]";
+    }
+    
+    if (printTrailingDelimiter)
+        typeTreeString += delimiter;
+    
+    return typeTreeString;
 }
 
 } // namespace lar_physics_content

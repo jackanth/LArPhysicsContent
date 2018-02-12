@@ -86,7 +86,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     // Check there is one vertex for this primary PFO and get it.
     if (pInputPfo->GetVertexList().size() != 1)
     {
-        CERR("Could not create LArAnalysisParticle as the number of PFO vertices was " << pInputPfo->GetVertexList().size());
+        std::cout << "AnalysisAlgorithm: could not create LArAnalysisParticle as the number of PFO vertices was " << pInputPfo->GetVertexList().size() << std::endl;
         return;
     }
     
@@ -286,7 +286,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     
     if (!pLArAnalysisParticle)
     {
-        CERR("Failed to cast");
+        std::cout << "AnalysisAlgorithm: failed to cast" << std::endl;
         throw StatusCodeException(STATUS_CODE_FAILURE);
     }
     
@@ -399,7 +399,7 @@ LArAnalysisParticle::TYPE AnalysisAlgorithm::EstimateParticleType(const Particle
     
     if (trackFitFindIter == trackFitMap.end())
     {
-        CERR("Found track hit energy object but not track fit - this should be impossible");
+        std::cout << "AnalysisAlgorithm: found track hit energy object but not track fit - this should be impossible" << std::endl;
         return LArAnalysisParticle::TYPE::TRACK;
     }
     
@@ -439,7 +439,7 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
     const bool hitEnergyFound = (hitEnergyFindIter != trackHitEnergyMap.end());
     
     if (fitFound != hitEnergyFound)
-        CERR("Fits should be found for tracks iff track hit energies are found");
+        std::cout << "AnalysisAlgorithm: fits should be found for tracks iff track hit energies are found" << std::endl;
     
     switch (particleType)
     {
@@ -493,7 +493,7 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
             break;
         }
         
-        default: CERR("Unknown particle type - could not calculate energy"); break;
+        default: std::cout << "AnalysisAlgorithm: unknown particle type - could not calculate energy" << std::endl; break;
     }
     
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
@@ -589,14 +589,14 @@ float AnalysisAlgorithm::EstimateTrackEnergyFromRange(const ParticleFlowObject *
             }
             
             if (!foundEnergy)
-                trackEnergy = this->EstimateTrackEnergyFromCharge(trackHitEnergyVector); // incl recombination correction
+                trackEnergy = this->EstimateTrackEnergyFromCharge(trackHitEnergyVector); // including recombination correction
             
             break;
         }
         
         default:
         {
-            CERR("Given a non-known-track particle to calculate energy from range");
+            std::cout << "AnalysisAlgorithm: given a non-known-track particle to calculate energy from range" << std::endl;
             break;
         }
     }
@@ -637,7 +637,7 @@ CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject
     
     if (eigenVectors.empty())
     {
-        CERR("PCA eigenvectors were empty");
+        std::cout << "AnalysisAlgorithm: PCA eigenvectors were empty" << std::endl;
         return CartesianVector{0.f, 0.f, 0.f};
     }
     
@@ -746,13 +746,13 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     
     if (!pBirksNtuple)
     {
-        CERR("Failed to load Birks fit ntuple from file");
+        std::cout << "AnalysisAlgorithm: failed to load Birks fit ntuple from file" << std::endl;
         return STATUS_CODE_NOT_FOUND;
     }
     
     if (pBirksNtuple->GetEntries() != 1)
     {
-        CERR("Birks fit ntuple did not have exactly one entry: " << pBirksNtuple->GetEntries());
+        std::cout << "AnalysisAlgorithm: Birks fit ntuple did not have exactly one entry: " << pBirksNtuple->GetEntries() << std::endl;
         return STATUS_CODE_NOT_FOUND;
     }
     
@@ -773,7 +773,7 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     
     if (!pEnergyFromRangeNtupleProton)
     {
-        CERR("Failed to load proton energy from range ntuple from file");
+        std::cout << "AnalysisAlgorithm: failed to load proton energy from range ntuple from file" << std::endl;
         return STATUS_CODE_NOT_FOUND;
     }
     
@@ -797,7 +797,7 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     
     if (!pEnergyFromRangeNtuplePionMuon)
     {
-        CERR("Failed to load proton energy from range ntuple from file");
+        std::cout << "AnalysisAlgorithm: failed to load proton energy from range ntuple from file" << std::endl;
         return STATUS_CODE_NOT_FOUND;
     }
     

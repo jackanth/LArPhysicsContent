@@ -8,6 +8,8 @@
 
 #include "LArAnalysisParticle.h"
 
+#include "LArAnalysisParticleHelper.h"
+
 using namespace pandora;
 
 namespace lar_physics_content
@@ -55,125 +57,74 @@ LArAnalysisParticle::LArAnalysisParticle(const LArAnalysisParticleParameters &pa
 
 void LArAnalysisParticle::Print() const
 {
-    if (this->m_hasMcInfo)
+    if (m_hasMcInfo)
     {
         std::cout << "LArAnalysisParticle at " << this << ": \n"
-              << "    - Type:                      " << this->TypeAsString(this->m_type) << "\n"
-              << "    - MC type:                   " << this->TypeAsString(this->m_mcType) << "\n"
-              << "    - Type tree:                 " << TEXT_GREEN_BOLD << this->TypeTreeAsString(this->m_typeTree) << TEXT_NORMAL << "\n"
-              << "    - MC type tree:              " << TEXT_GREEN_BOLD << this->TypeTreeAsString(this->m_mcTypeTree) << TEXT_NORMAL << "\n"
-              << "    - Kinetic energy:            " << TEXT_MAGENTA_BOLD << 1000.f * this->m_kineticEnergy << "MeV\n" << TEXT_NORMAL
-              << "    - MC kinetic energy:         " << TEXT_MAGENTA_BOLD << 1000.f * this->m_mcKineticEnergy << "MeV\n" << TEXT_NORMAL
-              << "    - MC energy:                 " << TEXT_MAGENTA_BOLD << 1000.f * this->m_mcEnergy << "MeV\n" << TEXT_NORMAL
-              << "    - MC mass:                   " << TEXT_MAGENTA_BOLD << 1000.f * this->m_mcMass << "MeV/c^2\n" << TEXT_NORMAL
+              << "    - Type:                      " << LArAnalysisParticleHelper::TypeAsString(m_type) << "\n"
+              << "    - MC type:                   " << LArAnalysisParticleHelper::TypeAsString(m_mcType) << "\n"
+              << "    - Type tree:                 " << LArAnalysisParticleHelper::TypeTreeAsString(m_typeTree) << "\n"
+              << "    - MC type tree:              " << LArAnalysisParticleHelper::TypeTreeAsString(m_mcTypeTree) << "\n"
+              << "    - Kinetic energy:            " << 1000.f * m_kineticEnergy << "MeV\n"
+              << "    - MC kinetic energy:         " << 1000.f * m_mcKineticEnergy << "MeV\n"
+              << "    - MC energy:                 " << 1000.f * m_mcEnergy << "MeV\n"
+              << "    - MC mass:                   " << 1000.f * m_mcMass << "MeV/c^2\n"
               << "    - KE from range:             " << 100.f * m_kineticEnergyFromRangeFraction << "%\n"
               << "    - KE from corr track charge: " << 100.f * m_kineticEnergyFromCorrectedTrackChargeFraction << "%\n"
               << "    - KE from track charge:      " << 100.f * m_kineticEnergyFromUncorrectedTrackChargeFraction << "%\n"
               << "    - KE from shower charge:     " << 100.f * m_kineticEnergyFromShowerChargeFraction << "%\n"
-              << "    - Is vertex fiducial:        " << TEXT_RED_BOLD << std::boolalpha << this->m_isVertexFiducial << std::noboolalpha
-                                                     << TEXT_NORMAL << "\n"
-              << "    - MC is vertex fiducial:     " << TEXT_RED_BOLD << std::boolalpha << this->m_mcIsVertexFiducial << std::noboolalpha
-                                                     << TEXT_NORMAL << "\n"
-              << "    - Fiducial hit fraction:     " << TEXT_RED_BOLD << 100.f * this->m_fiducialHitFraction << TEXT_NORMAL << "%\n"
-              << "    - MC containment fraction:   " << TEXT_RED_BOLD << 100.f * this->m_mcContainmentFraction << TEXT_NORMAL << "%\n"
-              << "    - Vertex:                    " << "(" << this->m_vertexPosition.GetX() << ", " << this->m_vertexPosition.GetY() 
-                                                     << ", " << this->m_vertexPosition.GetZ() << ") cm\n"
-              << "    - MC vertex:                 " << "(" << this->m_mcVertexPosition.GetX() << ", " << this->m_mcVertexPosition.GetY()
-                                                     << ", " << this->m_mcVertexPosition.GetZ() << ") cm\n"
-              << "    - Direction cosines:         " << "(" << this->m_directionCosines.GetX() << ", " << this->m_directionCosines.GetY() 
-                                                     << ", " << this->m_directionCosines.GetZ() << ")\n"
-              << "    - MC direction cosines:      " << "(" << this->m_mcDirectionCosines.GetX() << ", " 
-                                                     << this->m_mcDirectionCosines.GetY() << ", " << this->m_mcDirectionCosines.GetZ() 
-                                                     << ")\n"
-              << "    - MC momentum:               " << "(" << 1000.f * this->m_mcMomentum.GetX() << ", " 
-                                                     << 1000.f * this->m_mcMomentum.GetY() << ", " << 1000.f * this->m_mcMomentum.GetZ()
-                                                     << ") MeV/c\n"
-              << "    - Num 3D hits:               " << this->m_numberOf3dHits << "\n"
-              << "    - Num collection-plane hits: " << this->m_numberOfCollectionPlaneHits << "\n"
-              << "    - Is shower:                 " << std::boolalpha << this->m_isShower << std::noboolalpha << "\n"
-              << "    - MC is shower:              " << std::boolalpha << this->m_mcIsShower << std::noboolalpha << "\n"
-              << "    - Num downstream particles:  " << this->m_numberOfDownstreamParticles << "\n"
-              << "    - Has MC info:               " << std::boolalpha << this->m_hasMcInfo << std::noboolalpha << "\n"
-              << "    - MC PDG code:               " << this->m_mcPdgCode << "\n"
-              << "    - MC hit purity:             " << 100.f * this->m_mcHitPurity << "%\n"
-              << "    - MC hit completeness:       " << 100.f * this->m_mcHitCompleteness << "%\n"
-              << "    - MC hit purity (W):         " << 100.f * this->m_mcCollectionPlaneHitPurity << "%\n"
-              << "    - MC hit completeness (W):   " << 100.f * this->m_mcCollectionPlaneHitCompleteness << "%\n"
-              << "    - MC main MC particle at:    " << this->m_pMcMainMCParticle
+              << "    - Is vertex fiducial:        " << std::boolalpha << m_isVertexFiducial << std::noboolalpha << "\n"
+              << "    - MC is vertex fiducial:     " << std::boolalpha << m_mcIsVertexFiducial << std::noboolalpha << "\n"
+              << "    - Fiducial hit fraction:     " << 100.f * m_fiducialHitFraction << "%\n"
+              << "    - MC containment fraction:   " << 100.f * m_mcContainmentFraction << "%\n"
+              << "    - Vertex:                    " << "(" << m_vertexPosition.GetX() << ", " << m_vertexPosition.GetY() 
+                                                     << ", " << m_vertexPosition.GetZ() << ") cm\n"
+              << "    - MC vertex:                 " << "(" << m_mcVertexPosition.GetX() << ", " << m_mcVertexPosition.GetY()
+                                                     << ", " << m_mcVertexPosition.GetZ() << ") cm\n"
+              << "    - Direction cosines:         " << "(" << m_directionCosines.GetX() << ", " << m_directionCosines.GetY() 
+                                                     << ", " << m_directionCosines.GetZ() << ")\n"
+              << "    - MC direction cosines:      " << "(" << m_mcDirectionCosines.GetX() << ", " 
+                                                     << m_mcDirectionCosines.GetY() << ", " << m_mcDirectionCosines.GetZ() << ")\n"
+              << "    - MC momentum:               " << "(" << 1000.f * m_mcMomentum.GetX() << ", " << 1000.f * m_mcMomentum.GetY() << ", "
+                                                     << 1000.f * m_mcMomentum.GetZ() << ") MeV/c\n"
+              << "    - Num 3D hits:               " << m_numberOf3dHits << "\n"
+              << "    - Num collection-plane hits: " << m_numberOfCollectionPlaneHits << "\n"
+              << "    - Is shower:                 " << std::boolalpha << m_isShower << std::noboolalpha << "\n"
+              << "    - MC is shower:              " << std::boolalpha << m_mcIsShower << std::noboolalpha << "\n"
+              << "    - Num downstream particles:  " << m_numberOfDownstreamParticles << "\n"
+              << "    - Has MC info:               " << std::boolalpha << m_hasMcInfo << std::noboolalpha << "\n"
+              << "    - MC PDG code:               " << m_mcPdgCode << "\n"
+              << "    - MC hit purity:             " << 100.f * m_mcHitPurity << "%\n"
+              << "    - MC hit completeness:       " << 100.f * m_mcHitCompleteness << "%\n"
+              << "    - MC hit purity (W):         " << 100.f * m_mcCollectionPlaneHitPurity << "%\n"
+              << "    - MC hit completeness (W):   " << 100.f * m_mcCollectionPlaneHitCompleteness << "%\n"
+              << "    - MC main MC particle at:    " << m_pMcMainMCParticle
               << std::endl;
     }
     
     else
     {
         std::cout << "LArAnalysisParticle at " << this << ": \n"
-                  << "    - Type:                      " << this->TypeAsString(this->m_type) << "\n"
-                  << "    - Type tree:                 " << TEXT_GREEN_BOLD << this->TypeTreeAsString(this->m_typeTree) << TEXT_NORMAL 
-                                                         << "\n"
-                  << "    - Kinetic energy:            " << TEXT_MAGENTA_BOLD << 1000.f * this->m_kineticEnergy << "MeV\n" << TEXT_NORMAL
+                  << "    - Type:                      " << LArAnalysisParticleHelper::TypeAsString(m_type) << "\n"
+                  << "    - Type tree:                 " << LArAnalysisParticleHelper::TypeTreeAsString(m_typeTree) << "\n"
+                  << "    - Kinetic energy:            " << 1000.f * m_kineticEnergy << "MeV\n"
                   << "    - KE from range:             " << 100.f * m_kineticEnergyFromRangeFraction << "%\n"
                   << "    - KE from corr track charge: " << 100.f * m_kineticEnergyFromCorrectedTrackChargeFraction << "%\n"
                   << "    - KE from track charge:      " << 100.f * m_kineticEnergyFromUncorrectedTrackChargeFraction << "%\n"
                   << "    - KE from shower charge:     " << 100.f * m_kineticEnergyFromShowerChargeFraction << "%\n"
-                  << "    - Is vertex fiducial:        " << TEXT_RED_BOLD << std::boolalpha << this->m_isVertexFiducial << std::noboolalpha
-                                                         << TEXT_NORMAL << "\n"
-                  << "    - Fiducial hit fraction:     " << TEXT_RED_BOLD << 100.f * this->m_fiducialHitFraction << TEXT_NORMAL << "%\n"
-                  << "    - Vertex:                    " << "(" << this->m_vertexPosition.GetX() << ", " << this->m_vertexPosition.GetY()
-                                                         << ", " << this->m_vertexPosition.GetZ() << ") cm\n"
-                  << "    - Direction cosines:         " << "(" << this->m_directionCosines.GetX() << ", "
-                                                         << this->m_directionCosines.GetY() << ", " << this->m_directionCosines.GetZ() 
-                                                         << ")\n"
-                  << "    - Num 3D hits:               " << this->m_numberOf3dHits << "\n"
-                  << "    - Num collection-plane hits: " << this->m_numberOfCollectionPlaneHits << "\n"
-                  << "    - Is shower:                 " << std::boolalpha << this->m_isShower << std::noboolalpha << "\n"
-                  << "    - Num downstream particles:  " << this->m_numberOfDownstreamParticles << "\n"
-                  << "    - Has MC info:               " << std::boolalpha << this->m_hasMcInfo << std::noboolalpha
+                  << "    - Is vertex fiducial:        " << std::boolalpha << m_isVertexFiducial << std::noboolalpha
+                                                         << "\n"
+                  << "    - Fiducial hit fraction:     " << 100.f * m_fiducialHitFraction << "%\n"
+                  << "    - Vertex:                    " << "(" << m_vertexPosition.GetX() << ", " << m_vertexPosition.GetY()
+                                                         << ", " << m_vertexPosition.GetZ() << ") cm\n"
+                  << "    - Direction cosines:         " << "(" << m_directionCosines.GetX() << ", "
+                                                         << m_directionCosines.GetY() << ", " << m_directionCosines.GetZ() << ")\n"
+                  << "    - Num 3D hits:               " << m_numberOf3dHits << "\n"
+                  << "    - Num collection-plane hits: " << m_numberOfCollectionPlaneHits << "\n"
+                  << "    - Is shower:                 " << std::boolalpha << m_isShower << std::noboolalpha << "\n"
+                  << "    - Num downstream particles:  " << m_numberOfDownstreamParticles << "\n"
+                  << "    - Has MC info:               " << std::boolalpha << m_hasMcInfo << std::noboolalpha
                   << std::endl;
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-std::string LArAnalysisParticle::TypeAsString(const TYPE type)
-{
-    switch (type)
-    {
-        case TYPE::PION_MUON:  return "PION_MUON";
-        case TYPE::PROTON:     return "PROTON";
-        case TYPE::SHOWER:     return "SHOWER";
-        case TYPE::TRACK:      return "TRACK";
-        case TYPE::NEUTRINO:   return "NEUTRINO";
-        case TYPE::COSMIC_RAY: return "COSMIC_RAY";
-        default:               break;
-    }
-    
-    return "UNKNOWN";
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-std::string LArAnalysisParticle::TypeTreeAsStringImpl(const TypeTree &typeTree, const bool printTrailingDelimiter)
-{
-    const std::string delimiter = " - ";
-    std::string typeTreeString = TypeAsString(typeTree.Type());
-    
-    if (!typeTree.Daughters().empty())
-    {
-        typeTreeString += delimiter;
-        typeTreeString += "[ ";
-        
-        for (auto iter = typeTree.Daughters().begin(); iter != typeTree.Daughters().end(); ++iter)
-        {
-            const bool isLast = (std::next(iter, 1) == typeTree.Daughters().end());
-            typeTreeString += TypeTreeAsStringImpl(*iter, !isLast);
-        }
-            
-        typeTreeString += " ]";
-    }
-    
-    if (printTrailingDelimiter)
-        typeTreeString += delimiter;
-    
-    return typeTreeString;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

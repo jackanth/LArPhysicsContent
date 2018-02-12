@@ -9,8 +9,8 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "BirksHitSelectionTool.h"
-#include "DebugDefinitions.h"
-#include "../root/Common.h"
+
+#include "../root/Common.h" // ATTN temporary
 
 #include "TNtuple.h"
 #include "TCanvas.h"
@@ -46,7 +46,7 @@ void BirksHitSelectionTool::DecideWhichTrackHitsToCorrect(LArTrackHitEnergy::Vec
 {
     if (trackHitEnergyVector.empty())
     {
-        CERR("Track hit energy vector was empty");
+        std::cout << "BirksHitSelectionTool: track hit energy vector was empty" << std::endl;
         return;
     }
     
@@ -61,7 +61,7 @@ void BirksHitSelectionTool::DecideWhichTrackHitsToCorrect(LArTrackHitEnergy::Vec
     
     if (coordinateRange < std::numeric_limits<float>::epsilon())
     {
-        CERR("Coordinate range was too small");
+        std::cout << "BirksHitSelectionTool: coordinate range was too small" << std::endl;
         return;
     }
     

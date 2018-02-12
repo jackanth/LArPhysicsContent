@@ -15,8 +15,6 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "LArAnalysisParticleHelper.h"
-#include "DebugDefinitions.h"
-
 #include "TFile.h"
 
 namespace lar_physics_content
@@ -254,7 +252,7 @@ void AnalysisDataAlgorithm::RecursivelyAppendMCParticleMap(const ParticleFlowObj
 
         catch (...)
         {
-            CERR("Failed to find main MC particle");
+            std::cout << "AnalysisDataAlgorithm: failed to find main MC particle" << std::endl;
         }
 
         if (pMCParticle)
@@ -274,7 +272,7 @@ bool AnalysisDataAlgorithm::ProduceBirksFitData(const ParticleFlowObject *const 
     
     if (findIter == mcParticleMap.end())
     {
-        CERR("Failed to find primary particle in MC particle map");
+        std::cout << "AnalysisDataAlgorithm: failed to find primary particle in MC particle map" << std::endl;
         return false;
     }
     
@@ -282,7 +280,7 @@ bool AnalysisDataAlgorithm::ProduceBirksFitData(const ParticleFlowObject *const 
     
     if (!LArMCParticleHelper::IsVisible(pPrimaryMCParticle))
     {
-        CERR("Primary MC particle was invisible so ignoring this primary");
+        std::cout << "AnalysisDataAlgorithm: primary MC particle was invisible so ignoring this primary" << std::endl;
         return false;
     }
     
@@ -320,7 +318,7 @@ bool AnalysisDataAlgorithm::GetBirksFitData(const ParticleFlowObject *const pPfo
     const bool hitEnergyFound = (hitEnergyFindIter != trackHitEnergyMap.end());
     
     if (fitFound != hitEnergyFound)
-        CERR("Fits should be found for tracks iff track hit energies are found");
+        std::cout << "AnalysisDataAlgorithm: fits should be found for tracks iff track hit energies are found" << std::endl;
         
     if (isShower)
     {
@@ -330,7 +328,7 @@ bool AnalysisDataAlgorithm::GetBirksFitData(const ParticleFlowObject *const pPfo
     
     if (!fitFound || !hitEnergyFound)
     {
-        CERR("Could not find fit for tracklike particle so ignoring this primary");
+        std::cout << "AnalysisDataAlgorithm: Could not find fit for tracklike particle so ignoring this primary" << std::endl;
         return false;
     }
    
