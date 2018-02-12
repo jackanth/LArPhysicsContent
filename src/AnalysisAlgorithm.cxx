@@ -245,13 +245,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         
         const LArAnalysisParticle::TypeTree typeTree = this->CreateTypeTree(pInputPfo, particleTypeMap);
         
-        CartesianVector initialDirection(0.f, 0.f, 0.f);
-    
-        if (isCosmicRay)
-            initialDirection = this->GetCosmicRayDirectionAtVertex(pInputPfo, trackFitMap, pVertex);
-            
-        else
-            initialDirection = this->GetPrimaryDirectionAtVertex(pInputPfo, trackFitMap, pVertex);
+        const CartesianVector initialDirection = this->GetDirectionAtVertex(pInputPfo, trackFitMap, pVertex, isCosmicRay);
         
         const int num3DHits = LArAnalysisParticleHelper::GetHitsOfType(pInputPfo, TPC_3D, true).size();
         const int numWHits  = LArAnalysisParticleHelper::GetHitsOfType(pInputPfo, TPC_VIEW_W, true).size();
@@ -625,53 +619,14 @@ LArAnalysisParticle::TypeTree AnalysisAlgorithm::CreateTypeTree(const ParticleFl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector AnalysisAlgorithm::GetPrimaryDirectionAtVertex(const ParticleFlowObject *const pPfo, 
-                                                           const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, 
-                                                           const Vertex *const pVertex) const
+CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject *const pPfo,
+                                                        const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, const Vertex *const pVertex,
+                                                        const bool isCosmicRay) const
 {
     const auto findIter = trackFitMap.find(pPfo);
     
     if (findIter != trackFitMap.end())
-    {
-        try
-        {
-            const ParticleFlowObject *const pNeutrino = LArPfoHelper::GetParentNeutrino(pPfo);
-            const Vertex *const pNeutrinoVertex = pNeutrino->GetVertexList().front();
-            return LArAnalysisParticleHelper::GetFittedDirectionAtPrimaryVertex(findIter->second, pVertex->GetPosition(), pNeutrinoVertex->GetPosition());
-        }
-        
-        catch (...)
-        {
-            std::cout << "AnalysisAlgorithm: failed to get neutrino vertex for primary daughter" << std::endl;
-        }
-    }
-
-    const CaloHitList all3DHits = LArAnalysisParticleHelper::GetHitsOfType(pPfo, TPC_3D, true);
-    
-    LArPcaHelper::EigenVectors eigenVectors;
-    LArPcaHelper::EigenValues  eigenValues{0.f, 0.f, 0.f};
-    CartesianVector            centroid{0.f, 0.f, 0.f};
-    LArPcaHelper::RunPca(all3DHits, centroid, eigenValues, eigenVectors);
-    
-    if (eigenVectors.empty())
-    {
-        CERR("PCA eigenvectors were empty");
-        return CartesianVector{0.f, 0.f, 0.f};
-    }
-    
-    return eigenVectors.at(0);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-CartesianVector AnalysisAlgorithm::GetCosmicRayDirectionAtVertex(const ParticleFlowObject *const pPfo, 
-                                                           const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, 
-                                                           const Vertex *const pVertex) const
-{
-    const auto findIter = trackFitMap.find(pPfo);
-    
-    if (findIter != trackFitMap.end())
-        return LArAnalysisParticleHelper::GetFittedDirectionAtCosmicRayVertex(findIter->second, pVertex->GetPosition());
+        return LArAnalysisParticleHelper::GetFittedDirectionAtPosition(findIter->second, pVertex->GetPosition(), !isCosmicRay);
 
     const CaloHitList all3DHits = LArAnalysisParticleHelper::GetHitsOfType(pPfo, TPC_3D, true);
     

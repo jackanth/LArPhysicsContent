@@ -137,7 +137,7 @@ PfoList LArAnalysisParticleHelper::GetRecoNeutrinoList(const Algorithm &algorith
 float LArAnalysisParticleHelper::CaloHitToThreeDDistance(const Pandora &pandoraInstance, const CaloHit *const pCaloHit,
                                                  const ThreeDSlidingFitResult &trackFit)
 {
-    const CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, pCaloHit->GetPositionVector());
+    const CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, pCaloHit->GetPositionVector(), true);
     return LArAnalysisParticleHelper::CellToThreeDDistance(pCaloHit->GetCellSize1(), LArGeometryHelper::GetWirePitch(pandoraInstance, TPC_VIEW_W),
                                                    fitDirection);
 }
@@ -170,36 +170,12 @@ CaloHitList LArAnalysisParticleHelper::GetHitsOfType(const ParticleFlowObject *c
     }
     
     return caloHitList;
-}    
+}   
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPrimaryVertex(const ThreeDSlidingFitResult &trackFit, const CartesianVector &primaryVertex,
-    const CartesianVector &neutrinoVertex)
-{
-    CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, primaryVertex);
-    
-    if ((primaryVertex - neutrinoVertex).GetDotProduct(fitDirection) < 0.f)
-        fitDirection *= -1.f;
-    
-    return fitDirection;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtCosmicRayVertex(const ThreeDSlidingFitResult &trackFit, const CartesianVector &primaryVertex)
-{
-    CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, primaryVertex);
-    
-    if (fitDirection.GetDotProduct(CartesianVector(0.f, -1.f, 0.f)) < 0.f)
-        fitDirection *= -1.f;
-    
-    return fitDirection;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position)
+CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position,
+    const bool pointTowardsMiddle)
 {
     const CartesianVector &minPosition = trackFit.GetGlobalMinLayerPosition();
     const CartesianVector &maxPosition = trackFit.GetGlobalMaxLayerPosition();
@@ -232,6 +208,18 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
             else
                 fitDirection = maxDirection;
         }
+    }
+    
+    if (pointTowardsMiddle)
+    {
+        if ((maxCoordinate - displacementAlongFittedTrack) < (displacementAlongFittedTrack - minCoordinate))
+            fitDirection *= -1.f;
+    }
+    
+    else
+    {
+        if (fitDirection.GetDotProduct(CartesianVector(0.f, -1.f, 0.f)) < 0.f)
+            fitDirection *= -1.f;
     }
     
     return fitDirection;

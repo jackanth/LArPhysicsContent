@@ -191,16 +191,9 @@ private:
      *  @brief ...
      * 
      */
-    CartesianVector GetCosmicRayDirectionAtVertex(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, 
-                                         const Vertex *const pVertex) const;
-                                         
-    /**
-     *  @brief ...
-     * 
-     */
-    CartesianVector GetPrimaryDirectionAtVertex(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, 
-                                         const Vertex *const pVertex) const;
-    
+    CartesianVector GetDirectionAtVertex(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, 
+                                         const Vertex *const pVertex, const bool isCosmicRay) const;
+
     /**
      *  @brief ...
      * 

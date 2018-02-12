@@ -94,20 +94,7 @@ public:
      *  @brief ...
      * 
      */
-    static CartesianVector GetFittedDirectionAtPrimaryVertex(const ThreeDSlidingFitResult &trackFit, const CartesianVector &primaryVertex,
-        const CartesianVector &neutrinoVertex);
-    
-    /**
-     *  @brief ...
-     * 
-     */
-    static CartesianVector GetFittedDirectionAtCosmicRayVertex(const ThreeDSlidingFitResult &trackFit, const CartesianVector &primaryVertex);
-    
-    /**
-     *  @brief ...
-     * 
-     */
-    static CartesianVector GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position);
+    static CartesianVector GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position, const bool pointTowardsMiddle);
     
     /**
      *  @brief ...

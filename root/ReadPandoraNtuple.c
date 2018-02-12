@@ -667,8 +667,8 @@ void ReadPandoraNtuple(const char *const inputFilePath)
                         (*p_primary_VertexX)[i],
                         (*p_primary_VertexY)[i],
                         (*p_primary_VertexZ)[i],
-                        (*p_primary_mc_KineticEnergy)[i],
                         (*p_primary_mc_Energy)[i],
+                        (*p_primary_mc_KineticEnergy)[i],
                         (*p_primary_mc_Mass)[i],
                         (*p_primary_mc_VertexX)[i],
                         (*p_primary_mc_VertexY)[i],
@@ -723,7 +723,7 @@ void ReadPandoraNtuple(const char *const inputFilePath)
             
             for (int i = 0; i < cr_Number; ++i)
             {
-                if ((*p_cr_WasReconstructed)[i] && (*p_cr_HasMcInfo)[i] && (*p_primary_mc_IsVertexFiducial)[i] && (*p_cr_mc_IsContained)[i])
+                if ((*p_cr_WasReconstructed)[i] && (*p_cr_HasMcInfo)[i] && (*p_cr_mc_IsVertexFiducial)[i] && (*p_cr_mc_IsContained)[i])
                 {
                     pNtuple_CosmicRay_0->Fill(
                         (*p_cr_KineticEnergy)[i],
@@ -957,9 +957,6 @@ void ReadPandoraNtuple(const char *const inputFilePath)
         PLOT_2D("nu_mc_LongitudinalEnergy",          "nu_VisibleLongitudinalEnergy", pNtuple_Neutrino_0, 0.0, 2.0, -0.5, 2.0);
         PLOT_2D("nu_mc_TransverseEnergy",            "nu_VisibleTransverseEnergy",   pNtuple_Neutrino_0, 0.0, 0.01, 0.0, 2.0);
         
-        QUICK_PLOT_2D("nu_mc_DirectionCosineX",      "nu_DirectionCosineX",          pNtuple_Neutrino_1);
-        QUICK_PLOT_2D("nu_mc_DirectionCosineY",      "nu_DirectionCosineY",          pNtuple_Neutrino_1);
-        QUICK_PLOT_2D("nu_mc_DirectionCosineZ",      "nu_DirectionCosineZ",          pNtuple_Neutrino_1);
         QUICK_PLOT_2D("nu_mc_VertexX",               "nu_VertexX",                   pNtuple_Neutrino_3);
         QUICK_PLOT_2D("nu_mc_VertexY",               "nu_VertexY",                   pNtuple_Neutrino_3);
         QUICK_PLOT_2D("nu_mc_VertexZ",               "nu_VertexZ",                   pNtuple_Neutrino_3);
