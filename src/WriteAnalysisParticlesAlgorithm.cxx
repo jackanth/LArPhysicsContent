@@ -273,8 +273,8 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
     }
     
     const CartesianVector zAxis(0.f, 0.f, 1.f);
-    m_treeParameters.m_nu_VisibleTransverseEnergy   = visiblePseudoMomentum.GetDotProduct(zAxis);
-    m_treeParameters.m_nu_VisibleLongitudinalEnergy = visiblePseudoMomentum.GetCrossProduct(zAxis).GetMagnitude();
+    m_treeParameters.m_nu_VisibleLongitudinalEnergy = visiblePseudoMomentum.GetDotProduct(zAxis);
+    m_treeParameters.m_nu_VisibleTransverseEnergy   = visiblePseudoMomentum.GetCrossProduct(zAxis).GetMagnitude();
     
     if (neutrinoAnalysisParticle.HasMcInfo())
     {
