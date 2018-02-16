@@ -35,12 +35,12 @@
 
 void ReadPandoraNtuple(const char *const inputFilePath)
 {
-    typedef std::vector<Bool_t>          BoolVector;
-    typedef std::vector<Int_t>           IntVector;
-    typedef std::vector<Float_t>         FloatVector;
+    typedef std::vector<Bool_t>    BoolVector;
+    typedef std::vector<Int_t>     IntVector;
+    typedef std::vector<Float_t>   FloatVector;
     typedef std::vector<ULong64_t> UInt64Vector;
     typedef std::vector<TString>   StringVector;
-    typedef std::vector<UInt_t>      UnsignedVector;
+    typedef std::vector<UInt_t>    UnsignedVector;
     
     TTree *const pTree = LoadTreeFromFile(inputFilePath, "PandoraTree");
     
@@ -66,7 +66,7 @@ void ReadPandoraNtuple(const char *const inputFilePath)
     UInt_t          nu_NumberOf3dHits                                      = 0U;
     UInt_t          nu_NumberOfCollectionPlaneHits                         = 0U;
     UInt_t          nu_NumberOfDownstreamParticles                         = 0U;
-    Long64_t        nu_mc_McParticleUid                                    = 0LL;
+    ULong64_t       nu_mc_McParticleUid                                    = 0LL;
     Float_t         nu_mc_Energy                                           = 0.f;
     Float_t         nu_mc_LongitudinalEnergy                               = 0.f;
     Float_t         nu_mc_TransverseEnergy                                 = 0.f;
@@ -787,131 +787,131 @@ void ReadPandoraNtuple(const char *const inputFilePath)
     
     if (true)
     {
-//        QUICK_PLOT_1D("nu_VisibleEnergy",                                    pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_VisibleLongitudinalEnergy",                        pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_VisibleTransverseEnergy",                          pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_VisibleEnergyFracFromRange",                       pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_VisibleEnergyFracFromCorrectedTrackCharge",        pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_VisibleEnergyFracFromUncorrectedTrackCharge",      pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_VisibleEnergyFracFromShowerCharge",                pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_mc_Energy",                                        pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_mc_LongitudinalEnergy",                            pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_mc_TransverseEnergy",                              pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_mc_VisibleEnergy",                                 pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_mc_VisibleLongitudinalEnergy",                     pNtuple_Neutrino_0);
-//        QUICK_PLOT_1D("nu_mc_VisibleTransverseEnergy",                       pNtuple_Neutrino_0);
-//                                                                               
-//        QUICK_PLOT_1D("nu_DirectionCosineX",                                 pNtuple_Neutrino_1);
-//        QUICK_PLOT_1D("nu_DirectionCosineY",                                 pNtuple_Neutrino_1);
-//        QUICK_PLOT_1D("nu_DirectionCosineZ",                                 pNtuple_Neutrino_1);
-//        QUICK_PLOT_1D("nu_mc_DirectionCosineX",                              pNtuple_Neutrino_1);
-//        QUICK_PLOT_1D("nu_mc_DirectionCosineY",                              pNtuple_Neutrino_1);
-//        QUICK_PLOT_1D("nu_mc_DirectionCosineZ",                              pNtuple_Neutrino_1);
-//        QUICK_PLOT_1D("nu_mc_Momentum",                                      pNtuple_Neutrino_1);
-//        QUICK_PLOT_1D("nu_mc_MomentumX",                                     pNtuple_Neutrino_1);
-//        QUICK_PLOT_1D("nu_mc_MomentumY",                                     pNtuple_Neutrino_1);
-//        QUICK_PLOT_1D("nu_mc_MomentumZ",                                     pNtuple_Neutrino_1);
-//                                                                               
-//        QUICK_PLOT_1D("nu_WasReconstructed",                                 pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_IsVertexFiducial",                                 pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_IsContained",                                      pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_FiducialHitFraction",                              pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_IsVertexFiducial",                              pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_IsContained",                                   pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_ContainmentFraction",                           pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_McParticleUid",                                 pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_IsChargedCurrent",                              pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_VisibleEnergyFraction",                         pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_PdgCode",                                       pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_HitPurity",                                     pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_HitCompleteness",                               pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_CollectionPlaneHitPurity",                      pNtuple_Neutrino_2);
-//        QUICK_PLOT_1D("nu_mc_CollectionPlaneHitCompleteness",                pNtuple_Neutrino_2);
-//                                                                               
-//        QUICK_PLOT_1D("nu_HasMcInfo",                                        pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("primary_Number",                                      pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("cr_Number",                                           pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("nu_NumberOf3dHits",                                   pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("nu_NumberOfCollectionPlaneHits",                      pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("nu_NumberOfDownstreamParticles",                      pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("nu_VertexX",                                          pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("nu_VertexY",                                          pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("nu_VertexZ",                                          pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("nu_mc_VertexX",                                       pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("nu_mc_VertexY",                                       pNtuple_Neutrino_3);
-//        QUICK_PLOT_1D("nu_mc_VertexZ",                                       pNtuple_Neutrino_3);
-//        
-//        QUICK_PLOT_1D("primary_KineticEnergy",                               pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_KineticEnergyFracFromRange",                  pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_KineticEnergyFracFromCorrectedTrackCharge",   pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_KineticEnergyFracFromUncorrectedTrackCharge", pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_KineticEnergyFracFromShowerCharge",           pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_VertexX",                                     pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_VertexY",                                     pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_VertexZ",                                     pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_mc_Energy",                                   pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_mc_KineticEnergy",                            pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_mc_Mass",                                     pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_mc_VertexX",                                  pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_mc_VertexY",                                  pNtuple_Primary_0);
-//        QUICK_PLOT_1D("primary_mc_VertexZ",                                  pNtuple_Primary_0);
-//        
-//        QUICK_PLOT_1D("primary_DirectionCosineX",                            pNtuple_Primary_1);
-//        QUICK_PLOT_1D("primary_DirectionCosineY",                            pNtuple_Primary_1);
-//        QUICK_PLOT_1D("primary_DirectionCosineZ",                            pNtuple_Primary_1);
-//        QUICK_PLOT_1D("primary_mc_DirectionCosineX",                         pNtuple_Primary_1);
-//        QUICK_PLOT_1D("primary_mc_DirectionCosineY",                         pNtuple_Primary_1);
-//        QUICK_PLOT_1D("primary_mc_DirectionCosineZ",                         pNtuple_Primary_1);
-//        QUICK_PLOT_1D("primary_mc_Momentum",                                 pNtuple_Primary_1);
-//        QUICK_PLOT_1D("primary_mc_MomentumX",                                pNtuple_Primary_1);
-//        QUICK_PLOT_1D("primary_mc_MomentumY",                                pNtuple_Primary_1);
-//        QUICK_PLOT_1D("primary_mc_MomentumZ",                                pNtuple_Primary_1);
-//                                                                         
-//        QUICK_PLOT_1D("primary_WasReconstructed",                            pNtuple_Primary_2);
-//        QUICK_PLOT_1D("primary_IsVertexFiducial",                            pNtuple_Primary_2);
-//        QUICK_PLOT_1D("primary_IsContained",                                 pNtuple_Primary_2);
-//        QUICK_PLOT_1D("primary_FiducialHitFraction",                         pNtuple_Primary_2);
-//        QUICK_PLOT_1D("primary_HasMcInfo",                                   pNtuple_Primary_2);
-//        QUICK_PLOT_1D("primary_mc_IsVertexFiducial",                         pNtuple_Primary_2);
-//        QUICK_PLOT_1D("primary_mc_IsContained",                              pNtuple_Primary_2);
-//        QUICK_PLOT_1D("primary_mc_ContainmentFraction",                      pNtuple_Primary_2);
-//                                                                             
-//        QUICK_PLOT_1D("primary_IsShower",                                    pNtuple_Primary_3);
-//        QUICK_PLOT_1D("primary_IsTrack",                                     pNtuple_Primary_3);
-//        QUICK_PLOT_1D("primary_IsProton",                                    pNtuple_Primary_3);
-//        QUICK_PLOT_1D("primary_IsPionOrMuon",                                pNtuple_Primary_3);
-//        QUICK_PLOT_1D("primary_mc_IsShower",                                 pNtuple_Primary_3);
-//        QUICK_PLOT_1D("primary_mc_IsTrack",                                  pNtuple_Primary_3);
-//        QUICK_PLOT_1D("primary_mc_IsProton",                                 pNtuple_Primary_3);
-//        QUICK_PLOT_1D("primary_mc_IsPionOrMuon",                             pNtuple_Primary_3);
-//        QUICK_PLOT_1D("primary_mc_IsCosmicRay",                              pNtuple_Primary_3);
-//        QUICK_PLOT_1D("primary_mc_PdgCode",                                  pNtuple_Primary_3);
-//                                                                             
-//        QUICK_PLOT_1D("primary_NumberOf3dHits",                              pNtuple_Primary_4);
-//        QUICK_PLOT_1D("primary_NumberOfCollectionPlaneHits",                 pNtuple_Primary_4);
-//        QUICK_PLOT_1D("primary_NumberOfDownstreamParticles",                 pNtuple_Primary_4);
-//        QUICK_PLOT_1D("primary_mc_McParticleUid",                            pNtuple_Primary_4);
-//        QUICK_PLOT_1D("primary_mc_IsParticleSplitByReco",                    pNtuple_Primary_4);
-//        QUICK_PLOT_1D("primary_mc_HitPurity",                                pNtuple_Primary_4);
-//        QUICK_PLOT_1D("primary_mc_HitCompleteness",                          pNtuple_Primary_4);
-//        QUICK_PLOT_1D("primary_mc_CollectionPlaneHitPurity",                 pNtuple_Primary_4);
-//        QUICK_PLOT_1D("primary_mc_CollectionPlaneHitCompleteness",           pNtuple_Primary_4);
-//                                                                         
-//        QUICK_PLOT_1D("cr_KineticEnergy",                                    pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_KineticEnergyFracFromRange",                       pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_KineticEnergyFracFromCorrectedTrackCharge",        pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_KineticEnergyFracFromUncorrectedTrackCharge",      pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_KineticEnergyFracFromShowerCharge",                pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_VertexX",                                          pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_VertexY",                                          pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_VertexZ",                                          pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_mc_Energy",                                        pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_mc_KineticEnergy",                                 pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_mc_Mass",                                          pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_mc_VertexX",                                       pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_mc_VertexY",                                       pNtuple_CosmicRay_0);
-//        QUICK_PLOT_1D("cr_mc_VertexZ",                                       pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("nu_VisibleEnergy",                                    pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_VisibleLongitudinalEnergy",                        pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_VisibleTransverseEnergy",                          pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_VisibleEnergyFracFromRange",                       pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_VisibleEnergyFracFromCorrectedTrackCharge",        pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_VisibleEnergyFracFromUncorrectedTrackCharge",      pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_VisibleEnergyFracFromShowerCharge",                pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_mc_Energy",                                        pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_mc_LongitudinalEnergy",                            pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_mc_TransverseEnergy",                              pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_mc_VisibleEnergy",                                 pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_mc_VisibleLongitudinalEnergy",                     pNtuple_Neutrino_0);
+        QUICK_PLOT_1D("nu_mc_VisibleTransverseEnergy",                       pNtuple_Neutrino_0);
+                                                                               
+        QUICK_PLOT_1D("nu_DirectionCosineX",                                 pNtuple_Neutrino_1);
+        QUICK_PLOT_1D("nu_DirectionCosineY",                                 pNtuple_Neutrino_1);
+        QUICK_PLOT_1D("nu_DirectionCosineZ",                                 pNtuple_Neutrino_1);
+        QUICK_PLOT_1D("nu_mc_DirectionCosineX",                              pNtuple_Neutrino_1);
+        QUICK_PLOT_1D("nu_mc_DirectionCosineY",                              pNtuple_Neutrino_1);
+        QUICK_PLOT_1D("nu_mc_DirectionCosineZ",                              pNtuple_Neutrino_1);
+        QUICK_PLOT_1D("nu_mc_Momentum",                                      pNtuple_Neutrino_1);
+        QUICK_PLOT_1D("nu_mc_MomentumX",                                     pNtuple_Neutrino_1);
+        QUICK_PLOT_1D("nu_mc_MomentumY",                                     pNtuple_Neutrino_1);
+        QUICK_PLOT_1D("nu_mc_MomentumZ",                                     pNtuple_Neutrino_1);
+                                                                               
+        QUICK_PLOT_1D("nu_WasReconstructed",                                 pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_IsVertexFiducial",                                 pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_IsContained",                                      pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_FiducialHitFraction",                              pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_IsVertexFiducial",                              pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_IsContained",                                   pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_ContainmentFraction",                           pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_McParticleUid",                                 pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_IsChargedCurrent",                              pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_VisibleEnergyFraction",                         pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_PdgCode",                                       pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_HitPurity",                                     pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_HitCompleteness",                               pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_CollectionPlaneHitPurity",                      pNtuple_Neutrino_2);
+        QUICK_PLOT_1D("nu_mc_CollectionPlaneHitCompleteness",                pNtuple_Neutrino_2);
+                                                                               
+        QUICK_PLOT_1D("nu_HasMcInfo",                                        pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("primary_Number",                                      pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("cr_Number",                                           pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("nu_NumberOf3dHits",                                   pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("nu_NumberOfCollectionPlaneHits",                      pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("nu_NumberOfDownstreamParticles",                      pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("nu_VertexX",                                          pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("nu_VertexY",                                          pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("nu_VertexZ",                                          pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("nu_mc_VertexX",                                       pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("nu_mc_VertexY",                                       pNtuple_Neutrino_3);
+        QUICK_PLOT_1D("nu_mc_VertexZ",                                       pNtuple_Neutrino_3);
+        
+        QUICK_PLOT_1D("primary_KineticEnergy",                               pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_KineticEnergyFracFromRange",                  pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_KineticEnergyFracFromCorrectedTrackCharge",   pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_KineticEnergyFracFromUncorrectedTrackCharge", pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_KineticEnergyFracFromShowerCharge",           pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_VertexX",                                     pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_VertexY",                                     pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_VertexZ",                                     pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_mc_Energy",                                   pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_mc_KineticEnergy",                            pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_mc_Mass",                                     pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_mc_VertexX",                                  pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_mc_VertexY",                                  pNtuple_Primary_0);
+        QUICK_PLOT_1D("primary_mc_VertexZ",                                  pNtuple_Primary_0);
+        
+        QUICK_PLOT_1D("primary_DirectionCosineX",                            pNtuple_Primary_1);
+        QUICK_PLOT_1D("primary_DirectionCosineY",                            pNtuple_Primary_1);
+        QUICK_PLOT_1D("primary_DirectionCosineZ",                            pNtuple_Primary_1);
+        QUICK_PLOT_1D("primary_mc_DirectionCosineX",                         pNtuple_Primary_1);
+        QUICK_PLOT_1D("primary_mc_DirectionCosineY",                         pNtuple_Primary_1);
+        QUICK_PLOT_1D("primary_mc_DirectionCosineZ",                         pNtuple_Primary_1);
+        QUICK_PLOT_1D("primary_mc_Momentum",                                 pNtuple_Primary_1);
+        QUICK_PLOT_1D("primary_mc_MomentumX",                                pNtuple_Primary_1);
+        QUICK_PLOT_1D("primary_mc_MomentumY",                                pNtuple_Primary_1);
+        QUICK_PLOT_1D("primary_mc_MomentumZ",                                pNtuple_Primary_1);
+                                                                         
+        QUICK_PLOT_1D("primary_WasReconstructed",                            pNtuple_Primary_2);
+        QUICK_PLOT_1D("primary_IsVertexFiducial",                            pNtuple_Primary_2);
+        QUICK_PLOT_1D("primary_IsContained",                                 pNtuple_Primary_2);
+        QUICK_PLOT_1D("primary_FiducialHitFraction",                         pNtuple_Primary_2);
+        QUICK_PLOT_1D("primary_HasMcInfo",                                   pNtuple_Primary_2);
+        QUICK_PLOT_1D("primary_mc_IsVertexFiducial",                         pNtuple_Primary_2);
+        QUICK_PLOT_1D("primary_mc_IsContained",                              pNtuple_Primary_2);
+        QUICK_PLOT_1D("primary_mc_ContainmentFraction",                      pNtuple_Primary_2);
                                                                              
+        QUICK_PLOT_1D("primary_IsShower",                                    pNtuple_Primary_3);
+        QUICK_PLOT_1D("primary_IsTrack",                                     pNtuple_Primary_3);
+        QUICK_PLOT_1D("primary_IsProton",                                    pNtuple_Primary_3);
+        QUICK_PLOT_1D("primary_IsPionOrMuon",                                pNtuple_Primary_3);
+        QUICK_PLOT_1D("primary_mc_IsShower",                                 pNtuple_Primary_3);
+        QUICK_PLOT_1D("primary_mc_IsTrack",                                  pNtuple_Primary_3);
+        QUICK_PLOT_1D("primary_mc_IsProton",                                 pNtuple_Primary_3);
+        QUICK_PLOT_1D("primary_mc_IsPionOrMuon",                             pNtuple_Primary_3);
+        QUICK_PLOT_1D("primary_mc_IsCosmicRay",                              pNtuple_Primary_3);
+        QUICK_PLOT_1D("primary_mc_PdgCode",                                  pNtuple_Primary_3);
+                                                                             
+        QUICK_PLOT_1D("primary_NumberOf3dHits",                              pNtuple_Primary_4);
+        QUICK_PLOT_1D("primary_NumberOfCollectionPlaneHits",                 pNtuple_Primary_4);
+        QUICK_PLOT_1D("primary_NumberOfDownstreamParticles",                 pNtuple_Primary_4);
+        QUICK_PLOT_1D("primary_mc_McParticleUid",                            pNtuple_Primary_4);
+        QUICK_PLOT_1D("primary_mc_IsParticleSplitByReco",                    pNtuple_Primary_4);
+        QUICK_PLOT_1D("primary_mc_HitPurity",                                pNtuple_Primary_4);
+        QUICK_PLOT_1D("primary_mc_HitCompleteness",                          pNtuple_Primary_4);
+        QUICK_PLOT_1D("primary_mc_CollectionPlaneHitPurity",                 pNtuple_Primary_4);
+        QUICK_PLOT_1D("primary_mc_CollectionPlaneHitCompleteness",           pNtuple_Primary_4);
+                                                                         
+        QUICK_PLOT_1D("cr_KineticEnergy",                                    pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_KineticEnergyFracFromRange",                       pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_KineticEnergyFracFromCorrectedTrackCharge",        pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_KineticEnergyFracFromUncorrectedTrackCharge",      pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_KineticEnergyFracFromShowerCharge",                pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_VertexX",                                          pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_VertexY",                                          pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_VertexZ",                                          pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_mc_Energy",                                        pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_mc_KineticEnergy",                                 pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_mc_Mass",                                          pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_mc_VertexX",                                       pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_mc_VertexY",                                       pNtuple_CosmicRay_0);
+        QUICK_PLOT_1D("cr_mc_VertexZ",                                       pNtuple_CosmicRay_0);
+                                                                        
         QUICK_PLOT_1D("cr_DirectionCosineX",                                 pNtuple_CosmicRay_1);
         QUICK_PLOT_1D("cr_DirectionCosineY",                                 pNtuple_CosmicRay_1);
         QUICK_PLOT_1D("cr_DirectionCosineZ",                                 pNtuple_CosmicRay_1);
@@ -922,60 +922,60 @@ void ReadPandoraNtuple(const char *const inputFilePath)
         QUICK_PLOT_1D("cr_mc_DirectionCosineX",                              pNtuple_CosmicRay_1);
         QUICK_PLOT_1D("cr_mc_DirectionCosineY",                              pNtuple_CosmicRay_1);
         QUICK_PLOT_1D("cr_mc_DirectionCosineZ",                              pNtuple_CosmicRay_1);
-//                                                                             
-//        QUICK_PLOT_1D("cr_WasReconstructed",                                 pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_IsVertexFiducial",                                 pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_IsContained",                                      pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_FiducialHitFraction",                              pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_HasMcInfo",                                        pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_mc_IsVertexFiducial",                              pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_mc_IsContained",                                   pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_mc_ContainmentFraction",                           pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_mc_IsShower",                                      pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_mc_IsTrack",                                       pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_mc_IsProton",                                      pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_mc_IsPionOrMuon",                                  pNtuple_CosmicRay_2);
-//        QUICK_PLOT_1D("cr_mc_IsCosmicRay",                                   pNtuple_CosmicRay_2);
+                                                                             
+        QUICK_PLOT_1D("cr_WasReconstructed",                                 pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_IsVertexFiducial",                                 pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_IsContained",                                      pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_FiducialHitFraction",                              pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_HasMcInfo",                                        pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_mc_IsVertexFiducial",                              pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_mc_IsContained",                                   pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_mc_ContainmentFraction",                           pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_mc_IsShower",                                      pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_mc_IsTrack",                                       pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_mc_IsProton",                                      pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_mc_IsPionOrMuon",                                  pNtuple_CosmicRay_2);
+        QUICK_PLOT_1D("cr_mc_IsCosmicRay",                                   pNtuple_CosmicRay_2);
         QUICK_PLOT_1D("cr_mc_PdgCode",                                       pNtuple_CosmicRay_2);
-//                                                                             
-//        QUICK_PLOT_1D("cr_NumberOf3dHits",                                   pNtuple_CosmicRay_3);
-//        QUICK_PLOT_1D("cr_NumberOfCollectionPlaneHits",                      pNtuple_CosmicRay_3);
-//        QUICK_PLOT_1D("cr_NumberOfDownstreamParticles",                      pNtuple_CosmicRay_3);
-//        QUICK_PLOT_1D("cr_mc_McParticleUid",                                 pNtuple_CosmicRay_3);
-//        QUICK_PLOT_1D("cr_mc_IsParticleSplitByReco",                         pNtuple_CosmicRay_3);
-//        QUICK_PLOT_1D("cr_mc_HitPurity",                                     pNtuple_CosmicRay_3);
-//        QUICK_PLOT_1D("cr_mc_HitCompleteness",                               pNtuple_CosmicRay_3);
-//        QUICK_PLOT_1D("cr_mc_CollectionPlaneHitPurity",                      pNtuple_CosmicRay_3);
-//        QUICK_PLOT_1D("cr_mc_CollectionPlaneHitCompleteness",                pNtuple_CosmicRay_3);
+                                                                             
+        QUICK_PLOT_1D("cr_NumberOf3dHits",                                   pNtuple_CosmicRay_3);
+        QUICK_PLOT_1D("cr_NumberOfCollectionPlaneHits",                      pNtuple_CosmicRay_3);
+        QUICK_PLOT_1D("cr_NumberOfDownstreamParticles",                      pNtuple_CosmicRay_3);
+        QUICK_PLOT_1D("cr_mc_McParticleUid",                                 pNtuple_CosmicRay_3);
+        QUICK_PLOT_1D("cr_mc_IsParticleSplitByReco",                         pNtuple_CosmicRay_3);
+        QUICK_PLOT_1D("cr_mc_HitPurity",                                     pNtuple_CosmicRay_3);
+        QUICK_PLOT_1D("cr_mc_HitCompleteness",                               pNtuple_CosmicRay_3);
+        QUICK_PLOT_1D("cr_mc_CollectionPlaneHitPurity",                      pNtuple_CosmicRay_3);
+        QUICK_PLOT_1D("cr_mc_CollectionPlaneHitCompleteness",                pNtuple_CosmicRay_3);
     }
     
-    if (false)
+    if (true)
     {
         PLOT_2D("nu_mc_VisibleEnergy",               "nu_VisibleEnergy",             pNtuple_Neutrino_0, 0.0, 2.0, 0.0, 2.0);
-        PLOT_2D("nu_mc_VisibleLongitudinalEnergy",   "nu_VisibleTransverseEnergy", pNtuple_Neutrino_0, 0.0, 2.0, -0.5, 2.0);
-        PLOT_2D("nu_mc_VisibleTransverseEnergy",     "nu_VisibleLongitudinalEnergy",   pNtuple_Neutrino_0, 0.0, 0.6, 0.0, 1.0);
+        PLOT_2D("nu_mc_VisibleLongitudinalEnergy",   "nu_VisibleLongitudinalEnergy", pNtuple_Neutrino_0, 0.0, 2.0, -0.5, 2.0);
+        PLOT_2D("nu_mc_VisibleTransverseEnergy",     "nu_VisibleTransverseEnergy",   pNtuple_Neutrino_0, 0.0, 0.6, 0.0, 1.0);
         PLOT_2D("nu_mc_Energy",                      "nu_VisibleEnergy",             pNtuple_Neutrino_0, 0.0, 2.0, 0.0, 2.0);
-        PLOT_2D("nu_mc_LongitudinalEnergy",          "nu_VisibleTransverseEnergy", pNtuple_Neutrino_0, 0.0, 2.0, -0.5, 2.0);
-        PLOT_2D("nu_mc_TransverseEnergy",            "nu_VisibleLongitudinalEnergy",   pNtuple_Neutrino_0, 0.0, 0.01, 0.0, 2.0);
+        PLOT_2D("nu_mc_LongitudinalEnergy",          "nu_VisibleLongitudinalEnergy", pNtuple_Neutrino_0, 0.0, 2.0, -0.5, 2.0);
+        PLOT_2D("nu_mc_TransverseEnergy",            "nu_VisibleTransverseEnergy",   pNtuple_Neutrino_0, 0.0, 0.01, 0.0, 2.0);
         
         QUICK_PLOT_2D("nu_mc_VertexX",               "nu_VertexX",                   pNtuple_Neutrino_3);
-        QUICK_PLOT_2D("nu_mc_VertexY",               "nu_VertexY",                   pNtuple_Neutrino_3);
+        PLOT_2D("nu_mc_VertexY",                     "nu_VertexY",                   pNtuple_Neutrino_3, -100.f, 100.f, -100.f, 100.f);
         QUICK_PLOT_2D("nu_mc_VertexZ",               "nu_VertexZ",                   pNtuple_Neutrino_3);
 
         PLOT_2D("primary_mc_KineticEnergy",          "primary_KineticEnergy",        pNtuple_Primary_0, 0.0, 1.0, 0.0, 1.0);
         QUICK_PLOT_2D("primary_mc_VertexX",          "primary_VertexX",              pNtuple_Primary_0);
-        QUICK_PLOT_2D("primary_mc_VertexY",          "primary_VertexY",              pNtuple_Primary_0);
+        PLOT_2D("primary_mc_VertexY",                "primary_VertexY",              pNtuple_Primary_0, -100.f, 100.f, -100.f, 100.f);
         QUICK_PLOT_2D("primary_mc_VertexZ",          "primary_VertexZ",              pNtuple_Primary_0);
         QUICK_PLOT_2D("primary_mc_DirectionCosineX", "primary_DirectionCosineX",     pNtuple_Primary_1);
         QUICK_PLOT_2D("primary_mc_DirectionCosineY", "primary_DirectionCosineY",     pNtuple_Primary_1);
         QUICK_PLOT_2D("primary_mc_DirectionCosineZ", "primary_DirectionCosineZ",     pNtuple_Primary_1);
         
-        PLOT_2D("cr_mc_KineticEnergy",               "cr_KineticEnergy",             pNtuple_CosmicRay_0, 0.0, 50.0, 0.0, 50.0);
-        QUICK_PLOT_2D("cr_mc_VertexX",               "cr_VertexX",                   pNtuple_CosmicRay_0);
-        QUICK_PLOT_2D("cr_mc_VertexY",               "cr_VertexY",                   pNtuple_CosmicRay_0);
-        QUICK_PLOT_2D("cr_mc_VertexZ",               "cr_VertexZ",                   pNtuple_CosmicRay_0);
+        PLOT_2D("cr_mc_KineticEnergy",               "cr_KineticEnergy",             pNtuple_CosmicRay_0, 0.0, 2.f, 0.0, 2.f);
+        PLOT_2D("cr_mc_VertexX",                     "cr_VertexX",                   pNtuple_CosmicRay_0, -50.f, 350.f, -50.f, 350.f);
+        PLOT_2D("cr_mc_VertexY",                     "cr_VertexY",                   pNtuple_CosmicRay_0, -150.f, 150.f, -150.f, 150.f);
+        PLOT_2D("cr_mc_VertexZ",                     "cr_VertexZ",                   pNtuple_CosmicRay_0, 0.f, 1200.f, 0.f, 1200.f);
         QUICK_PLOT_2D("cr_mc_DirectionCosineX",      "cr_DirectionCosineX",          pNtuple_CosmicRay_1);
-        QUICK_PLOT_2D("cr_mc_DirectionCosineY",      "cr_DirectionCosineY",          pNtuple_CosmicRay_1);
+        PLOT_2D("cr_mc_DirectionCosineY",            "cr_DirectionCosineY",          pNtuple_CosmicRay_1, -1.f, 0.f, -1.f, 0.f);
         QUICK_PLOT_2D("cr_mc_DirectionCosineZ",      "cr_DirectionCosineZ",          pNtuple_CosmicRay_1);
     }
     
@@ -983,9 +983,8 @@ void ReadPandoraNtuple(const char *const inputFilePath)
     const float type_McPionMuon   = static_cast<float>(type_RecoProton_McPionMuon + type_RecoPionMuon_McPionMuon + type_RecoOtherTrack_McPionMuon + type_RecoShower_McPionMuon);
     const float type_McOtherTrack = static_cast<float>(type_RecoProton_McOtherTrack + type_RecoPionMuon_McOtherTrack + type_RecoOtherTrack_McOtherTrack + type_RecoShower_McOtherTrack);
     const float type_McShower     = static_cast<float>(type_RecoProton_McShower + type_RecoPionMuon_McShower + type_RecoOtherTrack_McShower + type_RecoShower_McShower);
-    
 
-    std::cout << " ---- TYPE ----------------------- " << std::endl;
+    std::cout << " ---- TYPE CLASSIFICATION ----------------------- " << std::endl;
     std::cout << "Reco proton,       MC proton      = " << 100.f * static_cast<float>(type_RecoProton_McProton)         / type_McProton     << "% " << type_RecoProton_McProton << std::endl;
     std::cout << "Reco proton,       MC pion/muon   = " << 100.f * static_cast<float>(type_RecoProton_McPionMuon)       / type_McPionMuon   << "% " << type_RecoProton_McPionMuon << std::endl;
     std::cout << "Reco proton,       MC other track = " << 100.f * static_cast<float>(type_RecoProton_McOtherTrack)     / type_McOtherTrack << "% " << type_RecoProton_McOtherTrack << std::endl;
