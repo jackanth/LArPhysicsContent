@@ -24,7 +24,7 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
-    
+
 WriteAnalysisParticlesAlgorithm::WriteAnalysisParticlesAlgorithm() :
     m_pfoListName(),
     m_outputFile(),
@@ -55,12 +55,12 @@ WriteAnalysisParticlesAlgorithm::~WriteAnalysisParticlesAlgorithm()
 {
     if (m_pOutputTree)
         m_pOutputTree->Write();
-        
+
     if (m_pOutputTFile)
     {
         if (m_pOutputTFile->IsOpen())
             m_pOutputTFile->Close();
-            
+
         delete m_pOutputTFile;
     }
 }
@@ -79,19 +79,19 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
 
         return STATUS_CODE_SUCCESS;
     }
-    
+
     // Get the MC particle list if it exists.
     const MCParticleList *pMCParticleList(nullptr);
     PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList);
-    
+
     // Get the CaloHit list if it exists.
     const CaloHitList *pCaloHitList(nullptr);
     PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList);
-    
+
     m_treeParameters = TreeParameters();
 
     MCPrimaryMap coveredMCPrimaries;
-    
+
     for (const ParticleFlowObject * const pPfo : *pPfoList)
     {
         if (const LArAnalysisParticle *const pAnalysisParticle = dynamic_cast<const LArAnalysisParticle *>(pPfo))
@@ -100,12 +100,12 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
                 coveredMCPrimaries.emplace(pAnalysisParticle->McMainMCParticle(), pAnalysisParticle);
         }
     }
-    
+
     for (const ParticleFlowObject * const pPfo : *pPfoList)
     {
         if (const LArAnalysisParticle *const pAnalysisParticle = dynamic_cast<const LArAnalysisParticle *>(pPfo))
         {
-            if (LArAnalysisParticleHelper::IsNeutrino(pPfo))  
+            if (LArAnalysisParticleHelper::IsNeutrino(pPfo))
             {
                 if (m_treeParameters.m_nu_WasReconstructed)
                 {
@@ -116,19 +116,19 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
                 this->PopulateNeutrinoParameters(*pAnalysisParticle, pMCParticleList, pCaloHitList);
                 m_treeParameters.m_nu_WasReconstructed = true;
             }
-            
+
             else if (LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(pPfo))
             {
                 this->AddPrimaryDaughterRecord(*pAnalysisParticle, coveredMCPrimaries);
                 ++m_treeParameters.m_primary_Number;
             }
-            
+
             else if (LArAnalysisParticleHelper::IsCosmicRay(pPfo))
             {
                 this->AddCosmicRayRecord(*pAnalysisParticle, coveredMCPrimaries);
                 ++m_treeParameters.m_cr_Number;
             }
-            
+
             else
             {
                 std::cout << "WriteAnalysisParticlesAlgorithm: analysis particle was not a cosmic ray, neutrino or primary daughter" << std::endl;
@@ -136,69 +136,69 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
             }
         }
     }
-    
+
     if (pMCParticleList)
     {
         MCParticleSet mcPrimarySet;
-            
+
         for (const MCParticle *const pMCParticle : *pMCParticleList)
         {
             try
             {
                 if ((pMCParticle->GetParentList().size() == 0) && LArMCParticleHelper::IsNeutrino(pMCParticle))
                     mcPrimarySet.insert(pMCParticle);
-                
+
                 else
                     mcPrimarySet.insert(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
             }
-            
+
             catch (...)
             {
                 continue;
             }
         }
-        
+
         for (const MCParticle *const pMCPrimary : mcPrimarySet)
         {
             if (coveredMCPrimaries.find(pMCPrimary) != coveredMCPrimaries.end())
                 continue;
-   
+
             if (!LArMCParticleHelper::IsNeutrino(pMCPrimary) && !LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) &&
                 (pMCPrimary->GetParticleId() != MU_MINUS))
             {
                 continue;
             }
-            
+
             float mcEnergy = 0.f, mcKineticEnergy = 0.f, mcMass = 0.f, mcContainmentFraction = 0.f;
             LArAnalysisParticle::TypeTree mcTypeTree;
             LArAnalysisParticle::TYPE mcType(LArAnalysisParticle::TYPE::UNKNOWN);
             CartesianVector mcVertexPosition(0.f, 0.f, 0.f), mcMomentum(0.f, 0.f, 0.f);
             int mcPdgCode(0);
-            
-            if (!LArAnalysisParticleHelper::GetMcInformation(pMCPrimary, mcEnergy, mcKineticEnergy, mcMass, mcTypeTree, mcType, mcVertexPosition, mcMomentum, mcPdgCode, 
+
+            if (!LArAnalysisParticleHelper::GetMcInformation(pMCPrimary, mcEnergy, mcKineticEnergy, mcMass, mcTypeTree, mcType, mcVertexPosition, mcMomentum, mcPdgCode,
                 mcContainmentFraction, m_minCoordinates, m_maxCoordinates))
             {
                 std::cout << "WriteAnalysisParticlesAlgorithm: failed to get MC information for non-reconstructed MC particle" << std::endl;
                 continue;
             }
-            
+
             if (mcEnergy < m_mcOnlyParticleEnergyCut)
                 continue;
-                
+
             if (mcContainmentFraction < m_mcOnlyParticleContainmentCut)
                 continue;
 
             const bool mcIsVertexFiducial = LArAnalysisParticleHelper::IsPointFiducial(mcVertexPosition, m_minCoordinates,
                 m_maxCoordinates);
-                
+
             CartesianVector mcDirectionCosines(0.f, 0.f, 0.f);
-            
+
             if (mcMomentum.GetMagnitude() < std::numeric_limits<float>::epsilon())
                 std::cout << "AnalysisAlgorithm: could not get direction from MC momentum as it was too small" << std::endl;
-            
+
             else
                 mcDirectionCosines = mcMomentum.GetUnitVector();
-                
+
             const bool mcIsShower = (mcType == LArAnalysisParticle::TYPE::SHOWER);
 
             if (LArMCParticleHelper::IsNeutrino(pMCPrimary))
@@ -208,20 +208,20 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
                     std::cout << "WriteAnalysisParticlesAlgorithm: found neutrino that was not covered by MC particles but neutrino MC properties already exist" << std::endl;
                     continue;
                 }
-                
+
                 m_treeParameters.m_nu_HasMcInfo = true;
-                
-                this->PopulateNeutrinoMcParameters(pMCPrimary, mcEnergy, mcVertexPosition, mcDirectionCosines, mcMomentum, 
+
+                this->PopulateNeutrinoMcParameters(pMCPrimary, mcEnergy, mcVertexPosition, mcDirectionCosines, mcMomentum,
                     mcIsVertexFiducial, mcContainmentFraction, mcPdgCode, pMCParticleList, pCaloHitList, 0.f, 0.f, 0.f, 0.f, mcTypeTree);
             }
-                
+
             else if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary))
             {
                 ++m_treeParameters.m_primary_Number;
-                this->AddMcOnlyPrimaryDaughterRecord(pMCPrimary, mcEnergy, mcKineticEnergy, mcMass, mcVertexPosition, mcDirectionCosines, mcMomentum, 
+                this->AddMcOnlyPrimaryDaughterRecord(pMCPrimary, mcEnergy, mcKineticEnergy, mcMass, mcVertexPosition, mcDirectionCosines, mcMomentum,
                     mcIsVertexFiducial, mcContainmentFraction, mcType, mcIsShower, mcPdgCode, mcTypeTree);
             }
-            
+
             else if (pMCPrimary->GetParticleId() == MU_MINUS)
             {
                 ++m_treeParameters.m_cr_Number;
@@ -230,17 +230,17 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
             }
         }
     }
-    
+
     if (m_verbose)
         this->DumpTree();
-    
+
     m_pOutputTree->Fill();
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalysisParticle &neutrinoAnalysisParticle, 
+void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalysisParticle &neutrinoAnalysisParticle,
     const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList) const
 {
     // m_nu_WasReconstructed is dealt with by the calling method.
@@ -263,26 +263,26 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
     m_treeParameters.m_nu_NumberOf3dHits                              = neutrinoAnalysisParticle.NumberOf3dHits();
     m_treeParameters.m_nu_NumberOfCollectionPlaneHits                 = neutrinoAnalysisParticle.NumberOfCollectionPlaneHits();
     m_treeParameters.m_nu_NumberOfDownstreamParticles                 = neutrinoAnalysisParticle.NumberOfDownstreamParticles();
-    
+
     CartesianVector visiblePseudoMomentum(0.f, 0.f, 0.f); // the summed reconstructed directional KEs of the primaries
-    
+
     for (const ParticleFlowObject *const pDaughterPfo : neutrinoAnalysisParticle.GetDaughterPfoList())
     {
         if (const LArAnalysisParticle *const pDaughterAnalysisParticle = dynamic_cast<const LArAnalysisParticle *>(pDaughterPfo))
             visiblePseudoMomentum += pDaughterAnalysisParticle->DirectionCosines() * pDaughterAnalysisParticle->KineticEnergy();
     }
-    
+
     const CartesianVector zAxis(0.f, 0.f, 1.f);
     m_treeParameters.m_nu_VisibleLongitudinalEnergy = visiblePseudoMomentum.GetDotProduct(zAxis);
     m_treeParameters.m_nu_VisibleTransverseEnergy   = visiblePseudoMomentum.GetCrossProduct(zAxis).GetMagnitude();
-    
+
     if (neutrinoAnalysisParticle.HasMcInfo())
     {
         this->PopulateNeutrinoMcParameters(neutrinoAnalysisParticle.McMainMCParticle(), neutrinoAnalysisParticle.McEnergy(),
-            neutrinoAnalysisParticle.McVertexPosition(), neutrinoAnalysisParticle.McDirectionCosines(), 
-            neutrinoAnalysisParticle.McMomentum(), neutrinoAnalysisParticle.McIsVertexFiducial(), neutrinoAnalysisParticle.McContainmentFraction(), 
-            neutrinoAnalysisParticle.McPdgCode(), pMCParticleList, pCaloHitList, neutrinoAnalysisParticle.McHitPurity(), 
-            neutrinoAnalysisParticle.McHitCompleteness(), neutrinoAnalysisParticle.McCollectionPlaneHitPurity(), 
+            neutrinoAnalysisParticle.McVertexPosition(), neutrinoAnalysisParticle.McDirectionCosines(),
+            neutrinoAnalysisParticle.McMomentum(), neutrinoAnalysisParticle.McIsVertexFiducial(), neutrinoAnalysisParticle.McContainmentFraction(),
+            neutrinoAnalysisParticle.McPdgCode(), pMCParticleList, pCaloHitList, neutrinoAnalysisParticle.McHitPurity(),
+            neutrinoAnalysisParticle.McHitCompleteness(), neutrinoAnalysisParticle.McCollectionPlaneHitPurity(),
             neutrinoAnalysisParticle.McCollectionPlaneHitCompleteness(), neutrinoAnalysisParticle.GetMcTypeTree());
     }
 }
@@ -291,16 +291,16 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
 
 void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParticle *const pMainMcParticle, const float mcEnergy,
     const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum,
-    const bool mcIsVertexFiducial, const float mcContainmentFraction, const int mcPdgCode, const MCParticleList *const pMCParticleList, 
+    const bool mcIsVertexFiducial, const float mcContainmentFraction, const int mcPdgCode, const MCParticleList *const pMCParticleList,
     const CaloHitList *const pCaloHitList, const float mcHitPurity, const float mcHitCompleteness, const float mcCollectionPlaneHitPurity,
     const float mcCollectionPlaneHitCompleteness, const LArAnalysisParticle::TypeTree mcTypeTree) const
 {
     if (pMainMcParticle)
         m_treeParameters.m_nu_mc_McParticleUid = reinterpret_cast<std::uint64_t>(pMainMcParticle->GetUid());
-        
+
     else // it can stay at its default value
         std::cout << "WriteAnalysisParticlesAlgorithm: could not populate MC particle UID" << std::endl;
-    
+
     m_treeParameters.m_nu_mc_Energy                         = mcEnergy;
     m_treeParameters.m_nu_mc_VertexX                        = mcVertexPosition.GetX();
     m_treeParameters.m_nu_mc_VertexY                        = mcVertexPosition.GetY();
@@ -321,19 +321,19 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
     m_treeParameters.m_nu_mc_HitCompleteness                = mcHitCompleteness;
     m_treeParameters.m_nu_mc_CollectionPlaneHitPurity       = mcCollectionPlaneHitPurity;
     m_treeParameters.m_nu_mc_CollectionPlaneHitCompleteness = mcCollectionPlaneHitCompleteness;
-    
+
     if (!pMCParticleList || pMCParticleList->empty())
     {
         std::cout << "WriteAnalysisParticlesAlgorithm: no valid MC particle list name provided but neutrino analysis particle has MC info" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
-    
+
     if (!pCaloHitList || pCaloHitList->empty())
     {
         std::cout << "WriteAnalysisParticlesAlgorithm: no valid CaloHit list name provided but neutrino analysis particle has MC info" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
-    
+
     MCParticleSet mcPrimarySet;
 
     for (const MCParticle *const pMCParticle : *pMCParticleList)
@@ -341,11 +341,11 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
         try
         {
             const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
-            
+
             if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pPrimaryMCParticle))
                 mcPrimarySet.insert(pPrimaryMCParticle);
         }
-        
+
         catch (...)
         {
             continue;
@@ -354,18 +354,18 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
 
     CartesianVector visibleMomentum(0.f, 0.f, 0.f);
     float visibleEnergy(0.f);
-    
+
     for (const MCParticle *const pMCPrimary : mcPrimarySet)
     {
         const float primaryVisibleEnergy = pMCPrimary->GetEnergy() - PdgTable::GetParticleMass(pMCPrimary->GetParticleId());
         visibleEnergy += primaryVisibleEnergy;
-        
+
         if (pMCPrimary->GetMomentum().GetMagnitude() > std::numeric_limits<float>::epsilon())
             visibleMomentum += pMCPrimary->GetMomentum().GetUnitVector() * primaryVisibleEnergy;
     }
-    
+
     const LArInteractionTypeHelper::InteractionType interactionType = this->GetInteractionType(pMCParticleList, pCaloHitList);
-    
+
     // To align with the non-MC definition, we define the longitudinal/transverse components with respect to the z-direction.
     const CartesianVector zDirectionVector(0.f, 0.f, 1.f);
 
@@ -376,9 +376,9 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
     m_treeParameters.m_nu_mc_VisibleTransverseEnergy   = visibleMomentum.GetCrossProduct(zDirectionVector).GetMagnitude();
     m_treeParameters.m_nu_mc_InteractionType           = LArInteractionTypeHelper::ToString(interactionType);
     m_treeParameters.m_nu_mc_IsChargedCurrent          = this->IsChargedCurrent(interactionType);
-    
+
     float visibleEnergyFraction(0.f);
-    
+
     if (mcEnergy > std::numeric_limits<float>::epsilon())
         visibleEnergyFraction = visibleEnergy / mcEnergy;
 
@@ -393,23 +393,23 @@ LArInteractionTypeHelper::InteractionType WriteAnalysisParticlesAlgorithm::GetIn
     // Obtain vector: true neutrinos
     MCParticleVector mcNeutrinoVector;
     LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
-    
+
     if (mcNeutrinoVector.empty())
     {
         std::cout << "WriteAnalysisParticlesAlgorithm: could not get interaction type because there were no reconstructed neutrinos" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
-    
+
     if (mcNeutrinoVector.size() > 1)
     {
         std::cout << "WriteAnalysisParticlesAlgorithm: could not get interaction type because there was more than one reconstructed neutrino" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
-    
+
     const MCParticle *const pMCNeutrino = mcNeutrinoVector.front();
 
     const LArMCParticleHelper::PrimaryParameters parameters;
-    
+
     if (const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle *>(pMCNeutrino))
         return LArInteractionTypeHelper::GetInteractionType(pLArMCNeutrino, pMCParticleList, pCaloHitList, parameters);
 
@@ -423,7 +423,7 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
     const MCPrimaryMap &coveredMCPrimaries) const
 {
     // m_primary_Number is dealt with by the calling method.
-    
+
     PUSH_TREE_RECORD(m_primary_WasReconstructed,                            true);
     PUSH_TREE_RECORD(m_primary_IsVertexFiducial,                            primaryAnalysisParticle.IsVertexFiducial());
     PUSH_TREE_RECORD(m_primary_IsContained,                                (primaryAnalysisParticle.FiducialHitFraction() >= m_fiducialHitFractionLowerBound));
@@ -448,23 +448,23 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
     PUSH_TREE_RECORD(m_primary_NumberOf3dHits,                              primaryAnalysisParticle.NumberOf3dHits());
     PUSH_TREE_RECORD(m_primary_NumberOfCollectionPlaneHits,                 primaryAnalysisParticle.NumberOfCollectionPlaneHits());
     PUSH_TREE_RECORD(m_primary_NumberOfDownstreamParticles,                 primaryAnalysisParticle.NumberOfDownstreamParticles());
-    
+
     if (primaryAnalysisParticle.HasMcInfo())
     {
         bool particleSplitByReco(false);
-        
+
         if (primaryAnalysisParticle.McMainMCParticle())
         {
             particleSplitByReco = (coveredMCPrimaries.count(primaryAnalysisParticle.McMainMCParticle()) > 1U);
             PUSH_TREE_RECORD(m_primary_mc_McParticleUid, reinterpret_cast<std::uint64_t>(primaryAnalysisParticle.McMainMCParticle()->GetUid()));
         }
-        
+
         else
         {
             std::cout << "WriteAnalysisParticlesAlgorithm: primary neutrino daughter had MC info but no associated main MC particle" << std::endl;
             PUSH_TREE_RECORD(m_primary_mc_McParticleUid, 0ULL);
         }
-        
+
         PUSH_TREE_RECORD(m_primary_mc_IsParticleSplitByReco,          particleSplitByReco);
         PUSH_TREE_RECORD(m_primary_mc_Energy,                         primaryAnalysisParticle.McEnergy());
         PUSH_TREE_RECORD(m_primary_mc_KineticEnergy,                  primaryAnalysisParticle.McKineticEnergy());
@@ -494,7 +494,7 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
         PUSH_TREE_RECORD(m_primary_mc_CollectionPlaneHitPurity,       primaryAnalysisParticle.McCollectionPlaneHitPurity());
         PUSH_TREE_RECORD(m_primary_mc_CollectionPlaneHitCompleteness, primaryAnalysisParticle.McCollectionPlaneHitCompleteness());
     }
-    
+
     else
     {
         PUSH_TREE_RECORD(m_primary_mc_IsParticleSplitByReco,          false);
@@ -533,8 +533,8 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
 
 void WriteAnalysisParticlesAlgorithm::AddMcOnlyPrimaryDaughterRecord(const MCParticle *const pMainMcParticle, const float mcEnergy,
     const float mcKineticEnergy, const float mcMass, const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines,
-    const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, const float mcContainmentFraction, 
-    const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, const int mcPdgCode, 
+    const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, const float mcContainmentFraction,
+    const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, const int mcPdgCode,
     const LArAnalysisParticle::TypeTree mcTypeTree) const
 {
     PUSH_TREE_RECORD(m_primary_WasReconstructed,                            false);
@@ -561,16 +561,16 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyPrimaryDaughterRecord(const MCPar
     PUSH_TREE_RECORD(m_primary_NumberOf3dHits,                              0U);
     PUSH_TREE_RECORD(m_primary_NumberOfCollectionPlaneHits,                 0U);
     PUSH_TREE_RECORD(m_primary_NumberOfDownstreamParticles,                 0U);
-    
+
     if (pMainMcParticle)
         PUSH_TREE_RECORD(m_primary_mc_McParticleUid, reinterpret_cast<std::uint64_t>(pMainMcParticle->GetUid()));
-    
+
     else
     {
         std::cout << "WriteAnalysisParticlesAlgorithm: primary neutrino daughter had MC info but no associated main MC particle" << std::endl;
         PUSH_TREE_RECORD(m_primary_mc_McParticleUid, 0ULL);
     }
-    
+
     PUSH_TREE_RECORD(m_primary_mc_IsParticleSplitByReco,          false); // not covered by any reconstructed particle
     PUSH_TREE_RECORD(m_primary_mc_Energy,                         mcEnergy);
     PUSH_TREE_RECORD(m_primary_mc_KineticEnergy,                  mcKineticEnergy);
@@ -607,7 +607,7 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
     const MCPrimaryMap &coveredMCPrimaries) const
 {
     // m_cr_Number is dealt with by the calling method.
-    
+
     PUSH_TREE_RECORD(m_cr_WasReconstructed,                            true);
     PUSH_TREE_RECORD(m_cr_IsVertexFiducial,                            cosmicRayAnalysisParticle.IsVertexFiducial());
     PUSH_TREE_RECORD(m_cr_IsContained,                                (cosmicRayAnalysisParticle.FiducialHitFraction() >= m_fiducialHitFractionLowerBound));
@@ -628,23 +628,23 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
     PUSH_TREE_RECORD(m_cr_NumberOf3dHits,                              cosmicRayAnalysisParticle.NumberOf3dHits());
     PUSH_TREE_RECORD(m_cr_NumberOfCollectionPlaneHits,                 cosmicRayAnalysisParticle.NumberOfCollectionPlaneHits());
     PUSH_TREE_RECORD(m_cr_NumberOfDownstreamParticles,                 cosmicRayAnalysisParticle.NumberOfDownstreamParticles());
-    
+
     if (cosmicRayAnalysisParticle.HasMcInfo())
     {
         bool particleSplitByReco(false);
-        
+
         if (cosmicRayAnalysisParticle.McMainMCParticle())
         {
             particleSplitByReco = (coveredMCPrimaries.count(cosmicRayAnalysisParticle.McMainMCParticle()) > 1U);
             PUSH_TREE_RECORD(m_cr_mc_McParticleUid, reinterpret_cast<std::uint64_t>(cosmicRayAnalysisParticle.McMainMCParticle()->GetUid()));
         }
-        
+
         else
         {
             std::cout << "WriteAnalysisParticlesAlgorithm: cosmic ray had MC info but no associated main MC particle" << std::endl;
             PUSH_TREE_RECORD(m_cr_mc_McParticleUid, 0ULL);
         }
-        
+
         PUSH_TREE_RECORD(m_cr_mc_IsParticleSplitByReco,          particleSplitByReco);
         PUSH_TREE_RECORD(m_cr_mc_Energy,                         cosmicRayAnalysisParticle.McEnergy());
         PUSH_TREE_RECORD(m_cr_mc_KineticEnergy,                  cosmicRayAnalysisParticle.McKineticEnergy());
@@ -674,7 +674,7 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
         PUSH_TREE_RECORD(m_cr_mc_CollectionPlaneHitPurity,       cosmicRayAnalysisParticle.McCollectionPlaneHitPurity());
         PUSH_TREE_RECORD(m_cr_mc_CollectionPlaneHitCompleteness, cosmicRayAnalysisParticle.McCollectionPlaneHitCompleteness());
     }
-    
+
     else
     {
         PUSH_TREE_RECORD(m_cr_mc_IsParticleSplitByReco,          false);
@@ -713,12 +713,12 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
 
 void WriteAnalysisParticlesAlgorithm::AddMcOnlyCosmicRayRecord(const MCParticle *const pMainMcParticle, const float mcEnergy,
     const float mcKineticEnergy, const float mcMass, const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines,
-    const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, const float mcContainmentFraction, 
-    const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, const int mcPdgCode, 
+    const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, const float mcContainmentFraction,
+    const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, const int mcPdgCode,
     const LArAnalysisParticle::TypeTree mcTypeTree) const
 {
     // m_cr_Number is dealt with by the calling method.
-    
+
     PUSH_TREE_RECORD(m_cr_WasReconstructed,                            false);
     PUSH_TREE_RECORD(m_cr_IsVertexFiducial,                            false);
     PUSH_TREE_RECORD(m_cr_IsContained,                                 false);
@@ -739,16 +739,16 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyCosmicRayRecord(const MCParticle 
     PUSH_TREE_RECORD(m_cr_NumberOf3dHits,                              0U);
     PUSH_TREE_RECORD(m_cr_NumberOfCollectionPlaneHits,                 0U);
     PUSH_TREE_RECORD(m_cr_NumberOfDownstreamParticles,                 0U);
-    
+
     if (pMainMcParticle)
         PUSH_TREE_RECORD(m_cr_mc_McParticleUid, reinterpret_cast<std::uint64_t>(pMainMcParticle->GetUid()));
-    
+
     else
     {
         std::cout << "WriteAnalysisParticlesAlgorithm: cosmic ray had MC info but no associated main MC particle" << std::endl;
         PUSH_TREE_RECORD(m_cr_mc_McParticleUid, 0ULL);
     }
-    
+
     PUSH_TREE_RECORD(m_cr_mc_IsParticleSplitByReco,          false); // not covered by any reconstructed particle
     PUSH_TREE_RECORD(m_cr_mc_Energy,                         mcEnergy);
     PUSH_TREE_RECORD(m_cr_mc_KineticEnergy,                  mcKineticEnergy);
@@ -784,7 +784,7 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyCosmicRayRecord(const MCParticle 
 void WriteAnalysisParticlesAlgorithm::DumpTree() const
 {
     const std::string nuLabel = " - [nu]        ";
-    
+
     std::cout << "Pandora Tree dump:\n";
     std::cout << nuLabel << "Was reconstructed:                " << std::boolalpha << m_treeParameters.m_nu_WasReconstructed << std::noboolalpha << '\n';
     std::cout << nuLabel << "Is vertex fiducial:               " << std::boolalpha << m_treeParameters.m_nu_IsVertexFiducial << std::noboolalpha << '\n';
@@ -837,13 +837,13 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
     std::cout << nuLabel << "MC hit completeness:              " << 100.f * m_treeParameters.m_nu_mc_HitCompleteness << "%\n";
     std::cout << nuLabel << "MC hit purity (coll plane):       " << 100.f * m_treeParameters.m_nu_mc_CollectionPlaneHitPurity << "%\n";
     std::cout << nuLabel << "MC hit completeness (coll plane): " << 100.f * m_treeParameters.m_nu_mc_CollectionPlaneHitCompleteness << "%\n";
-    
+
     std::cout << " - [primary]   Number of primaries:              " << m_treeParameters.m_primary_Number << '\n';
-    
+
     for (int i = 0; i < m_treeParameters.m_primary_Number; ++i)
     {
         const std::string label = " - [primary " + std::to_string(i) + "] ";
-        
+
         std::cout << label << "Was reconstructed:                " << std::boolalpha << m_treeParameters.m_primary_WasReconstructed.at(i) << std::noboolalpha << '\n';
         std::cout << label << "Is vertex fiducial:               " << std::boolalpha << m_treeParameters.m_primary_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
         std::cout << label << "Is contained:                     " << std::boolalpha << m_treeParameters.m_primary_IsContained.at(i) << std::noboolalpha << '\n';
@@ -898,13 +898,13 @@ void WriteAnalysisParticlesAlgorithm::DumpTree() const
         std::cout << label << "MC hit purity (coll plane):       " << 100.f * m_treeParameters.m_primary_mc_CollectionPlaneHitPurity.at(i) << "%\n";
         std::cout << label << "MC hit completeness (coll plane): " << 100.f * m_treeParameters.m_primary_mc_CollectionPlaneHitCompleteness.at(i) << "%\n";
     }
-    
+
     std::cout << " - [cr]        Number of cosmic rays:            " << m_treeParameters.m_cr_Number << '\n';
-    
+
     for (int i = 0; i < m_treeParameters.m_cr_Number; ++i)
     {
         const std::string label = " - [cr " + std::to_string(i) + "]      ";
-        
+
         std::cout << label << "Was reconstructed:                " << std::boolalpha << m_treeParameters.m_cr_WasReconstructed.at(i) << std::noboolalpha << '\n';
         std::cout << label << "Is vertex fiducial:               " << std::boolalpha << m_treeParameters.m_cr_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
         std::cout << label << "Is contained:                     " << std::boolalpha << m_treeParameters.m_cr_IsContained.at(i) << std::noboolalpha << '\n';
@@ -1026,10 +1026,10 @@ bool WriteAnalysisParticlesAlgorithm::IsChargedCurrent(const LArInteractionTypeH
         case LArInteractionTypeHelper::CCDIS:
         case LArInteractionTypeHelper::CCCOH:
             return true;
-            
+
         default: break;
     };
-    
+
     return false;
 }
 
@@ -1040,29 +1040,29 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_outputFile));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Verbose", m_verbose));
-        
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowXMargin", m_fiducialCutLowXMargin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighXMargin", m_fiducialCutHighXMargin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowYMargin", m_fiducialCutLowYMargin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighYMargin", m_fiducialCutHighYMargin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowZMargin", m_fiducialCutLowZMargin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighZMargin", m_fiducialCutHighZMargin));
-    
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McContainmentFractionLowerBound", m_mcContainmentFractionLowerBound));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialHitFractionLowerBound", m_fiducialHitFractionLowerBound));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McOnlyParticleContainmentCut", m_mcOnlyParticleContainmentCut));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McOnlyParticleEnergyCut", m_mcOnlyParticleEnergyCut));
-    
+
     // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
     LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), m_fiducialCutLowXMargin, m_fiducialCutHighXMargin,
         m_fiducialCutLowYMargin, m_fiducialCutHighYMargin, m_fiducialCutLowZMargin, m_fiducialCutHighZMargin, m_minCoordinates, m_maxCoordinates);
-        
+
     m_pOutputTFile = new TFile(m_outputFile.c_str(), "UPDATE");
     m_pOutputTree = new TTree("PandoraTree", "PandoraTree");
-    
+
     // Neutrino parameters.
     m_pOutputTree->Branch("nu_WasReconstructed",                                 &m_treeParameters.m_nu_WasReconstructed);
     m_pOutputTree->Branch("nu_IsVertexFiducial",                                 &m_treeParameters.m_nu_IsVertexFiducial);
@@ -1115,7 +1115,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     m_pOutputTree->Branch("nu_mc_HitCompleteness",                               &m_treeParameters.m_nu_mc_HitCompleteness);
     m_pOutputTree->Branch("nu_mc_CollectionPlaneHitPurity",                      &m_treeParameters.m_nu_mc_CollectionPlaneHitPurity);
     m_pOutputTree->Branch("nu_mc_CollectionPlaneHitCompleteness",                &m_treeParameters.m_nu_mc_CollectionPlaneHitCompleteness);
-    
+
     // Primary neutrino daughter parameters.
     m_pOutputTree->Branch("primary_Number",                                      &m_treeParameters.m_primary_Number);
     m_pOutputTree->Branch("primary_WasReconstructed",                            &m_treeParameters.m_primary_WasReconstructed);
@@ -1171,7 +1171,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     m_pOutputTree->Branch("primary_mc_HitCompleteness",                          &m_treeParameters.m_primary_mc_HitCompleteness);
     m_pOutputTree->Branch("primary_mc_CollectionPlaneHitPurity",                 &m_treeParameters.m_primary_mc_CollectionPlaneHitPurity);
     m_pOutputTree->Branch("primary_mc_CollectionPlaneHitCompleteness",           &m_treeParameters.m_primary_mc_CollectionPlaneHitCompleteness);
-    
+
     // Cosmic ray parameters.
     m_pOutputTree->Branch("cr_Number",                                           &m_treeParameters.m_cr_Number);
     m_pOutputTree->Branch("cr_WasReconstructed",                                 &m_treeParameters.m_cr_WasReconstructed);
@@ -1223,7 +1223,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     m_pOutputTree->Branch("cr_mc_HitCompleteness",                               &m_treeParameters.m_cr_mc_HitCompleteness);
     m_pOutputTree->Branch("cr_mc_CollectionPlaneHitPurity",                      &m_treeParameters.m_cr_mc_CollectionPlaneHitPurity);
     m_pOutputTree->Branch("cr_mc_CollectionPlaneHitCompleteness",                &m_treeParameters.m_cr_mc_CollectionPlaneHitCompleteness);
-    
+
     return STATUS_CODE_SUCCESS;
 }
 

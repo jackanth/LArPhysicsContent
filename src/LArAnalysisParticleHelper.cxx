@@ -41,13 +41,13 @@ std::string LArAnalysisParticleHelper::TypeAsString(const LArAnalysisParticle::T
         case LArAnalysisParticle::TYPE::COSMIC_RAY: return "COSMIC_RAY";
         default:               break;
     }
-    
+
     return "UNKNOWN";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
-void LArAnalysisParticleHelper::GetFiducialCutParameters(const Pandora &pandoraInstance, const float fiducialCutLowXMargin, 
+
+void LArAnalysisParticleHelper::GetFiducialCutParameters(const Pandora &pandoraInstance, const float fiducialCutLowXMargin,
     const float fiducialCutHighXMargin, const float fiducialCutLowYMargin, const float fiducialCutHighYMargin,
     const float fiducialCutLowZMargin, const float fiducialCutHighZMargin, CartesianVector &minCoordinates, CartesianVector &maxCoordinates)
 {
@@ -68,7 +68,7 @@ void LArAnalysisParticleHelper::GetFiducialCutParameters(const Pandora &pandoraI
     const float xMax = pLArTPC->GetCenterX() + (0.5f * pLArTPC->GetWidthX()) - fiducialCutHighXMargin;
     const float yMax = pLArTPC->GetCenterY() + (0.5f * pLArTPC->GetWidthY()) - fiducialCutHighYMargin;
     const float zMax = pLArTPC->GetCenterZ() + (0.5f * pLArTPC->GetWidthZ()) - fiducialCutHighZMargin;
-    
+
     minCoordinates = CartesianVector(xMin, yMin, zMin);
     maxCoordinates = CartesianVector(xMax, yMax, zMax);
 }
@@ -84,13 +84,13 @@ void LArAnalysisParticleHelper::RecursivelyAppendTrackFitMap(const Pandora &pand
         {
             trackFitMap.emplace(pPfo, LArAnalysisParticleHelper::PerformSlidingTrackFit(pandoraInstance, pPfo, slidingFitWindow));
         }
-        
+
         catch (...)
         {
             std::cout << "LArAnalysisParticleHelper: failed to perform track fit" << std::endl;
         }
     }
-    
+
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
         LArAnalysisParticleHelper::RecursivelyAppendTrackFitMap(pandoraInstance, pDaughterPfo, trackFitMap, slidingFitWindow);
 }
@@ -145,7 +145,7 @@ PfoList LArAnalysisParticleHelper::GetRecoNeutrinoList(const Algorithm &algorith
     PfoList allRecoNeutrinoList;
     LArPfoHelper::GetRecoNeutrinos(&allRecoParticleList, allRecoNeutrinoList);
     allRecoNeutrinoList.sort(LArAnalysisParticleHelper::SortRecoNeutrinos);
-    
+
     return allRecoNeutrinoList;
 }
 
@@ -165,7 +165,7 @@ std::tuple<float, float> LArAnalysisParticleHelper::GetPolarAnglesFromDirection(
 {
     const float polarAngle     = std::acos(std::fabs(direction.GetY()));
     const float azimuthalAngle = std::asin(std::fabs(direction.GetX() / std::sin(polarAngle)));
-    
+
     return std::make_tuple(polarAngle, azimuthalAngle);
 }
 
@@ -175,7 +175,7 @@ CaloHitList LArAnalysisParticleHelper::GetHitsOfType(const ParticleFlowObject *c
 {
     CaloHitList caloHitList;
     LArPfoHelper::GetCaloHits(pPfo, hitType, caloHitList);
-    
+
     if (recurseOverDaughters)
     {
         for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
@@ -185,9 +185,9 @@ CaloHitList LArAnalysisParticleHelper::GetHitsOfType(const ParticleFlowObject *c
                                std::make_move_iterator(daughterCaloHitList.end()));
         }
     }
-    
+
     return caloHitList;
-}   
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -196,65 +196,65 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
 {
     const CartesianVector &minPosition = trackFit.GetGlobalMinLayerPosition();
     const CartesianVector &maxPosition = trackFit.GetGlobalMaxLayerPosition();
-    
+
     const float minCoordinate = trackFit.GetLongitudinalDisplacement(minPosition);
     const float maxCoordinate = trackFit.GetLongitudinalDisplacement(maxPosition);
-    
+
     const CartesianVector &minDirection = trackFit.GetGlobalMinLayerDirection();
     const CartesianVector &maxDirection = trackFit.GetGlobalMaxLayerDirection();
- 
+
     CartesianVector fitDirection{0.f, 0.f, 0.f};
     const float displacementAlongFittedTrack = trackFit.GetLongitudinalDisplacement(position);
-        
+
     if (trackFit.GetGlobalFitDirection(displacementAlongFittedTrack, fitDirection) != STATUS_CODE_SUCCESS)
     {
         if (displacementAlongFittedTrack <= minCoordinate)
             fitDirection = minDirection;
-            
+
         else if (displacementAlongFittedTrack >= maxCoordinate)
             fitDirection = maxDirection;
-            
+
         else
         {
             const float distanceToMinPosition = (position - minPosition).GetMagnitude();
             const float distanceToMaxPosition = (position - maxPosition).GetMagnitude();
-            
+
             if (distanceToMinPosition < distanceToMaxPosition)
                 fitDirection = minDirection;
-                
+
             else
                 fitDirection = maxDirection;
         }
     }
-    
+
     if (pointTowardsMiddle)
     {
         if ((maxCoordinate - displacementAlongFittedTrack) < (displacementAlongFittedTrack - minCoordinate))
             fitDirection *= -1.f;
     }
-    
+
     else
     {
         if (fitDirection.GetDotProduct(CartesianVector(0.f, -1.f, 0.f)) < 0.f)
             fitDirection *= -1.f;
     }
-    
+
     return fitDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates, 
+float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
     const CartesianVector &maxCoordinates)
 {
     PfoList downstreamPfos;
     LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
-    
+
     CaloHitList caloHitList;
     LArPfoHelper::GetCaloHits(downstreamPfos, TPC_3D, caloHitList);
-    
+
     unsigned fiducialHits(0U);
-    
+
     for (const CaloHit *const pCaloHit : caloHitList)
     {
         if (LArAnalysisParticleHelper::IsPointFiducial(pCaloHit->GetPositionVector(), minCoordinates, maxCoordinates))
@@ -266,56 +266,22 @@ float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const ParticleFlowObj
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArAnalysisParticleHelper::RecursivelyCheckFiducialCut(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
-    const CartesianVector &maxCoordinates)
-{
-    if (!LArAnalysisParticleHelper::CheckFiducialCut(pPfo, minCoordinates, maxCoordinates))
-        return false;
-    
-    for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
-    {
-        if (!LArAnalysisParticleHelper::RecursivelyCheckFiducialCut(pDaughterPfo, minCoordinates, maxCoordinates))
-            return false;
-    }
-    
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArAnalysisParticleHelper::CheckFiducialCut(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
-    const CartesianVector &maxCoordinates)
-{
-    CaloHitList caloHitList;
-    LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHitList);
-    
-    for (const CaloHit *const pCaloHit : caloHitList)
-    {
-        if (!LArAnalysisParticleHelper::IsPointFiducial(pCaloHit->GetPositionVector(), minCoordinates, maxCoordinates))
-            return false;
-    }
-    
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool LArAnalysisParticleHelper::IsPointFiducial(const CartesianVector &point, const CartesianVector &minCoordinates,
     const CartesianVector &maxCoordinates)
 {
     const float xPosition = point.GetX();
     const float yPosition = point.GetY();
     const float zPosition = point.GetZ();
-    
+
     if (xPosition < minCoordinates.GetX() || xPosition > maxCoordinates.GetX())
         return false;
-        
+
     if (yPosition < minCoordinates.GetY() || yPosition > maxCoordinates.GetY())
         return false;
-        
+
     if (zPosition < minCoordinates.GetZ() || zPosition > maxCoordinates.GetZ())
         return false;
-        
+
     return true;
 }
 
@@ -326,12 +292,12 @@ float LArAnalysisParticleHelper::GetParticleRange(const ParticleFlowObject *cons
     // Get the 3D CaloHits and order them by projection along the track fit.
     CaloHitList caloHitList;
     LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHitList);
-    
+
     const HitProjectionVector orderedHitProjectionVector = LArAnalysisParticleHelper::OrderHitsByProjectionOnToTrackFit(caloHitList, trackFit);
 
     // Use the projections to create vector positions along the track.
     CartesianPointVector pointVector;
-    
+
     for (const auto &projectionPair : orderedHitProjectionVector)
     {
         CartesianVector position{0.f, 0.f, 0.f};
@@ -358,16 +324,16 @@ float LArAnalysisParticleHelper::GetParticleRange(const ParticleFlowObject *cons
     for (const CartesianVector &position : pointVector)
     {
         const float increment = (position - currentPosition).GetMagnitude();
-        
+
         if (increment >= 0.f && increment < 1000.f)
             totalLength += increment;
-            
+
         else
             std::cout << "LArAnalysisParticleHelper: Range increment was " << increment << std::endl;
-            
+
         currentPosition = position;
     }
-    
+
     return totalLength;
 }
 
@@ -386,7 +352,7 @@ LArAnalysisParticleHelper::HitProjectionVector LArAnalysisParticleHelper::OrderH
         {
             return lhs.second < rhs.second;
         });
-        
+
     return orderedHitProjectionVector;
 }
 
@@ -396,10 +362,10 @@ void LArAnalysisParticleHelper::WriteNTuple(TNtuple *const pNtuple, const std::s
 {
     if (verboseMode)
         pNtuple->Print();
-    
+
     TFile *pFile = new TFile(fileName.c_str(), "NEW");
     pNtuple->Write();
-    
+
     pFile->Close();
     delete pFile;
 }
@@ -409,19 +375,19 @@ void LArAnalysisParticleHelper::WriteNTuple(TNtuple *const pNtuple, const std::s
 TNtuple * LArAnalysisParticleHelper::LoadNTupleFromFile(const std::string &filePath, const std::string &nTupleName)
 {
     TFile *pFile = new TFile(filePath.c_str(), "READ");
-    
+
     if (!pFile->IsOpen())
     {
         std::cout << "LArAnalysisParticleHelper: failed to open file at " << filePath << std::endl;
         return NULL;
     }
-    
+
     if (!pFile->GetListOfKeys()->Contains(nTupleName.c_str()))
     {
         std::cout << "LArAnalysisParticleHelper: data file at " << filePath << " did not contain key '" << nTupleName << "'" << std::endl;
         return NULL;
     }
-    
+
     return (TNtuple *)pFile->Get(nTupleName.c_str());
 }
 
@@ -431,22 +397,22 @@ const MCParticle *LArAnalysisParticleHelper::GetMainMCParticle(const ParticleFlo
 {
     ClusterList clusterList;
     LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
-    
+
     CaloHitList caloHitList;
-    
+
     for (const Cluster *const pCluster : clusterList)
         pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-    
+
     MCParticleWeightMap mcParticleWeightMap;
 
     for (const CaloHit *const pCaloHit : caloHitList)
     {
         const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
         MCParticleVector mcParticleVector;
-        
-        for (const MCParticleWeightMap::value_type &mapEntry : hitMCParticleWeightMap) 
+
+        for (const MCParticleWeightMap::value_type &mapEntry : hitMCParticleWeightMap)
             mcParticleVector.push_back(mapEntry.first);
-            
+
         std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
 
         for (const MCParticle *const pMCParticle : mcParticleVector)
@@ -456,7 +422,7 @@ const MCParticle *LArAnalysisParticleHelper::GetMainMCParticle(const ParticleFlo
                 const MCParticle *const pMCPrimary = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
                 mcParticleWeightMap[pMCPrimary] += hitMCParticleWeightMap.at(pMCParticle);
             }
-            
+
             catch (...)
             {
                 continue;
@@ -468,10 +434,10 @@ const MCParticle *LArAnalysisParticleHelper::GetMainMCParticle(const ParticleFlo
     const MCParticle *pBestMCParticle(nullptr);
 
     MCParticleVector mcParticleVector;
-    
+
     for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
         mcParticleVector.push_back(mapEntry.first);
-        
+
     std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
 
     for (const MCParticle *const pCurrentMCParticle : mcParticleVector)
@@ -521,9 +487,9 @@ bool LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCPart
 {
     if (!pMCParticle)
         return false;
-    
+
     LArAnalysisParticleHelper::CreateMcTypeTree(pMCParticle, typeTree);
-    
+
     mcEnergy         = pMCParticle->GetEnergy();
     mcKineticEnergy  = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
     mcMass           = PdgTable::GetParticleMass(pMCParticle->GetParticleId());
@@ -531,38 +497,38 @@ bool LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCPart
     mcVertexPosition = pMCParticle->GetVertex();
     mcMomentum       = pMCParticle->GetMomentum();
     mcPdgCode        = pMCParticle->GetParticleId();
-    
+
     float escapedEnergy(0.f), totalEnergy(0.f);
     LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(pMCParticle, escapedEnergy, totalEnergy, minCoordinates, maxCoordinates);
-    
+
     if (totalEnergy > std::numeric_limits<float>::epsilon())
         mcContainmentFraction = (totalEnergy - escapedEnergy) / totalEnergy;
-        
+
     else
         mcContainmentFraction = 0.f;
-    
+
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle, 
+void LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle,
     const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, float &collectionPlaneHitPurity,
     float &collectionPlaneHitCompleteness)
 {
     PfoList downstreamPfos;
     LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
-    
+
     CaloHitList pfoAssociatedCaloHits;
     LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_U, pfoAssociatedCaloHits);
     LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_V, pfoAssociatedCaloHits);
-    
+
     CaloHitList pfoAssociatedWCaloHits;
     LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_W, pfoAssociatedWCaloHits);
     pfoAssociatedCaloHits.insert(pfoAssociatedCaloHits.end(), pfoAssociatedWCaloHits.begin(), pfoAssociatedWCaloHits.end());
-    
+
     LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(pfoAssociatedCaloHits, pMCParticle, pCaloHitList, isNeutrino, hitPurity, hitCompleteness, false);
-    LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(pfoAssociatedWCaloHits, pMCParticle, pCaloHitList, isNeutrino, collectionPlaneHitPurity, 
+    LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(pfoAssociatedWCaloHits, pMCParticle, pCaloHitList, isNeutrino, collectionPlaneHitPurity,
         collectionPlaneHitCompleteness, true);
 }
 
@@ -605,19 +571,19 @@ float LArAnalysisParticleHelper::CellToThreeDDistance(const float hitWidth, cons
 {
     float polarAngle = 0.f, azimuthalAngle = 0.f;
     std::tie(polarAngle, azimuthalAngle) = LArAnalysisParticleHelper::GetPolarAnglesFromDirection(fitDirection);
-    
+
     const float cosPhi_sinTheta = std::fabs(std::cos(azimuthalAngle) * std::sin(polarAngle));
     const float sinPhi_sinTheta = std::fabs(std::sin(azimuthalAngle) * std::sin(polarAngle));
-    
+
     float dx_p = std::numeric_limits<float>::max();
     float dx_w = std::numeric_limits<float>::max();
-    
+
     if (cosPhi_sinTheta > std::numeric_limits<float>::epsilon())
         dx_p = wirePitch / cosPhi_sinTheta;
-        
+
     if (sinPhi_sinTheta > std::numeric_limits<float>::epsilon())
         dx_w = hitWidth / sinPhi_sinTheta;
-    
+
     return std::min(dx_p, dx_w);
 }
 
@@ -627,7 +593,7 @@ void LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(const MCParticle *co
     float &totalEnergy, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates)
 {
     bool allEnergyContained(true);
-    
+
     switch (pCurrentMCParticle->GetParticleId())
     {
         case E_MINUS:
@@ -640,54 +606,54 @@ void LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(const MCParticle *co
         {
             const float mcParticleEnergy = pCurrentMCParticle->GetEnergy() - PdgTable::GetParticleMass(pCurrentMCParticle->GetParticleId());
             const CartesianVector displacementVector = pCurrentMCParticle->GetEndpoint() - pCurrentMCParticle->GetVertex();
-            
+
             if (displacementVector.GetMagnitude() < std::numeric_limits<float>::epsilon())
                 break;
-            
+
             float muMin(0.f), muMax(1.f);
             bool forceZeroContainment(false);
-            
-            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(minCoordinates.GetX(), 0.f, 0.f), 
+
+            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(minCoordinates.GetX(), 0.f, 0.f),
                 CartesianVector(-1.f, 0.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
-                
-            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(maxCoordinates.GetX(), 0.f, 0.f), 
+
+            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(maxCoordinates.GetX(), 0.f, 0.f),
                 CartesianVector(1.f, 0.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
-                
-            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(0.f, minCoordinates.GetY(), 0.f), 
+
+            LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(0.f, minCoordinates.GetY(), 0.f),
                 CartesianVector(0.f, -1.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
-                
+
             LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(0.f, maxCoordinates.GetY(), 0.f),
                 CartesianVector(0.f, 1.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
-                
+
             LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(0.f, 0.f, minCoordinates.GetZ()),
                 CartesianVector(0.f, 0.f, -1.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
-                
+
             LArAnalysisParticleHelper::AdjustMusForContainmentFraction(CartesianVector(0.f, 0.f, maxCoordinates.GetZ()),
                 CartesianVector(0.f, 0.f, 1.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
-                
+
             if (forceZeroContainment)
             {
                 escapedEnergy += mcParticleEnergy;
                 allEnergyContained = false;
             }
-                
+
             else
             {
                 const float containmentFraction = std::max(0.f, muMax - muMin);
-                
+
                 if (containmentFraction < 1.f)
                 {
                     escapedEnergy += (1.f - containmentFraction) * mcParticleEnergy;
                     allEnergyContained = false;
                 }
             }
-                
+
             totalEnergy += mcParticleEnergy;
         }
-        
+
         default: break;
     }
-    
+
     if (allEnergyContained)
     {
         for (const MCParticle *const pDaughterParticle : pCurrentMCParticle->GetDaughterList())
@@ -700,48 +666,48 @@ void LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(const MCParticle *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArAnalysisParticleHelper::AdjustMusForContainmentFraction(const CartesianVector &planePoint, const CartesianVector &planeNormal, 
+void LArAnalysisParticleHelper::AdjustMusForContainmentFraction(const CartesianVector &planePoint, const CartesianVector &planeNormal,
     const CartesianVector &vertexPosition, const CartesianVector &originalDisplacementVector, float &muMin, float &muMax,
     bool &forceZeroContainment)
 {
     const float projectedDisplacement = originalDisplacementVector.GetDotProduct(planeNormal);
-    
+
     if (std::fabs(projectedDisplacement) < std::numeric_limits<float>::epsilon())
         return;
-        
+
     const float muIntercept = (planePoint - vertexPosition).GetDotProduct(planeNormal) / projectedDisplacement;
     const bool isAligned = (projectedDisplacement > 0.f);
-    
+
     if (isAligned)
     {
         if (muIntercept > std::numeric_limits<float>::min() && muIntercept < std::numeric_limits<float>::max())
             muMax = std::min(muMax, muIntercept);
-            
+
         else if (muIntercept < 0.f)
             forceZeroContainment = true;
     }
-    
+
     else
     {
         if (muIntercept > std::numeric_limits<float>::min() && muIntercept < std::numeric_limits<float>::max())
             muMin = std::max(muMin, muIntercept);
-            
+
         else if (muIntercept > 0.f)
             forceZeroContainment = true;
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-        
+
 bool LArAnalysisParticleHelper::CreateMcTypeTree(const MCParticle *const pMCParticle, LArAnalysisParticle::TypeTree &typeTree)
 {
     LArAnalysisParticle::TypeTree::List daughterTypeTrees;
-    
+
     const LArAnalysisParticle::TYPE type = LArAnalysisParticleHelper::GetMcParticleType(pMCParticle);
-    
+
     if (type == LArAnalysisParticle::TYPE::UNKNOWN)
         return false;
-    
+
     if (type != LArAnalysisParticle::TYPE::SHOWER)
     {
         for (const MCParticle *const pDaughterParticle : pMCParticle->GetDaughterList())
@@ -749,13 +715,13 @@ bool LArAnalysisParticleHelper::CreateMcTypeTree(const MCParticle *const pMCPart
             if (pDaughterParticle->GetEnergy() > 0.05f)
             {
                 LArAnalysisParticle::TypeTree daughterTypeTree;
-                
+
                 if (LArAnalysisParticleHelper::CreateMcTypeTree(pDaughterParticle, daughterTypeTree))
                     daughterTypeTrees.push_back(daughterTypeTree);
             }
         }
     }
-    
+
     typeTree = LArAnalysisParticle::TypeTree(type, daughterTypeTrees);
     return true;
 }
@@ -766,15 +732,15 @@ LArAnalysisParticle::TYPE LArAnalysisParticleHelper::GetMcParticleType(const MCP
 {
     if (LArMCParticleHelper::IsNeutrino(pMCParticle))
         return LArAnalysisParticle::TYPE::NEUTRINO;
-        
+
     if (LArMCParticleHelper::IsCosmicRay(pMCParticle))
         return LArAnalysisParticle::TYPE::COSMIC_RAY;
-    
+
     switch (pMCParticle->GetParticleId())
     {
         case PROTON:   return LArAnalysisParticle::TYPE::PROTON;
-        case MU_MINUS: 
-        case MU_PLUS: 
+        case MU_MINUS:
+        case MU_PLUS:
         case PI_MINUS:
         case PI_PLUS:  return LArAnalysisParticle::TYPE::PION_MUON;
         case PHOTON:
@@ -783,30 +749,30 @@ LArAnalysisParticle::TYPE LArAnalysisParticleHelper::GetMcParticleType(const MCP
         case NEUTRON:
         default: break;
     }
-    
+
     return LArAnalysisParticle::TYPE::UNKNOWN;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(const CaloHitList  &pfoAssociatedCaloHits, const MCParticle *const pMCParticle, 
-    const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, 
+void LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(const CaloHitList  &pfoAssociatedCaloHits, const MCParticle *const pMCParticle,
+    const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness,
     const bool useCollectionPlaneOnly)
 {
-    // Purity       = (num 2D hits assoc with PFO or its descendents \cap assoc with MC particle or its descendents) / 
+    // Purity       = (num 2D hits assoc with PFO or its descendents \cap assoc with MC particle or its descendents) /
     //                (num 2D hits assoc with PFO or its descendents)
-    
-    // Completeness = (num 2D hits assoc with PFO or its descendents \cap assoc with MC particle or its descendents) / 
+
+    // Completeness = (num 2D hits assoc with PFO or its descendents \cap assoc with MC particle or its descendents) /
     //                (num 2D hits assoc with MC particle or its descendents)
 
     std::unordered_map<const CaloHit *, float> mcAssociatedCaloHits;
     float totalMcHitWeight(0.f);
-    
+
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         if (useCollectionPlaneOnly && (pCaloHit->GetHitType() != TPC_VIEW_W))
             continue;
-        
+
         for (const MCParticleWeightMap::value_type &mapPair : pCaloHit->GetMCParticleWeightMap())
         {
             try
@@ -818,60 +784,60 @@ void LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(const CaloHitL
                     totalMcHitWeight += mapPair.second;
                 }
             }
-            
+
             catch (...)
             {
                 continue;
             }
         }
     }
-    
+
     float numerator(0.f);
-    
+
     for (const CaloHit *const pPfoAssocCaloHit : pfoAssociatedCaloHits)
     {
         const auto findIter = mcAssociatedCaloHits.find(pPfoAssocCaloHit);
-        
+
         if (findIter != mcAssociatedCaloHits.end())
             numerator += findIter->second;
     }
-    
+
     if (pfoAssociatedCaloHits.empty() || (totalMcHitWeight < std::numeric_limits<float>::epsilon()))
     {
         hitPurity       = 0.f;
         hitCompleteness = 0.f;
         return;
     }
-    
+
     hitPurity       = numerator / static_cast<float>(pfoAssociatedCaloHits.size());
     hitCompleteness = numerator / totalMcHitWeight;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::string LArAnalysisParticleHelper::TypeTreeAsStringImpl(const LArAnalysisParticle::TypeTree &typeTree, 
+std::string LArAnalysisParticleHelper::TypeTreeAsStringImpl(const LArAnalysisParticle::TypeTree &typeTree,
     const bool printTrailingDelimiter)
 {
     const std::string delimiter = " - ";
     std::string typeTreeString = TypeAsString(typeTree.Type());
-    
+
     if (!typeTree.Daughters().empty())
     {
         typeTreeString += delimiter;
         typeTreeString += "[ ";
-        
+
         for (auto iter = typeTree.Daughters().begin(); iter != typeTree.Daughters().end(); ++iter)
         {
             const bool isLast = (std::next(iter, 1) == typeTree.Daughters().end());
             typeTreeString += TypeTreeAsStringImpl(*iter, !isLast);
         }
-            
+
         typeTreeString += " ]";
     }
-    
+
     if (printTrailingDelimiter)
         typeTreeString += delimiter;
-    
+
     return typeTreeString;
 }
 

@@ -30,21 +30,21 @@
 inline TNtuple * LoadNTupleFromFile(const char *const dataFilePath, const char *const nTupleName)
 {
     std::cout << "Using data file: " << dataFilePath << std::endl;
-    
+
     TFile *pFile = new TFile(dataFilePath, "READ");
-    
+
     if (!pFile->IsOpen())
     {
         CERR("Failed to open file at " << dataFilePath);
         return NULL;
     }
-    
+
     if (!pFile->GetListOfKeys()->Contains(nTupleName))
     {
         CERR("Data file at " << dataFilePath << " did not contain key '" << nTupleName << "'");
         return NULL;
     }
-    
+
     return (TNtuple *)pFile->Get(nTupleName);
 }
 
@@ -53,21 +53,21 @@ inline TNtuple * LoadNTupleFromFile(const char *const dataFilePath, const char *
 inline TTree * LoadTreeFromFile(const char *const dataFilePath, const char *const treeName)
 {
     std::cout << "Using data file: " << dataFilePath << std::endl;
-    
+
     TFile *pFile = new TFile(dataFilePath, "READ");
-    
+
     if (!pFile->IsOpen())
     {
         CERR("Failed to open file at " << dataFilePath);
         return NULL;
     }
-    
+
     if (!pFile->GetListOfKeys()->Contains(treeName))
     {
         CERR("Data file at " << dataFilePath << " did not contain key '" << treeName << "'");
         return NULL;
     }
-    
+
     return (TTree *)pFile->Get(treeName);
 }
 
@@ -128,18 +128,18 @@ inline TCanvas * PlotNtuple1D(TNtuple *const pNtuple, const char *const xName, c
 {
     float x = 0.f;
     const int numEntries = pNtuple->GetEntries();
-    
+
     if (numEntries == 0)
     {
         CERR("Number of ntuple entries was 0 so not drawing plot");
         return NULL;
     }
-    
+
     pNtuple->SetBranchAddress(xName, &x);
-        
+
     float xMax = plotSettings.xMax;
     float xMin = plotSettings.xMin;
-    
+
     if (xMax == 0.f && xMin == 0.f && plotSettings.useMaximumRange)
     {
         bool firstEntry = true;
@@ -147,16 +147,16 @@ inline TCanvas * PlotNtuple1D(TNtuple *const pNtuple, const char *const xName, c
         for (int i = 0; i < numEntries; ++i)
         {
             pNtuple->GetEntry(i);
-            
+
             if (firstEntry)
             {
                 xMax = x;
                 xMin = x;
-                
+
                 firstEntry = false;
                 continue;
             }
-            
+
             if (x > xMax) xMax = x;
             if (x < xMin) xMin = x;
         }
@@ -164,40 +164,40 @@ inline TCanvas * PlotNtuple1D(TNtuple *const pNtuple, const char *const xName, c
     }
 
     TH1F *pHistogram = new TH1F(identifier, identifier, plotSettings.xNumBins, xMin, xMax);
-    
+
     for (int i = 0; i < numEntries; ++i)
     {
         pNtuple->GetEntry(i);
         pHistogram->Fill(x);
     }
-    
+
     TCanvas *pCanvas = NULL;
-    
+
     if (plotSettings.newCanvas)
         pCanvas = new TCanvas(identifier, identifier, 900, 600);
-    
+
     pHistogram->SetXTitle((strcmp(plotSettings.xTitle, "") == 0) ? xName : plotSettings.xTitle);
     pHistogram->SetTitle((strcmp(plotSettings.title, "") == 0) ? identifier : plotSettings.title);
     pHistogram->SetMarkerStyle(6);
     pHistogram->SetStats(kTRUE);
     pHistogram->SetMarkerColor(plotSettings.pointColor);
-    
+
     switch (plotSettings.plotType)
     {
         case SAME:      pHistogram->Draw("SAME"); break;
         case SCATTER:   pHistogram->Draw("P");   break;
         case LINE:      pHistogram->Draw("L");   break;
-        case HISTOGRAM: 
-        default:        
+        case HISTOGRAM:
+        default:
         {
             if (plotSettings.trimSmallHistogramValues)
                 pHistogram->SetMinimum(static_cast<int>(std::round(pHistogram->GetEntries()/10000.f)));
-                
+
             pHistogram->Draw("COLZ");
             break;
         }
     }
-    
+
     pNtuple->ResetBranchAddresses();
     return pCanvas;
 }
@@ -209,19 +209,19 @@ inline TCanvas * PlotNtuple2D(TNtuple *const pNtuple, const char *const xName, c
 {
     float x = 0.f, y = 0.f;
     const int numEntries = pNtuple->GetEntries();
-    
+
     if (numEntries == 0)
     {
         CERR("Number of ntuple entries was 0 so not drawing plot");
         return NULL;
     }
-    
+
     pNtuple->SetBranchAddress(xName, &x);
     pNtuple->SetBranchAddress(yName, &y);
-        
+
     float xMax = plotSettings.xMax, yMax = plotSettings.yMax;
     float xMin = plotSettings.xMin, yMin = plotSettings.yMin;
-    
+
     if (xMax == 0.f && yMax == 0.f && xMin == 0.f && yMin == 0.f && plotSettings.useMaximumRange)
     {
         bool firstEntry = true;
@@ -229,19 +229,19 @@ inline TCanvas * PlotNtuple2D(TNtuple *const pNtuple, const char *const xName, c
         for (int i = 0; i < numEntries; ++i)
         {
             pNtuple->GetEntry(i);
-            
+
             if (firstEntry)
             {
                 xMax = x;
                 yMax = y;
-                
+
                 xMin = x;
                 yMax = y;
-                
+
                 firstEntry = false;
                 continue;
             }
-            
+
             if (x > xMax) xMax = x;
             if (y > yMax) yMax = y;
             if (x < xMin) xMin = x;
@@ -251,41 +251,41 @@ inline TCanvas * PlotNtuple2D(TNtuple *const pNtuple, const char *const xName, c
     }
 
     TH2F *pHistogram = new TH2F(identifier, identifier, plotSettings.xNumBins, xMin, xMax, plotSettings.yNumBins, yMin, yMax);
-    
+
     for (int i = 0; i < numEntries; ++i)
     {
         pNtuple->GetEntry(i);
         pHistogram->Fill(x, y);
     }
-    
+
     TCanvas *pCanvas = NULL;
-    
+
     if (plotSettings.newCanvas)
         pCanvas = new TCanvas(identifier, identifier, 900, 600);
-    
+
     pHistogram->SetXTitle((strcmp(plotSettings.xTitle, "") == 0) ? xName : plotSettings.xTitle);
     pHistogram->SetYTitle((strcmp(plotSettings.yTitle, "") == 0) ? yName : plotSettings.yTitle);
     pHistogram->SetTitle((strcmp(plotSettings.title, "") == 0) ? identifier : plotSettings.title);
     pHistogram->SetMarkerStyle(6);
     pHistogram->SetStats(kTRUE);
     pHistogram->SetMarkerColor(plotSettings.pointColor);
-    
+
     switch (plotSettings.plotType)
     {
         case SAME:      pHistogram->Draw("SAME"); break;
         case SCATTER:   pHistogram->Draw("P");   break;
         case LINE:      pHistogram->Draw("L");   break;
-        case HISTOGRAM: 
-        default:        
+        case HISTOGRAM:
+        default:
         {
             if (plotSettings.trimSmallHistogramValues)
                 pHistogram->SetMinimum(static_cast<int>(std::round(pHistogram->GetEntries()/10000.f)));
-                
+
             pHistogram->Draw("COLZ");
             break;
         }
     }
-    
+
     pNtuple->ResetBranchAddresses();
     return pCanvas;
 }
@@ -294,10 +294,10 @@ inline TCanvas * PlotNtuple2D(TNtuple *const pNtuple, const char *const xName, c
 
 inline TCanvas * PlotArrays2D(double xArray[], double yArray[], const int numEntries, const char *const identifier,
                               const PlotSettings2D &plotSettings)
-{    
+{
     float xMax = plotSettings.xMax, yMax = plotSettings.yMax;
     float xMin = plotSettings.xMin, yMin = plotSettings.yMin;
-    
+
     if (xMax == 0.f && yMax == 0.f && xMin == 0.f && yMin == 0.f && plotSettings.useMaximumRange)
     {
         bool firstEntry = true;
@@ -308,14 +308,14 @@ inline TCanvas * PlotArrays2D(double xArray[], double yArray[], const int numEnt
             {
                 xMax = xArray[i];
                 yMax = yArray[i];
-                
+
                 xMin = xArray[i];
                 xMax = yArray[i];
-                
+
                 firstEntry = false;
                 continue;
             }
-            
+
             if (xArray[i] > xMax) xMax = xArray[i];
             if (yArray[i] > yMax) yMax = yArray[i];
             if (xArray[i] < xMin) xMin = xArray[i];
@@ -325,12 +325,12 @@ inline TCanvas * PlotArrays2D(double xArray[], double yArray[], const int numEnt
     }
 
     TGraph *pGraph = new TGraph(numEntries, xArray, yArray);
-    
+
     TCanvas *pCanvas = NULL;
-    
+
     if (plotSettings.newCanvas)
         pCanvas = new TCanvas(identifier, identifier, 900, 600);
-    
+
     pGraph->GetXaxis()->SetTitle((strcmp(plotSettings.xTitle, "") == 0) ? "x" : plotSettings.xTitle);
     pGraph->GetXaxis()->SetRangeUser(plotSettings.xMin, plotSettings.xMax);
     pGraph->GetYaxis()->SetTitle((strcmp(plotSettings.yTitle, "") == 0) ? "y" : plotSettings.yTitle);
@@ -338,7 +338,7 @@ inline TCanvas * PlotArrays2D(double xArray[], double yArray[], const int numEnt
     pGraph->SetTitle((strcmp(plotSettings.title, "") == 0) ? identifier : plotSettings.title);
     pGraph->SetMarkerStyle(6);
     pGraph->SetLineColor(plotSettings.lineColor);
-    
+
     if (plotSettings.newCanvas)
     {
         switch (plotSettings.plotType)
@@ -349,7 +349,7 @@ inline TCanvas * PlotArrays2D(double xArray[], double yArray[], const int numEnt
             default:      pGraph->Draw("AL");   break;
         }
     }
-    
+
     else
     {
         switch (plotSettings.plotType)
@@ -360,7 +360,7 @@ inline TCanvas * PlotArrays2D(double xArray[], double yArray[], const int numEnt
             default:      pGraph->Draw("L");    break;
         }
     }
-    
+
     return pCanvas;
 }
 
@@ -374,25 +374,25 @@ inline TCanvas * PlotFunction2D(float (*pFunction)(float, va_list), const float 
         CERR("Number of steps must be 2 or more");
         return NULL;
     }
-    
+
     const float stepSize = (xArgMax - xArgMin) / (float) (nSteps - 1);
-    
+
     float xMax = plotSettings.xMax, yMax = plotSettings.yMax;
     float xMin = plotSettings.xMin, yMin = plotSettings.yMin;
-    
+
     // Populate x and y with the values.
     float x[10000], y[10000];
-    
+
     for (int i = 0; i < nSteps; ++i)
     {
         x[i] = xArgMin + (float)i * stepSize;
-        
+
         va_list argptr;
         va_start(argptr, plotSettings);
         y[i] = (*pFunction)(x[i], argptr);
         va_end(argptr);
     }
-    
+
     if (xMax == 0.f && yMax == 0.f && xMin == 0.f && yMin == 0.f && plotSettings.useMaximumRange)
     {
         bool firstEntry = true;
@@ -403,14 +403,14 @@ inline TCanvas * PlotFunction2D(float (*pFunction)(float, va_list), const float 
             {
                 xMax = x[i];
                 yMax = y[i];
-                
+
                 xMin = x[i];
                 xMax = y[i];
-                
+
                 firstEntry = false;
                 continue;
             }
-            
+
             if (x[i] > xMax) xMax = x[i];
             if (y[i] > yMax) yMax = y[i];
             if (x[i] < xMin) xMin = x[i];
@@ -419,18 +419,18 @@ inline TCanvas * PlotFunction2D(float (*pFunction)(float, va_list), const float 
     }
 
     TGraph *pGraph = new TGraph(nSteps, x, y);
-    
+
     TCanvas *pCanvas = NULL;
-    
+
     if (plotSettings.newCanvas)
         pCanvas = new TCanvas(identifier, identifier, 900, 600);
-    
+
     pGraph->GetXaxis()->SetTitle((strcmp(plotSettings.xTitle, "") == 0) ? "x" : plotSettings.xTitle);
     pGraph->GetYaxis()->SetTitle((strcmp(plotSettings.yTitle, "") == 0) ? "y" : plotSettings.yTitle);
     pGraph->SetTitle((strcmp(plotSettings.title, "") == 0) ? identifier : plotSettings.title);
     pGraph->SetMarkerStyle(6);
     pGraph->SetLineColor(plotSettings.lineColor);
-    
+
     if (plotSettings.newCanvas)
     {
         switch (plotSettings.plotType)
@@ -440,7 +440,7 @@ inline TCanvas * PlotFunction2D(float (*pFunction)(float, va_list), const float 
             default:      pGraph->Draw("AL"); break;
         }
     }
-    
+
     else
     {
         switch (plotSettings.plotType)
@@ -450,7 +450,7 @@ inline TCanvas * PlotFunction2D(float (*pFunction)(float, va_list), const float 
             default:      pGraph->Draw("L"); break;
         }
     }
-    
+
     return pCanvas;
 }
 

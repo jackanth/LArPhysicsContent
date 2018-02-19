@@ -76,13 +76,13 @@ void LArAnalysisParticle::Print() const
               << "    - MC is vertex fiducial:     " << std::boolalpha << m_mcIsVertexFiducial << std::noboolalpha << "\n"
               << "    - Fiducial hit fraction:     " << 100.f * m_fiducialHitFraction << "%\n"
               << "    - MC containment fraction:   " << 100.f * m_mcContainmentFraction << "%\n"
-              << "    - Vertex:                    " << "(" << m_vertexPosition.GetX() << ", " << m_vertexPosition.GetY() 
+              << "    - Vertex:                    " << "(" << m_vertexPosition.GetX() << ", " << m_vertexPosition.GetY()
                                                      << ", " << m_vertexPosition.GetZ() << ") cm\n"
               << "    - MC vertex:                 " << "(" << m_mcVertexPosition.GetX() << ", " << m_mcVertexPosition.GetY()
                                                      << ", " << m_mcVertexPosition.GetZ() << ") cm\n"
-              << "    - Direction cosines:         " << "(" << m_directionCosines.GetX() << ", " << m_directionCosines.GetY() 
+              << "    - Direction cosines:         " << "(" << m_directionCosines.GetX() << ", " << m_directionCosines.GetY()
                                                      << ", " << m_directionCosines.GetZ() << ")\n"
-              << "    - MC direction cosines:      " << "(" << m_mcDirectionCosines.GetX() << ", " 
+              << "    - MC direction cosines:      " << "(" << m_mcDirectionCosines.GetX() << ", "
                                                      << m_mcDirectionCosines.GetY() << ", " << m_mcDirectionCosines.GetZ() << ")\n"
               << "    - MC momentum:               " << "(" << 1000.f * m_mcMomentum.GetX() << ", " << 1000.f * m_mcMomentum.GetY() << ", "
                                                      << 1000.f * m_mcMomentum.GetZ() << ") MeV/c\n"
@@ -100,7 +100,7 @@ void LArAnalysisParticle::Print() const
               << "    - MC main MC particle at:    " << m_pMcMainMCParticle
               << std::endl;
     }
-    
+
     else
     {
         std::cout << "LArAnalysisParticle at " << this << ": \n"

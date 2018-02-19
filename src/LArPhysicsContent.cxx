@@ -22,7 +22,7 @@
     d("LArAnalysis",                AnalysisAlgorithm)                                                                          \
     d("LArWriteAnalysisParticles",  WriteAnalysisParticlesAlgorithm)                                                            \
     d("LArAnalysisData",            AnalysisDataAlgorithm)
-    
+
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArBirksHitSelection", BirksHitSelectionTool)
 

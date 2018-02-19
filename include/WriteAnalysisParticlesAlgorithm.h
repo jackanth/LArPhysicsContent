@@ -35,9 +35,9 @@ public:
     using RUnsignedVector = std::vector<UInt_t>;    ///< Alias for a vector of ROOT unsigned ints
     using RUInt64Vector   = std::vector<ULong64_t>; ///< Alias for a vector of ROOT unsigned 64-bit ints
     using RTextVector     = std::vector<TString>;   ///< Alias for a vector of ROOT strings
-    
+
     /**
-     *  @brief  Constructor
+     *  @brief  Default constructor
      */
     TreeParameters() noexcept;
 
@@ -92,7 +92,7 @@ public:
     Float_t            m_nu_mc_HitCompleteness;                               ///< The neutrino's hit number completeness (MC quantity)
     Float_t            m_nu_mc_CollectionPlaneHitPurity;                      ///< The neutrino's hit number purity in the collection plane (MC quantity)
     Float_t            m_nu_mc_CollectionPlaneHitCompleteness;                ///< The neutrino's hit number completeness in the collection plane (MC quantity)
-                                                                      
+
     UInt_t             m_primary_Number;                                      ///< The number of primary daughters
     RBoolVector        m_primary_WasReconstructed;                            ///< Whether each primary daughter has been reconstructed
     RBoolVector        m_primary_IsVertexFiducial;                            ///< Whether each primary daughter's vertex is fiducial
@@ -147,7 +147,7 @@ public:
     RFloatVector       m_primary_mc_HitCompleteness;                          ///< The primary daughter's hit number completeness (MC quantity)
     RFloatVector       m_primary_mc_CollectionPlaneHitPurity;                 ///< The primary daughter's hit number purity in the collection plane (MC quantity)
     RFloatVector       m_primary_mc_CollectionPlaneHitCompleteness;           ///< The primary daughter's hit number completeness in the collection plane (MC quantity)
-                                                                  
+
     UInt_t             m_cr_Number;                                           ///< The number of cosmic rays
     RBoolVector        m_cr_WasReconstructed;                                 ///< Whether each cosmic ray has been reconstructed
     RBoolVector        m_cr_IsVertexFiducial;                                 ///< Whether each cosmic ray's vertex is fiducial
@@ -204,16 +204,16 @@ public:
 
 /**
  *  @brief  WriteAnalysisParticlesAlgorithm class
- * 
+ *
  */
 class WriteAnalysisParticlesAlgorithm : public Algorithm
 {
 public:
     /**
-     *  @brief  Constructor
+     *  @brief  Default constructor
      */
     WriteAnalysisParticlesAlgorithm();
-    
+
     /**
      *  @brief  Destructor
      */
@@ -222,24 +222,24 @@ public:
 protected:
     StatusCode ReadSettings(const TiXmlHandle xmlHandle);
     StatusCode Run();
-    
+
 private:
     using AnalysisParticleList = std::list<const LArAnalysisParticle *>; ///< Alias for a list of AnalysisParticles
     using MCPrimaryMap = std::unordered_multimap<const MCParticle *, const LArAnalysisParticle *>; ///< Alias for a map from MC primaries to AnalysisParticles
 
     /**
      *  @brief  Populate the tree parameters with neutrino information
-     * 
+     *
      *  @param  neutrinoAnalysisParticle the neutrino analysis particle
      *  @param  pMCParticleList address of the MC particle list
      *  @param  pCaloHitList address of the CaloHitList
      */
     void PopulateNeutrinoParameters(const LArAnalysisParticle &neutrinoAnalysisParticle, const MCParticleList *const pMCParticleList,
         const CaloHitList *const pCaloHitList) const;
-    
+
     /**
      *  @brief  Populate the tree parameters with neutrino MC information
-     * 
+     *
      *  @param  pMainMcParticle address of the main MC particle
      *  @param  mcEnergy the MC energy
      *  @param  mcVertexPosition the MC vertex position
@@ -256,35 +256,34 @@ private:
      *  @param  mcCollectionPlaneHitCompleteness the MC collection plane hit completeness
      *  @param  mcTypeTree the MC type tree
      */
-    void PopulateNeutrinoMcParameters(const MCParticle *const pMainMcParticle, const float mcEnergy,
-        const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum, 
-        const bool mcIsVertexFiducial, const float mcContainmentFraction, const int mcPdgCode, const MCParticleList *const pMCParticleList,
-        const CaloHitList *const pCaloHitList, const float mcHitPurity, const float mcHitCompleteness, 
-        const float mcCollectionPlaneHitPurity, const float mcCollectionPlaneHitCompleteness, 
+    void PopulateNeutrinoMcParameters(const MCParticle *const pMainMcParticle, const float mcEnergy, const CartesianVector &mcVertexPosition,
+        const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum, const bool mcIsVertexFiducial,
+        const float mcContainmentFraction, const int mcPdgCode, const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
+        const float mcHitPurity, const float mcHitCompleteness, const float mcCollectionPlaneHitPurity, const float mcCollectionPlaneHitCompleteness,
         const LArAnalysisParticle::TypeTree mcTypeTree) const;
-    
+
     /**
      *  @brief  Get the interaction type for the event
-     * 
+     *
      *  @param  pMCParticleList address of the MC particle list
      *  @param  pCaloHitList address of the CaloHit list
-     * 
+     *
      *  @return the interaction type
      */
     LArInteractionTypeHelper::InteractionType GetInteractionType(const MCParticleList *const pMCParticleList,
         const CaloHitList *const pCaloHitList) const;
-    
+
     /**
      *  @brief  Add a primary daughter record to the tree parameters
-     * 
+     *
      *  @param  primaryAnalysisParticle the primary daughter analysis particle
      *  @param  coveredMCPrimaries the list of MC primaries that have been covered so far
      */
     void AddPrimaryDaughterRecord(const LArAnalysisParticle &primaryAnalysisParticle, const MCPrimaryMap &coveredMCPrimaries) const;
-    
+
     /**
      *  @brief  Add an MC-only primary daughter record
-     * 
+     *
      *  @param  pMainMcParticle address of the main MC particle
      *  @param  mcEnergy the MC energy
      *  @param  mcKineticEnergy the MC kinetic energy
@@ -299,23 +298,22 @@ private:
      *  @param  mcPdgCode the MC PDG code
      *  @param  mcTypeTree the MC type tree
      */
-    void AddMcOnlyPrimaryDaughterRecord(const MCParticle *const pMainMcParticle, const float mcEnergy, const float mcKineticEnergy, 
-        const float mcMass, const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, 
-        const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, const float mcContainmentFraction, 
-        const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, const int mcPdgCode, 
-        const LArAnalysisParticle::TypeTree mcTypeTree) const;
-        
+    void AddMcOnlyPrimaryDaughterRecord(const MCParticle *const pMainMcParticle, const float mcEnergy, const float mcKineticEnergy,
+        const float mcMass, const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum,
+        const bool mcIsVertexFiducial, const float mcContainmentFraction, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower,
+        const int mcPdgCode, const LArAnalysisParticle::TypeTree mcTypeTree) const;
+
     /**
      *  @brief  Add a cosmic ray record to the tree parameters
-     * 
+     *
      *  @param  cosmicRayAnalysisParticle the cosmic ray analysis particle
      *  @param  coveredMCPrimaries the list of MC primaries that have been covered so far
      */
     void AddCosmicRayRecord(const LArAnalysisParticle &cosmicRayAnalysisParticle, const MCPrimaryMap &coveredMCPrimaries) const;
-    
+
     /**
      *  @brief  Add an MC-only cosmic ray record
-     * 
+     *
      *  @param pMainMcParticle address of the main MC particle
      *  @param mcEnergy the MC energy
      *  @param mcKineticEnergy the MC kinetic energy
@@ -330,22 +328,21 @@ private:
      *  @param mcPdgCode the MC PDG code
      *  @param mcTypeTree the MC type tree
      */
-    void AddMcOnlyCosmicRayRecord(const MCParticle *const pMainMcParticle, const float mcEnergy, const float mcKineticEnergy, 
-        const float mcMass, const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, 
-        const CartesianVector &mcMomentum, const bool mcIsVertexFiducial, const float mcContainmentFraction, 
-        const LArAnalysisParticle::TYPE mcType, const bool mcIsShower, const int mcPdgCode, 
-        const LArAnalysisParticle::TypeTree mcTypeTree) const;
-    
+    void AddMcOnlyCosmicRayRecord(const MCParticle *const pMainMcParticle, const float mcEnergy, const float mcKineticEnergy, const float mcMass,
+        const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum,
+        const bool mcIsVertexFiducial, const float mcContainmentFraction, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower,
+        const int mcPdgCode, const LArAnalysisParticle::TypeTree mcTypeTree) const;
+
     /**
      *  @brief  Dump the tree parameters
      */
     void DumpTree() const;
-        
+
     /**
      *  @brief  Find out whether a given interaction type is charged-current
-     * 
+     *
      *  @param  interactionType the interaction type enum
-     * 
+     *
      *  @return whether the interaction type is charged-current
      */
     bool IsChargedCurrent(const LArInteractionTypeHelper::InteractionType interactionType) const;
@@ -358,12 +355,12 @@ private:
     mutable TreeParameters    m_treeParameters;                  ///< The tree parameters
     std::string               m_mcParticleListName;              ///< The name of the MC particle list
     std::string               m_caloHitListName;                 ///< The name of the CaloHit list
-    float                     m_fiducialCutLowXMargin;           ///< The low-X fiducial volume margin
-    float                     m_fiducialCutHighXMargin;          ///< The high-X fiducial volume margin
-    float                     m_fiducialCutLowYMargin;           ///< The low-Y fiducial volume margin
-    float                     m_fiducialCutHighYMargin;          ///< The high-Y fiducial volume margin
-    float                     m_fiducialCutLowZMargin;           ///< The low-Z fiducial volume margin
-    float                     m_fiducialCutHighZMargin;          ///< The high-Z fiducial volume margin
+    float                     m_fiducialCutLowXMargin;           ///< The low-x fiducial volume margin
+    float                     m_fiducialCutHighXMargin;          ///< The high-x fiducial volume margin
+    float                     m_fiducialCutLowYMargin;           ///< The low-y fiducial volume margin
+    float                     m_fiducialCutHighYMargin;          ///< The high-y fiducial volume margin
+    float                     m_fiducialCutLowZMargin;           ///< The low-z fiducial volume margin
+    float                     m_fiducialCutHighZMargin;          ///< The high-z fiducial volume margin
     CartesianVector           m_minCoordinates;                  ///< The set of detector minimum coordinates
     CartesianVector           m_maxCoordinates;                  ///< The set of detector maximum coordinates
     float                     m_mcContainmentFractionLowerBound; ///< The lower containment fraction bound for MC containment
