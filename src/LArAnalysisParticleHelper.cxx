@@ -226,22 +226,36 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
                 fitDirection = maxDirection;
         }
     }
-
+    
     if (pointTowardsMiddle)
     {
-        if ((maxCoordinate - displacementAlongFittedTrack) < (displacementAlongFittedTrack - minCoordinate))
-            fitDirection *= -1.f;
+        const CartesianVector &minToMaxVector = maxPosition - minPosition;
+    
+        if (std::fabs(maxCoordinate - displacementAlongFittedTrack) < std::fabs(displacementAlongFittedTrack - minCoordinate))
+        {
+            // If closer to the maximum coordinate, we want the fit direction and the min-to-max vector to be more anti-aligned.
+            if (minToMaxVector.GetDotProduct(fitDirection) > 0.f)
+                fitDirection *= -1.f;
+            
+        }
+        
+        else
+        {
+            // If closer to the minimum coordinate, we want the fit direction and the min-to-max vector to be more aligned.
+            if (minToMaxVector.GetDotProduct(fitDirection) < 0.f)
+                fitDirection *= -1.f;
+        }
     }
-
+    
     else
     {
         if (fitDirection.GetDotProduct(CartesianVector(0.f, -1.f, 0.f)) < 0.f)
             fitDirection *= -1.f;
     }
-
+    
     return fitDirection;
 }
-
+    
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,

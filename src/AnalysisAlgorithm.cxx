@@ -640,8 +640,15 @@ CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject
         std::cout << "AnalysisAlgorithm: PCA eigenvectors were empty" << std::endl;
         return CartesianVector{0.f, 0.f, 0.f};
     }
-
-    return eigenVectors.at(0);
+    
+    CartesianVector fitDirection = eigenVectors.at(0);
+    const CartesianVector vertexToCentroid = centroid - pVertex->GetPosition();
+    
+    // We want the fit direction to be mostly aligned with the vertex-to-centroid direction.
+    if (vertexToCentroid.GetDotProduct(fitDirection) < 0.f)
+        fitDirection *= -1.f;
+    
+    return fitDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
