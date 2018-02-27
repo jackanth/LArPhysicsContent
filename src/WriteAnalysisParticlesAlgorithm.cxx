@@ -378,11 +378,20 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const MCParti
 
 LArInteractionTypeHelper::InteractionType WriteAnalysisParticlesAlgorithm::GetInteractionType(const MCParticleList *const pMCParticleList) const
 {
-    MCParticleVector mcPrimaryVector;
-    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
+    if (!pMCParticleList)
+        throw STATUS_CODE_NOT_FOUND;
     
-    MCParticleList mcPrimaryList(mcPrimaryVector.begin(), mcPrimaryVector.end());
-    std::cout << mcPrimaryList.size() << std::endl;
+    MCParticleList mcPrimaryList;
+    
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
+    {
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))
+            mcPrimaryList.push_back(pMCParticle);
+    }
+    
+    if (mcPrimaryList.empty())
+        throw STATUS_CODE_NOT_FOUND;
+    
     const auto interactionType = LArInteractionTypeHelper::GetInteractionType(mcPrimaryList);
     std::cout << "done" << std::endl;
     return interactionType;
