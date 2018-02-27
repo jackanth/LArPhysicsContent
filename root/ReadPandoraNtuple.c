@@ -1,5 +1,7 @@
 #include "Common.h"
 
+#define PLOT_TITLE_POSTFIX ": CC #nu_{#mu}"
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 #define QUICK_PLOT_1D(variableName, ntupleAddress)                                                        \
@@ -621,43 +623,115 @@ void ReadPandoraNtuple(const char *const inputFilePath)
                 nu_mc_VertexX,
                 nu_mc_VertexY,
                 nu_mc_VertexZ);
+                
+//            float maximumEnergy = 0.f;
+//            int maximumIndex = 0;
+//            
+//            for (int i = 0; i < primary_Number; ++i)
+//            {
+//                if ((*p_primary_WasReconstructed)[i] && (*p_primary_HasMcInfo)[i] && (*p_primary_mc_IsVertexFiducial)[i] && (*p_primary_mc_IsContained)[i] && ((*p_primary_KineticEnergy)[i] > 0.f)) 
+//                {
+//                    
+//                    if ((*p_primary_KineticEnergy)[i] > maximumEnergy)
+//                    {
+//                        maximumEnergy = (*p_primary_KineticEnergy)[i];
+//                        maximumIndex = i;
+//                    }
+//                }
+//            }
 
+            //int i = maximumIndex;
             for (int i = 0; i < primary_Number; ++i)
             {
-                if ((*p_primary_WasReconstructed)[i] && (*p_primary_HasMcInfo)[i] && (*p_primary_mc_IsVertexFiducial)[i] && (*p_primary_mc_IsContained)[i])
+                if ((*p_primary_WasReconstructed)[i] && (*p_primary_HasMcInfo)[i] && (*p_primary_mc_IsVertexFiducial)[i] && (*p_primary_mc_IsContained)[i] && ((*p_primary_KineticEnergy)[i] > 0.f)) 
                 {
-                    const bool recoIsProton     = (*p_primary_IsProton)[i];
-                    const bool mcIsProton       = (*p_primary_mc_IsProton)[i];
-                    const bool recoIsPionMuon   = (*p_primary_IsPionOrMuon)[i];
-                    const bool mcIsPionMuon     = (*p_primary_mc_IsPionOrMuon)[i];
-                    const bool recoIsOtherTrack = (*p_primary_IsTrack)[i];
-                    const bool mcIsOtherTrack   = (*p_primary_mc_IsTrack)[i];
-                    const bool recoIsShower     = (*p_primary_IsShower)[i];
-                    const bool mcIsShower       = (*p_primary_mc_IsShower)[i];
-
+                    const bool recoIsProton   = (*p_primary_IsProton)[i];
+                    const bool mcIsProton     = (*p_primary_mc_IsProton)[i];
+                    const bool recoIsPionMuon = (*p_primary_IsPionOrMuon)[i];
+                    const bool mcIsPionMuon   = (*p_primary_mc_IsPionOrMuon)[i];
+                    const bool mcIsCosmicRay  = (*p_primary_mc_IsCosmicRay)[i];
+                    const bool recoIsTrack    = (*p_primary_IsTrack)[i];
+                    const bool mcIsTrack      = (*p_primary_mc_IsTrack)[i];
+                    const bool recoIsShower   = (*p_primary_IsShower)[i];
+                    const bool mcIsShower     = (*p_primary_mc_IsShower)[i];
+                    
+                    if (!mcIsCosmicRay)
+                    {
+                        if (mcIsProton)
+                        {
+                            if      (recoIsProton)   ++type_RecoProton_McProton;
+                            else if (recoIsPionMuon) ++type_RecoPionMuon_McProton;
+                            else if (recoIsShower)   ++type_RecoShower_McProton;
+                            else if (recoIsTrack)    ++type_RecoOtherTrack_McProton;
+                        }
+                        
+                        else if (mcIsPionMuon)
+                        {
+                            if      (recoIsProton)   ++type_RecoProton_McPionMuon;
+                            else if (recoIsPionMuon) ++type_RecoPionMuon_McPionMuon;
+                            else if (recoIsShower)   ++type_RecoShower_McPionMuon;
+                            else if (recoIsTrack)    ++type_RecoOtherTrack_McPionMuon;
+                        }
+                            
+                        else if (mcIsShower)
+                        {
+                            if      (recoIsProton)   ++type_RecoProton_McShower;
+                            else if (recoIsPionMuon) ++type_RecoPionMuon_McShower;
+                            else if (recoIsShower)   ++type_RecoShower_McShower;
+                            else if (recoIsTrack)    ++type_RecoOtherTrack_McShower;
+                        }
+                            
+                        else if (mcIsTrack)
+                        {
+                            std::cout << (*p_primary_mc_PdgCode)[i] << std::endl;
+                            if      (recoIsProton)   ++type_RecoProton_McOtherTrack;
+                            else if (recoIsPionMuon) ++type_RecoPionMuon_McOtherTrack;
+                            else if (recoIsShower)   ++type_RecoShower_McOtherTrack;
+                            else if (recoIsTrack)    ++type_RecoOtherTrack_McOtherTrack;
+                        }
+                    }
+/*
                     if      (recoIsProton && mcIsProton)         ++type_RecoProton_McProton;
                     else if (recoIsProton && mcIsPionMuon)       ++type_RecoProton_McPionMuon;
-                    else if (recoIsProton && mcIsOtherTrack)     ++type_RecoProton_McOtherTrack;
+                    else if (recoIsProton && mcIsOtherTrack)     
+                    {
+                        ++type_RecoProton_McOtherTrack;
+                        std::cout << (*p_primary_mc_PdgCode)[i] << std::endl;
+                    }
                     else if (recoIsProton && mcIsShower)         ++type_RecoProton_McShower;
                                                                  
                     else if (recoIsPionMuon && mcIsProton)       ++type_RecoPionMuon_McProton;
-                    else if (recoIsPionMuon && mcIsPionMuon)     ++type_RecoPionMuon_McPionMuon;
-                    else if (recoIsPionMuon && mcIsOtherTrack)   ++type_RecoPionMuon_McOtherTrack;
+                    else if (recoIsPionMuon && (mcIsPionMuon || mcIsCosmicRay))     ++type_RecoPionMuon_McPionMuon;
+                    else if (recoIsPionMuon && mcIsOtherTrack)
+                    {
+                           ++type_RecoPionMuon_McOtherTrack;
+                        
+                    }
                     else if (recoIsPionMuon && mcIsShower)       ++type_RecoPionMuon_McShower;
                     
                     else if (recoIsOtherTrack && mcIsProton)     ++type_RecoOtherTrack_McProton;
                     else if (recoIsOtherTrack && mcIsPionMuon)   ++type_RecoOtherTrack_McPionMuon;
-                    else if (recoIsOtherTrack && mcIsOtherTrack) ++type_RecoOtherTrack_McOtherTrack;
+                    else if (recoIsOtherTrack && mcIsOtherTrack)
+                    {
+                        ++type_RecoOtherTrack_McOtherTrack;
+                        std::cout << (*p_primary_mc_PdgCode)[i] << std::endl;
+                    }
+                    
                     else if (recoIsOtherTrack && mcIsShower)     ++type_RecoOtherTrack_McShower;
                     
                     else if (recoIsShower && mcIsProton)         ++type_RecoShower_McProton;
                     else if (recoIsShower && mcIsPionMuon)       ++type_RecoShower_McPionMuon;
-                    else if (recoIsShower && mcIsOtherTrack)     ++type_RecoShower_McOtherTrack;
+                    else if (recoIsShower && mcIsOtherTrack)
+                    { 
+                        ++type_RecoShower_McOtherTrack;
+                        std::cout << (*p_primary_mc_PdgCode)[i] << std::endl;
+                    }
+                    
                     else if (recoIsShower && mcIsShower)         ++type_RecoShower_McShower;
                     
                     else
                         std::cout << "Unknown particle type" << std::endl;
-                    
+                        */
                     pNtuple_Primary_0->Fill(
                         (*p_primary_KineticEnergy)[i],
                         (*p_primary_KineticEnergyFracFromRange)[i],
@@ -785,7 +859,7 @@ void ReadPandoraNtuple(const char *const inputFilePath)
         }
     }
     
-    if (true)
+    if (false)
     {
         QUICK_PLOT_1D("nu_VisibleEnergy",                                    pNtuple_Neutrino_0);
         QUICK_PLOT_1D("nu_VisibleLongitudinalEnergy",                        pNtuple_Neutrino_0);
@@ -949,7 +1023,7 @@ void ReadPandoraNtuple(const char *const inputFilePath)
         QUICK_PLOT_1D("cr_mc_CollectionPlaneHitCompleteness",                pNtuple_CosmicRay_3);
     }
     
-    if (true)
+    if (false)
     {
         PLOT_2D("nu_mc_VisibleEnergy",               "nu_VisibleEnergy",             pNtuple_Neutrino_0, 0.0, 2.0, 0.0, 2.0);
         PLOT_2D("nu_mc_VisibleLongitudinalEnergy",   "nu_VisibleLongitudinalEnergy", pNtuple_Neutrino_0, 0.0, 2.0, -0.5, 2.0);
@@ -979,6 +1053,8 @@ void ReadPandoraNtuple(const char *const inputFilePath)
         QUICK_PLOT_2D("cr_mc_DirectionCosineZ",      "cr_DirectionCosineZ",          pNtuple_CosmicRay_1);
     }
     
+        QUICK_PLOT_1D("primary_mc_PdgCode",                                  pNtuple_Primary_3);
+    
     const float type_McProton     = static_cast<float>(type_RecoProton_McProton + type_RecoPionMuon_McProton + type_RecoOtherTrack_McProton + type_RecoShower_McProton);
     const float type_McPionMuon   = static_cast<float>(type_RecoProton_McPionMuon + type_RecoPionMuon_McPionMuon + type_RecoOtherTrack_McPionMuon + type_RecoShower_McPionMuon);
     const float type_McOtherTrack = static_cast<float>(type_RecoProton_McOtherTrack + type_RecoPionMuon_McOtherTrack + type_RecoOtherTrack_McOtherTrack + type_RecoShower_McOtherTrack);
@@ -1004,5 +1080,92 @@ void ReadPandoraNtuple(const char *const inputFilePath)
     std::cout << "Reco shower,       MC pion/muon   = " << 100.f * static_cast<float>(type_RecoShower_McPionMuon)       / type_McPionMuon   << "% " << type_RecoShower_McPionMuon << std::endl;
     std::cout << "Reco shower,       MC other track = " << 100.f * static_cast<float>(type_RecoShower_McOtherTrack)     / type_McOtherTrack << "% " << type_RecoShower_McOtherTrack << std::endl;
     std::cout << "Reco shower,       MC shower      = " << 100.f * static_cast<float>(type_RecoShower_McShower)         / type_McShower     << "% " << type_RecoShower_McShower << std::endl;
+
+
+    {
+        TString identifier1 = "nu_mc_VisibleEnergy";
+        TString identifier2 = "nu_VisibleEnergy";
+        TString identifier = identifier1 + "_" + identifier2;
+        struct PlotSettings2D plotSettings = g_defaultPlotSettings2D;
+        plotSettings.xMin = 0.f;
+        plotSettings.xMax = 2.f;
+        plotSettings.yMin = 0.f;
+        plotSettings.yMax = 2.f;
+        plotSettings.xNumBins = 60;
+        plotSettings.yNumBins = 60;
+        strcpy(plotSettings.title, "Neutrino visible energy" PLOT_TITLE_POSTFIX);
+        strcpy(plotSettings.xTitle, "MC visible energy (GeV)");
+        strcpy(plotSettings.yTitle, "Reconstructed visible energy (GeV)");
+        PlotNtuple2D(pNtuple_Neutrino_0, identifier1, identifier2, identifier, plotSettings)->SaveAs(identifier.Append(".png"));
+        PlotNtuple2D(pNtuple_Neutrino_0, identifier1, identifier2, identifier, plotSettings)->SaveAs(identifier.Append(".png"));
+    }
+    
+    {
+        TString identifier1 = "primary_mc_KineticEnergy";
+        TString identifier2 = "primary_KineticEnergy";
+        TString identifier = identifier1 + "_" + identifier2;
+        struct PlotSettings2D plotSettings = g_defaultPlotSettings2D;
+        plotSettings.xMin = 0.f;
+        plotSettings.xMax = 1.f;
+        plotSettings.yMin = 0.f;
+        plotSettings.yMax = 1.f;
+        plotSettings.xNumBins = 60;
+        plotSettings.yNumBins = 60;
+        strcpy(plotSettings.title, "Primary neutrino daughter kinetic energy" PLOT_TITLE_POSTFIX);
+        strcpy(plotSettings.xTitle, "MC kinetic energy (GeV)");
+        strcpy(plotSettings.yTitle, "Reconstructed kinetic energy (GeV)");
+        PlotNtuple2D(pNtuple_Primary_0, identifier1, identifier2, identifier, plotSettings)->SaveAs(identifier.Append(".png"));
+    }
+    
+    {
+        TString identifier1 = "primary_mc_DirectionCosineX";
+        TString identifier2 = "primary_DirectionCosineX";
+        TString identifier = identifier1 + "_" + identifier2;
+        struct PlotSettings2D plotSettings = g_defaultPlotSettings2D;
+        plotSettings.xMin = -1.f;
+        plotSettings.xMax = 1.f;
+        plotSettings.yMin = -1.f;
+        plotSettings.yMax = 1.f;
+        plotSettings.xNumBins = 60;
+        plotSettings.yNumBins = 60;
+        strcpy(plotSettings.title, "Primary neutrino daughter x-direction cosine" PLOT_TITLE_POSTFIX);
+        strcpy(plotSettings.xTitle, "MC direction cosine");
+        strcpy(plotSettings.yTitle, "Reconstructed direction cosine");
+        PlotNtuple2D(pNtuple_Primary_1, identifier1, identifier2, identifier, plotSettings)->SaveAs(identifier.Append(".png"));
+    }
+    
+    {
+        TString identifier1 = "primary_mc_DirectionCosineY";
+        TString identifier2 = "primary_DirectionCosineY";
+        TString identifier = identifier1 + "_" + identifier2;
+        struct PlotSettings2D plotSettings = g_defaultPlotSettings2D;
+        plotSettings.xMin = -1.f;
+        plotSettings.xMax = 1.f;
+        plotSettings.yMin = -1.f;
+        plotSettings.yMax = 1.f;
+        plotSettings.xNumBins = 60;
+        plotSettings.yNumBins = 60;
+        strcpy(plotSettings.title, "Primary neutrino daughter y-direction cosine" PLOT_TITLE_POSTFIX);
+        strcpy(plotSettings.xTitle, "MC direction cosine");
+        strcpy(plotSettings.yTitle, "Reconstructed direction cosine");
+        PlotNtuple2D(pNtuple_Primary_1, identifier1, identifier2, identifier, plotSettings)->SaveAs(identifier.Append(".png"));
+    }
+    
+    {
+        TString identifier1 = "primary_mc_DirectionCosineZ";
+        TString identifier2 = "primary_DirectionCosineZ";
+        TString identifier = identifier1 + "_" + identifier2;
+        struct PlotSettings2D plotSettings = g_defaultPlotSettings2D;
+        plotSettings.xMin = -1.f;
+        plotSettings.xMax = 1.f;
+        plotSettings.yMin = -1.f;
+        plotSettings.yMax = 1.f;
+        plotSettings.xNumBins = 60;
+        plotSettings.yNumBins = 60;
+        strcpy(plotSettings.title, "Primary neutrino daughter z-direction cosine" PLOT_TITLE_POSTFIX);
+        strcpy(plotSettings.xTitle, "MC direction cosine");
+        strcpy(plotSettings.yTitle, "Reconstructed direction cosine");
+        PlotNtuple2D(pNtuple_Primary_1, identifier1, identifier2, identifier, plotSettings)->SaveAs(identifier.Append(".png"));
+    }
 
 }

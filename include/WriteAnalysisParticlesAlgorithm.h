@@ -232,10 +232,8 @@ private:
      *
      *  @param  neutrinoAnalysisParticle the neutrino analysis particle
      *  @param  pMCParticleList address of the MC particle list
-     *  @param  pCaloHitList address of the CaloHitList
      */
-    void PopulateNeutrinoParameters(const LArAnalysisParticle &neutrinoAnalysisParticle, const MCParticleList *const pMCParticleList,
-        const CaloHitList *const pCaloHitList) const;
+    void PopulateNeutrinoParameters(const LArAnalysisParticle &neutrinoAnalysisParticle, const MCParticleList *const pMCParticleList) const;
 
     /**
      *  @brief  Populate the tree parameters with neutrino MC information
@@ -249,7 +247,6 @@ private:
      *  @param  mcContainmentFraction the MC containment fraction
      *  @param  mcPdgCode the MC PDG code
      *  @param  pMCParticleList address of the MC particle list
-     *  @param  pCaloHitList address of the CaloHit list
      *  @param  mcHitPurity ahe MC hit purity
      *  @param  mcHitCompleteness the MC hit completeness
      *  @param  mcCollectionPlaneHitPurity the MC collection plane hit purity
@@ -258,7 +255,7 @@ private:
      */
     void PopulateNeutrinoMcParameters(const MCParticle *const pMainMcParticle, const float mcEnergy, const CartesianVector &mcVertexPosition,
         const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum, const bool mcIsVertexFiducial,
-        const float mcContainmentFraction, const int mcPdgCode, const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
+        const float mcContainmentFraction, const int mcPdgCode, const MCParticleList *const pMCParticleList,
         const float mcHitPurity, const float mcHitCompleteness, const float mcCollectionPlaneHitPurity, const float mcCollectionPlaneHitCompleteness,
         const LArAnalysisParticle::TypeTree mcTypeTree) const;
 
@@ -266,12 +263,10 @@ private:
      *  @brief  Get the interaction type for the event
      *
      *  @param  pMCParticleList address of the MC particle list
-     *  @param  pCaloHitList address of the CaloHit list
      *
      *  @return the interaction type
      */
-    LArInteractionTypeHelper::InteractionType GetInteractionType(const MCParticleList *const pMCParticleList,
-        const CaloHitList *const pCaloHitList) const;
+    LArInteractionTypeHelper::InteractionType GetInteractionType(const MCParticleList *const pMCParticleList) const;
 
     /**
      *  @brief  Add a primary daughter record to the tree parameters
@@ -354,7 +349,6 @@ private:
     bool                      m_verbose;                         ///< Whether to print some AnalysisParticle information to screen
     mutable TreeParameters    m_treeParameters;                  ///< The tree parameters
     std::string               m_mcParticleListName;              ///< The name of the MC particle list
-    std::string               m_caloHitListName;                 ///< The name of the CaloHit list
     float                     m_fiducialCutLowXMargin;           ///< The low-x fiducial volume margin
     float                     m_fiducialCutHighXMargin;          ///< The high-x fiducial volume margin
     float                     m_fiducialCutLowYMargin;           ///< The low-y fiducial volume margin
