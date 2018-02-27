@@ -382,7 +382,10 @@ LArInteractionTypeHelper::InteractionType WriteAnalysisParticlesAlgorithm::GetIn
     LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
     
     MCParticleList mcPrimaryList(mcPrimaryVector.begin(), mcPrimaryVector.end());
-    return LArInteractionTypeHelper::GetInteractionType(mcPrimaryList);
+    std::cout << mcPrimaryList.size() << std::endl;
+    const auto interactionType = LArInteractionTypeHelper::GetInteractionType(mcPrimaryList);
+    std::cout << "done" << std::endl;
+    return interactionType;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
