@@ -1,0 +1,69 @@
+##############################################################################
+# cmake configuration file for LArPhysicsContent
+#
+# requires:
+#   MacroCheckPackageLibs.cmake for checking package libraries
+#
+# returns following variables:
+#
+#   LArPhysicsContent_FOUND      : set to TRUE if LArPhysicsContent found
+#       if FIND_PACKAGE called with REQUIRED and COMPONENTS arguments
+#       LArPhysicsContent_FOUND is only set to TRUE if ALL components are also found
+#       if REQUIRED is NOT set components may or may not be available
+#
+#   LArPhysicsContent_ROOT       : path to this LArPhysicsContent installation
+#   LArPhysicsContent_VERSION    : package version
+#   LArPhysicsContent_LIBRARIES  : list of LArPhysicsContent libraries (NOT including COMPONENTS)
+#   LArPhysicsContent_INCLUDE_DIRS  : list of paths to be used with INCLUDE_DIRECTORIES
+#   LArPhysicsContent_LIBRARY_DIRS  : list of paths to be used with LINK_DIRECTORIES
+#   LArPhysicsContent_COMPONENT_LIBRARIES      : list of LArPhysicsContent component libraries
+#   LArPhysicsContent_${COMPONENT}_FOUND       : set to TRUE or FALSE for each library
+#   LArPhysicsContent_${COMPONENT}_LIBRARY     : path to individual libraries
+#   LArPhysicsContent_${COMPONENT}_LIB_DEPENDS : individual library dependencies
+#
+# @author Jan Engels, Desy
+##############################################################################
+
+SET( LArPhysicsContent_ROOT "@CMAKE_INSTALL_PREFIX@" )
+SET( LArPhysicsContent_VERSION "@LArPhysicsContent_VERSION@" )
+
+
+# ---------- include dirs -----------------------------------------------------
+# do not store find results in cache
+SET( LArPhysicsContent_INCLUDE_DIRS LArPhysicsContent_INCLUDE_DIRS-NOTFOUND )
+MARK_AS_ADVANCED( LArPhysicsContent_INCLUDE_DIRS )
+
+FIND_PATH( LArPhysicsContent_INCLUDE_DIRS
+	NAMES larphysicscontent/LArPhysicsContent.h
+	PATHS ${LArPhysicsContent_ROOT} ${LArPhysicsContent_ROOT}/include
+	NO_DEFAULT_PATH
+)
+
+
+
+# ---------- libraries --------------------------------------------------------
+INCLUDE( "@PANDORA_CMAKE_MODULES_PATH@/MacroCheckPackageLibs.cmake" )
+
+# only standard libraries should be passed as arguments to CHECK_PACKAGE_LIBS
+# additional components are set by cmake in variable PKG_FIND_COMPONENTS
+# first argument should be the package name
+CHECK_PACKAGE_LIBS( LArPhysicsContent LArPhysicsContent )
+
+
+
+
+# ---------- libraries dependencies -------------------------------------------
+# this sets LArPhysicsContent_${COMPONENT}_LIB_DEPENDS variables
+INCLUDE( "${LArPhysicsContent_ROOT}/lib/cmake/LArPhysicsContentLibDeps.cmake" )
+ 
+
+
+
+# ---------- final checking ---------------------------------------------------
+INCLUDE( FindPackageHandleStandardArgs )
+# set LARPHYSICSCONTENTNEW_FOUND to TRUE if all listed variables are TRUE and not empty
+# LArPhysicsContent_COMPONENT_VARIABLES will be set if FIND_PACKAGE is called with REQUIRED argument
+FIND_PACKAGE_HANDLE_STANDARD_ARGS( LArPhysicsContent DEFAULT_MSG LArPhysicsContent_ROOT LArPhysicsContent_INCLUDE_DIRS LArPhysicsContent_LIBRARIES ${LArPhysicsContent_COMPONENT_VARIABLES} )
+
+SET( LArPhysicsContent_FOUND ${LARPHYSICSCONTENTNEW_FOUND} )
+

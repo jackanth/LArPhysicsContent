@@ -1,18 +1,17 @@
-# cmake file for building LArPhysicsContent
-#-------------------------------------------------------------------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 2.8.2 FATAL_ERROR)
+# use cmake 2.8 or later
+cmake_minimum_required (VERSION 2.8)
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "LArPhysicsContent requires an out-of-source build.")
 endif()
 
-# project name
 project(LArPhysicsContent)
 
 # project version
-set(${PROJECT_NAME}_VERSION_MAJOR 03)
-set(${PROJECT_NAME}_VERSION_MINOR 07)
-set(${PROJECT_NAME}_VERSION_PATCH 02)
+# ATTN This package supports two build systems; please ensure version is specified here *and* in ups/product_deps
+set(${PROJECT_NAME}_VERSION_MAJOR 00)
+set(${PROJECT_NAME}_VERSION_MINOR 01)
+set(${PROJECT_NAME}_VERSION_PATCH 00)
 set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}")
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
@@ -20,10 +19,10 @@ set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_
 include(PandoraCMakeSettings)
 
 # Prefer local include directory to any paths to installed header files
-include_directories(include)
+include_directories(./)
 
-find_package(PandoraSDK 03.00.00 REQUIRED)
-find_package(LArContent 03.07.00 REQUIRED)
+find_package(PandoraSDK 03.02.00 REQUIRED)
+find_package(LArContent 03.11.00 REQUIRED)
 
 foreach(package PandoraSDK LArContent)
     if(${package}_FOUND)
@@ -34,21 +33,20 @@ foreach(package PandoraSDK LArContent)
 endforeach()
 
 if(PANDORA_MONITORING)
-    find_package(PandoraMonitoring 03.00.00 REQUIRED)
+    find_package(PandoraMonitoring 03.04.00 REQUIRED)
     include_directories(${PandoraMonitoring_INCLUDE_DIRS})
     link_libraries(${PandoraMonitoring_LIBRARIES})
     add_definitions(${PandoraMonitoring_DEFINITIONS})
     add_definitions("-DMONITORING")
-
-    list(APPEND CMAKE_MODULE_PATH "$ENV{ROOTSYS}/etc/cmake/")
-    find_package(ROOT 5.26.00 REQUIRED COMPONENTS Eve Geom RGL EG TMVA)
 endif()
+
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
 
 find_package(ROOT 5.26.00 REQUIRED COMPONENTS Eve Geom RGL EG TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 link_libraries(${ROOT_LIBRARIES} ${ROOT_COMPONENT_LIBRARIES})
 add_definitions(${ROOT_DEFINITIONS})
-add_definitions("-DMONITORING")
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Low level settings - compiler etc
@@ -66,26 +64,11 @@ endif()
 # Build products
 
 # - Collect sources - not ideal because you have to keep running CMake to pick up changes
-file(GLOB_RECURSE LAR_PHYSICS_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cxx")
+file(GLOB_RECURSE LAR_PHYSICS_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larphysicscontent/*.cc")
 
 # - Add library and properties
 add_library(${PROJECT_NAME} SHARED ${LAR_PHYSICS_CONTENT_SRCS})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSION} SOVERSION ${${PROJECT_NAME}_SOVERSION})
-
-# - Executable
-add_executable(PandoraInterface ${PROJECT_SOURCE_DIR}/test/PandoraInterface.cxx)
-if(PANDORA_MONITORING)
-    include_directories(${ROOT_INCLUDE_DIRS})
-    target_link_libraries(PandoraInterface ${ROOT_LIBRARIES})
-endif()
-
-target_link_libraries(PandoraInterface ${PROJECT_NAME})
-
-# - Optional documents
-option(LArPhysicsContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
-if(LArPhysicsContent_BUILD_DOCS)
-    add_subdirectory(doc)
-endif()
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Install products
@@ -94,10 +77,10 @@ endif()
 install(TARGETS ${PROJECT_NAME} DESTINATION lib COMPONENT Runtime)
 
 # - headers
-install(DIRECTORY include/ DESTINATION include COMPONENT Development FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY ./larphysicscontent DESTINATION include COMPONENT Development FILES_MATCHING PATTERN "*.h")
 
-# - executable
-install(TARGETS PandoraInterface DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+# - support files
+PANDORA_GENERATE_PACKAGE_CONFIGURATION_FILES(${PROJECT_NAME}Config.cmake ${PROJECT_NAME}ConfigVersion.cmake ${PROJECT_NAME}LibDeps.cmake)
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # display some variables and write them to cache

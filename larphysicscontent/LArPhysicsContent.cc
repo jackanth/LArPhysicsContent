@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArPhysicsContent.cc
  *
- *  @brief  Factory implementations for analysis content
+ *  @brief  Factory implementations for physics content
  *
  *  $Log: $
  */

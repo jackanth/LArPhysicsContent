@@ -1,12 +1,12 @@
 /**
  *  @file LArPhysicsContent/include/AnalysisAlgorithm.h
  *
- *  @brief Header file for the LEE analysis algorithm class.
+ *  @brief Header file for the analysis algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_LEE_ANALYSIS_ALGORITHM_H
-#define LAR_LEE_ANALYSIS_ALGORITHM_H 1
+#ifndef LAR_ANALYSIS_ALGORITHM_H
+#define LAR_ANALYSIS_ALGORITHM_H 1
 
 #include "Objects/ParticleFlowObject.h"
 
@@ -301,4 +301,4 @@ inline AnalysisAlgorithm::EnergyFromRangeData::EnergyFromRangeData(const float r
 }
 } // namespace lar_physics_content
 
-#endif // #ifndef LAR_LEE_ANALYSIS_ALGORITHM_H
+#endif // #ifndef LAR_ANALYSIS_ALGORITHM_H
