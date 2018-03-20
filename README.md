@@ -1,8 +1,4 @@
 # LArPhysicsContent
-[![Build Status](https://travis-ci.org/PandoraPFA/LArPhysicsContent.svg?branch=master)](https://travis-ci.org/PandoraPFA/LArPhysicsContent)
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/13057/badge.svg)](https://scan.coverity.com/projects/pandorapfa-larphysicscontent)
-[![codecov](https://codecov.io/gh/PandoraPFA/LArPhysicsContent/branch/master/graph/badge.svg)](https://codecov.io/gh/PandoraPFA/LArPhysicsContent)
-
 Pandora algorithms and tools for analysis of LAr TPC events
 
 LArPhysicsContent is distributed under the [GPLv3 License](http://www.gnu.org/licenses/gpl-3.0.en.html)
