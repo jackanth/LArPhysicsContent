@@ -1,22 +1,22 @@
 /**
- *  @file   LArPhysicsContent/include/LArAnalysisParticleHelper.h
+ *  @file   larphysicscontent/LArAnalysisParticleHelper.h
  *
- *  @brief  Header file for the LEE analysis helper class.
+ *  @brief  Header file for the lar analysis particle helper class.
  *
  *  $Log: $
  */
-#ifndef LEE_ANALYSIS_HELPER_H
-#define LEE_ANALYSIS_HELPER_H 1
+#ifndef LAR_ANALYSIS_PARTICLE_HELPER_H
+#define LAR_ANALYSIS_PARTICLE_HELPER_H 1
 
 #include "Pandora/Pandora.h"
 #include "Objects/ParticleFlowObject.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "LArAnalysisParticle.h"
+#include "larphysicscontent/LArAnalysisParticle.h"
+#include "larphysicscontent/LArTrackHitValue.h"
 
 #include "TNtuple.h"
-#include "LArTrackHitEnergy.h"
 
 #include <tuple>
 #include <unordered_map>
@@ -33,10 +33,41 @@ namespace lar_physics_content
 class LArAnalysisParticleHelper
 {
 public:
-    using LArTrackHitEnergyMap = std::unordered_map<const ParticleFlowObject *, LArTrackHitEnergy::Vector>; ///< Alias for a map from PFOs to their track hit energies
-    using TrackFitMap          = std::unordered_map<const ParticleFlowObject *, ThreeDSlidingFitResult>;    ///< Alias for map from PFOs to track fits.
+    using TrackHitValueVector  = std::vector<LArTrackHitValue>; ///< Alias for a vector of LArTrackHitValues
+    using LArTrackHitEnergyMap = std::unordered_map<const ParticleFlowObject *, TrackHitValueVector>;    ///< Alias for a map from PFOs to their track hit energies
+    using TrackFitMap          = std::unordered_map<const ParticleFlowObject *, ThreeDSlidingFitResult>; ///< Alias for map from PFOs to track fits.
     using HitProjectionPair    = std::pair<const CaloHit *, float>; ///< Alias for a map from CaloHits to their projected track coordinate
     using HitProjectionVector  = std::vector<HitProjectionPair>;    ///< Alias for a vector of hit projection pairs
+
+    /**
+     *  @brief  PfoMcInfo class
+     */
+    class PfoMcInfo
+    {
+    public:
+        /**
+         *  @brief  Default constructor
+         */
+        PfoMcInfo() noexcept;
+        
+        const MCParticle             *m_pMCParticle;
+        float                         m_mcEnergy;
+        float                         m_mcKineticEnergy;
+        float                         m_mcMass;
+        LArAnalysisParticle::TypeTree m_mcTypeTree;
+        LArAnalysisParticle::TYPE     m_mcType;
+        CartesianVector               m_mcVertexPosition;
+        CartesianVector               m_mcMomentum;
+        CartesianVector               m_mcDirectionCosines;
+        int                           m_mcPdgCode;
+        float                         m_mcContainmentFraction;
+        bool                          m_mcIsShower;
+        bool                          m_mcIsVertexFiducial;
+        bool                          m_mcIsContained;
+        bool                          m_mcIsProton;
+        bool                          m_mcIsCosmicRay;
+        bool                          m_mcIsPionOrMuon;
+    };
 
     /**
      *  @brief  Get the particle type as a string
@@ -263,39 +294,13 @@ public:
      *  @brief  Get MC information for a given MC particle
      *
      *  @param  pMCParticle
-     *  @param  mcEnergy the energy of the MC particle (to populate)
-     *  @param  mcKineticEnergy the kinetic energy of the MC particle (to populate)
-     *  @param  mcMass the mass of the MC particle (to populate)
-     *  @param  typeTree the type tree of the MC particle (to populate)
-     *  @param  mcType the type of the MC particle (to populate)
-     *  @param  mcVertexPosition the vertex position of the MC particle (to populate)
-     *  @param  mcMomentum the momentum of the MC particle (to populate)
-     *  @param  mcPdgCode the PDG code of the MC particle (to populate)
-     *  @param  mcContainmentFraction the containment fraction of the MC particle (to populate)
      *  @param  minCoordinates the minimum fiducial coordinates of the detector
      *  @param  maxCoordinates the maximum fiducial coordinates of the detector
      *
-     *  @return success
+     *  @return the mc information
      */
-    static bool GetMcInformation(const MCParticle *const pMCParticle, float &mcEnergy, float &mcKineticEnergy, float &mcMass,
-        LArAnalysisParticle::TypeTree &typeTree, LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum,
-        int &mcPdgCode, float &mcContainmentFraction, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
-
-    /**
-     *  @brief  Calculate hit-counting-based purity and completeness values
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  pMCParticle address of the MC particle
-     *  @param  pCaloHitList address of the CaloHit list
-     *  @param  isNeutrino whether the PFO is a beam neutrino
-     *  @param  hitPurity the purity (to populate)
-     *  @param  hitCompleteness the completeness (to populate)
-     *  @param  mcCollectionPlaneHitPurity the purity in the collection plane (to populate)
-     *  @param  mcCollectionPlaneHitCompleteness the completeness in the collection plane (to populate)
-     */
-    static void CalculateHitPurityAndCompleteness(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle,
-        const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, float &mcCollectionPlaneHitPurity,
-        float &mcCollectionPlaneHitCompleteness);
+    static PfoMcInfo GetMcInformation(const MCParticle *const pMCParticle, const CartesianVector &minCoordinates,
+        const CartesianVector &maxCoordinates, const float mcContainmentFractionLowerBound);
 
 private:
     /**
@@ -366,21 +371,6 @@ private:
     static LArAnalysisParticle::TYPE GetMcParticleType(const MCParticle *const pMCParticle);
 
     /**
-     *  @brief  Calculate the hit-counting-based purity and completeness for a PFO
-     *
-     *  @param  pfoAssociatedCaloHits the hits associated with the PFO
-     *  @param  pMCParticle address of the PFO's main MC particle
-     *  @param  pCaloHitList address of the CaloHit list
-     *  @param  isNeutrino whether the PFO is a beam neutrino
-     *  @param  hitPurity the hit purity (to populate)
-     *  @param  hitCompleteness the hit completeness (to populate)
-     *  @param  useCollectionPlaneOnly whether to use only the collection plane
-     */
-    static void CalculateHitPurityAndCompleteness(const CaloHitList &pfoAssociatedCaloHits, const MCParticle *const pMCParticle,
-        const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness,
-        const bool useCollectionPlaneOnly);
-
-    /**
      *  @brief  Get the particle type tree as a string (implementation)
      *
      *  @param  typeTree the typeTree
@@ -394,6 +384,29 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline LArAnalysisParticleHelper::PfoMcInfo::PfoMcInfo() noexcept :
+    m_pMCParticle(nullptr),
+    m_mcEnergy(0.f),
+    m_mcKineticEnergy(0.f),
+    m_mcMass(0.f),
+    m_mcTypeTree(),
+    m_mcType(LArAnalysisParticle::TYPE::UNKNOWN),
+    m_mcVertexPosition(0.f, 0.f, 0.f),
+    m_mcMomentum(0.f, 0.f, 0.f),
+    m_mcDirectionCosines(0.f, 0.f, 0.f),
+    m_mcPdgCode(0),
+    m_mcContainmentFraction(0.f),
+    m_mcIsShower(false),
+    m_mcIsVertexFiducial(false),
+    m_mcIsContained(false),
+    m_mcIsProton(false),
+    m_mcIsCosmicRay(false),
+    m_mcIsPionOrMuon(false)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline std::string LArAnalysisParticleHelper::TypeTreeAsString(const LArAnalysisParticle::TypeTree &typeTree)
 {
     return LArAnalysisParticleHelper::TypeTreeAsStringImpl(typeTree, false);
@@ -401,4 +414,4 @@ inline std::string LArAnalysisParticleHelper::TypeTreeAsString(const LArAnalysis
 
 } // namespace lar_physics_content
 
-#endif // #ifndef LEE_ANALYSIS_HELPER_H
+#endif // #ifndef LAR_ANALYSIS_PARTICLE_HELPER_H

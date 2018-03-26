@@ -1,12 +1,12 @@
 /**
- *  @file   LArPhysicsContent/src/LArAnalysisParticleHelper.cxx
+ *  @file   larphysicscontent/LArAnalysisParticleHelper.cxx
  *
  *  @brief  Implementation of the LEE analysis helper class.
  *
  *  $Log: $
  */
 
-#include "LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArAnalysisParticleHelper.h"
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -494,56 +494,49 @@ bool LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(const ParticleFlowObje
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCParticle, float &mcEnergy, float &mcKineticEnergy, float &mcMass,
-    LArAnalysisParticle::TypeTree &typeTree, LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition,
-    CartesianVector &mcMomentum, int &mcPdgCode, float &mcContainmentFraction, const CartesianVector &minCoordinates,
-    const CartesianVector &maxCoordinates)
+LArAnalysisParticleHelper::PfoMcInfo LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCParticle, 
+    const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates, const float mcContainmentFractionLowerBound)
 {
     if (!pMCParticle)
-        return false;
+    {
+        std::cout << "LArAnalysisParticleHelper: could not get MC information because there was no MC particle" << std::endl;
+        throw STATUS_CODE_INVALID_PARAMETER;
+    }
+    
+    LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo;
+    pfoMcInfo.m_pMCParticle = pMCParticle;
+    LArAnalysisParticleHelper::CreateMcTypeTree(pMCParticle, pfoMcInfo.m_mcTypeTree);
 
-    LArAnalysisParticleHelper::CreateMcTypeTree(pMCParticle, typeTree);
-
-    mcEnergy         = pMCParticle->GetEnergy();
-    mcKineticEnergy  = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
-    mcMass           = PdgTable::GetParticleMass(pMCParticle->GetParticleId());
-    mcType           = typeTree.Type();
-    mcVertexPosition = pMCParticle->GetVertex();
-    mcMomentum       = pMCParticle->GetMomentum();
-    mcPdgCode        = pMCParticle->GetParticleId();
+    pfoMcInfo.m_mcEnergy           = pMCParticle->GetEnergy();
+    pfoMcInfo.m_mcKineticEnergy    = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+    pfoMcInfo.m_mcMass             = PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+    pfoMcInfo.m_mcType             = pfoMcInfo.m_mcTypeTree.Type();
+    pfoMcInfo.m_mcVertexPosition   = pMCParticle->GetVertex();
+    pfoMcInfo.m_mcMomentum         = pMCParticle->GetMomentum();
+    
+    if (pfoMcInfo.m_mcMomentum.GetMagnitude() < std::numeric_limits<float>::epsilon())
+            std::cout << "LArAnalysisParticleHelper: could not get direction from MC momentum as it was too small" << std::endl;
+    else
+        pfoMcInfo.m_mcDirectionCosines = pfoMcInfo.m_mcMomentum.GetUnitVector();
+        
+    pfoMcInfo.m_mcPdgCode = pMCParticle->GetParticleId();
 
     float escapedEnergy(0.f), totalEnergy(0.f);
     LArAnalysisParticleHelper::RecursivelyAddEscapedEnergy(pMCParticle, escapedEnergy, totalEnergy, minCoordinates, maxCoordinates);
 
     if (totalEnergy > std::numeric_limits<float>::epsilon())
-        mcContainmentFraction = (totalEnergy - escapedEnergy) / totalEnergy;
+        pfoMcInfo.m_mcContainmentFraction = (totalEnergy - escapedEnergy) / totalEnergy;
 
     else
-        mcContainmentFraction = 0.f;
+        pfoMcInfo.m_mcContainmentFraction = 0.f;
+        
+    pfoMcInfo.m_mcIsContained  = (pfoMcInfo.m_mcContainmentFraction >= mcContainmentFractionLowerBound);
+    pfoMcInfo.m_mcIsShower     = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::SHOWER);
+    pfoMcInfo.m_mcIsProton     = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PROTON);
+    pfoMcInfo.m_mcIsPionOrMuon = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PION_MUON);
+    pfoMcInfo.m_mcIsCosmicRay  = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::COSMIC_RAY);
 
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle,
-    const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness, float &collectionPlaneHitPurity,
-    float &collectionPlaneHitCompleteness)
-{
-    PfoList downstreamPfos;
-    LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
-
-    CaloHitList pfoAssociatedCaloHits;
-    LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_U, pfoAssociatedCaloHits);
-    LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_V, pfoAssociatedCaloHits);
-
-    CaloHitList pfoAssociatedWCaloHits;
-    LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_W, pfoAssociatedWCaloHits);
-    pfoAssociatedCaloHits.insert(pfoAssociatedCaloHits.end(), pfoAssociatedWCaloHits.begin(), pfoAssociatedWCaloHits.end());
-
-    LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(pfoAssociatedCaloHits, pMCParticle, pCaloHitList, isNeutrino, hitPurity, hitCompleteness, false);
-    LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(pfoAssociatedWCaloHits, pMCParticle, pCaloHitList, isNeutrino, collectionPlaneHitPurity,
-        collectionPlaneHitCompleteness, true);
+    return pfoMcInfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -765,66 +758,6 @@ LArAnalysisParticle::TYPE LArAnalysisParticleHelper::GetMcParticleType(const MCP
     }
 
     return LArAnalysisParticle::TYPE::UNKNOWN;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArAnalysisParticleHelper::CalculateHitPurityAndCompleteness(const CaloHitList  &pfoAssociatedCaloHits, const MCParticle *const pMCParticle,
-    const CaloHitList *const pCaloHitList, const bool isNeutrino, float &hitPurity, float &hitCompleteness,
-    const bool useCollectionPlaneOnly)
-{
-    // Purity       = (num 2D hits assoc with PFO or its descendents \cap assoc with MC particle or its descendents) /
-    //                (num 2D hits assoc with PFO or its descendents)
-
-    // Completeness = (num 2D hits assoc with PFO or its descendents \cap assoc with MC particle or its descendents) /
-    //                (num 2D hits assoc with MC particle or its descendents)
-
-    std::unordered_map<const CaloHit *, float> mcAssociatedCaloHits;
-    float totalMcHitWeight(0.f);
-
-    for (const CaloHit *const pCaloHit : *pCaloHitList)
-    {
-        if (useCollectionPlaneOnly && (pCaloHit->GetHitType() != TPC_VIEW_W))
-            continue;
-
-        for (const MCParticleWeightMap::value_type &mapPair : pCaloHit->GetMCParticleWeightMap())
-        {
-            try
-            {
-                if ((isNeutrino && LArMCParticleHelper::IsBeamNeutrinoFinalState(mapPair.first)) ||
-                    (!isNeutrino && LArMCParticleHelper::GetPrimaryMCParticle(mapPair.first) == pMCParticle))
-                {
-                    mcAssociatedCaloHits.emplace(pCaloHit, mapPair.second);
-                    totalMcHitWeight += mapPair.second;
-                }
-            }
-
-            catch (...)
-            {
-                continue;
-            }
-        }
-    }
-
-    float numerator(0.f);
-
-    for (const CaloHit *const pPfoAssocCaloHit : pfoAssociatedCaloHits)
-    {
-        const auto findIter = mcAssociatedCaloHits.find(pPfoAssocCaloHit);
-
-        if (findIter != mcAssociatedCaloHits.end())
-            numerator += findIter->second;
-    }
-
-    if (pfoAssociatedCaloHits.empty() || (totalMcHitWeight < std::numeric_limits<float>::epsilon()))
-    {
-        hitPurity       = 0.f;
-        hitCompleteness = 0.f;
-        return;
-    }
-
-    hitPurity       = numerator / static_cast<float>(pfoAssociatedCaloHits.size());
-    hitCompleteness = numerator / totalMcHitWeight;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

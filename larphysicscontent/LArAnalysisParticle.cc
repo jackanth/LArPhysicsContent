@@ -1,14 +1,13 @@
 /**
- *  @file   LArPhysicsContent/src/LArAnalysisParticle.cc
+ *  @file   larphysicscontent/LArAnalysisParticle.cc
  *
  *  @brief  Implementation of the lar analysis particle class.
  *
  *  $Log: $
  */
 
-#include "LArAnalysisParticle.h"
-
-#include "LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArAnalysisParticle.h"
+#include "larphysicscontent/LArAnalysisParticleHelper.h"
 
 using namespace pandora;
 
@@ -24,6 +23,7 @@ LArAnalysisParticle::LArAnalysisParticle(const LArAnalysisParticleParameters &pa
     m_fiducialHitFraction(parameters.m_fiducialHitFraction),
     m_vertexPosition(parameters.m_vertexPosition),
     m_directionCosines(parameters.m_directionCosines),
+    m_analysisMomentum(parameters.m_analysisMomentum),
     m_numberOf3dHits(parameters.m_numberOf3dHits),
     m_numberOfCollectionPlaneHits(parameters.m_numberOfCollectionPlaneHits),
     m_isShower(parameters.m_isShower),
@@ -84,6 +84,9 @@ void LArAnalysisParticle::Print() const
                                                      << ", " << m_directionCosines.GetZ() << ")\n"
               << "    - MC direction cosines:      " << "(" << m_mcDirectionCosines.GetX() << ", "
                                                      << m_mcDirectionCosines.GetY() << ", " << m_mcDirectionCosines.GetZ() << ")\n"
+              << "    - Momentum:                  " << "(" << 1000.f * m_analysisMomentum.GetX() << ", " 
+                                                     << 1000.f * m_analysisMomentum.GetY() << ", " 
+                                                     << 1000.f * m_analysisMomentum.GetZ() << ") MeV/c\n"
               << "    - MC momentum:               " << "(" << 1000.f * m_mcMomentum.GetX() << ", " << 1000.f * m_mcMomentum.GetY() << ", "
                                                      << 1000.f * m_mcMomentum.GetZ() << ") MeV/c\n"
               << "    - Num 3D hits:               " << m_numberOf3dHits << "\n"
@@ -118,6 +121,9 @@ void LArAnalysisParticle::Print() const
                                                          << ", " << m_vertexPosition.GetZ() << ") cm\n"
                   << "    - Direction cosines:         " << "(" << m_directionCosines.GetX() << ", "
                                                          << m_directionCosines.GetY() << ", " << m_directionCosines.GetZ() << ")\n"
+                  << "    - Momentum:                  " << "(" << 1000.f * m_analysisMomentum.GetX() << ", " 
+                                                         << 1000.f * m_analysisMomentum.GetY() << ", " 
+                                                         << 1000.f * m_analysisMomentum.GetZ() << ") MeV/c\n"
                   << "    - Num 3D hits:               " << m_numberOf3dHits << "\n"
                   << "    - Num collection-plane hits: " << m_numberOfCollectionPlaneHits << "\n"
                   << "    - Is shower:                 " << std::boolalpha << m_isShower << std::noboolalpha << "\n"
@@ -138,6 +144,7 @@ LArAnalysisParticleParameters::LArAnalysisParticleParameters() noexcept :
     m_fiducialHitFraction(0.f),
     m_vertexPosition(CartesianVector(0.f, 0.f, 0.f)),
     m_directionCosines(CartesianVector(0.f, 0.f, 0.f)),
+    m_analysisMomentum(CartesianVector(0.f, 0.f, 0.f)),
     m_numberOf3dHits(0U),
     m_numberOfCollectionPlaneHits(0U),
     m_isShower(false),

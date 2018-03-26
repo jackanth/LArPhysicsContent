@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArPhysicsContent.cc
+ *  @file   larphysicscontent/LArPhysicsContent.cc
  *
- *  @brief  Factory implementations for physics content
+ *  @brief  Factory implementations for lar physics content.
  *
  *  $Log: $
  */
@@ -11,12 +11,12 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/Pandora.h"
 
-#include "AnalysisAlgorithm.h"
-#include "AnalysisDataAlgorithm.h"
-#include "WriteAnalysisParticlesAlgorithm.h"
-#include "BirksHitSelectionTool.h"
+#include "larphysicscontent/LArPhysicsContent.h"
 
-#include "LArPhysicsContent.h"
+#include "larphysicscontent/AnalysisAlgorithm.h"
+#include "larphysicscontent/AnalysisDataAlgorithm.h"
+#include "larphysicscontent/WriteAnalysisParticlesAlgorithm.h"
+#include "larphysicscontent/HitPurityTool.h"
 
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
     d("LArAnalysis",                AnalysisAlgorithm)                                                                          \
@@ -24,7 +24,7 @@
     d("LArAnalysisData",            AnalysisDataAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
-    d("LArBirksHitSelection", BirksHitSelectionTool)
+    d("LArHitPurity", HitPurityTool)
 
 #define FACTORY Factory
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArPhysicsContent/include/WriteAnalysisParticlesAlgorithm.h
+ *  @file   larphysicscontent/WriteAnalysisParticlesAlgorithm.h
  *
  *  @brief  Header file for the write AnalysisParticles algorithm class.
  *
@@ -10,13 +10,260 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArAnalysisParticle.h"
+#include "larphysicscontent/LArAnalysisParticle.h"
+#include "larphysicscontent/LArAnalysisParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
 
+/**
+ *  @brief  Macro for performing operations on the tree member scalars: (variable name, member variable, type, default value, units)
+ * 
+ *  @param  d the macro
+ */
+#define TREE_SCALAR_MEMBERS(d)                                                                                                       \
+    d("nu_WasReconstructed",                            m_nu_WasReconstructed,                            Bool_t,    false, "")      \
+    d("nu_IsVertexFiducial",                            m_nu_IsVertexFiducial,                            Bool_t,    false, "")      \
+    d("nu_IsContained",                                 m_nu_IsContained,                                 Bool_t,    false, "")      \
+    d("nu_FiducialHitFraction",                         m_nu_FiducialHitFraction,                         Float_t,   0.f,   "")      \
+    d("nu_HasMcInfo",                                   m_nu_HasMcInfo,                                   Bool_t,    false, "")      \
+    d("nu_VisibleEnergy",                               m_nu_VisibleEnergy,                               Float_t,   0.f,   "GeV")   \
+    d("nu_VisibleLongitudinalEnergy",                   m_nu_VisibleLongitudinalEnergy,                   Float_t,   0.f,   "GeV")   \
+    d("nu_VisibleTransverseEnergy",                     m_nu_VisibleTransverseEnergy,                     Float_t,   0.f,   "GeV")   \
+    d("nu_VisibleEnergyFracFromRange",                  m_nu_VisibleEnergyFracFromRange,                  Float_t,   0.f,   "")      \
+    d("nu_VisibleEnergyFracFromCorrectedTrackCharge",   m_nu_VisibleEnergyFracFromCorrectedTrackCharge,   Float_t,   0.f,   "")      \
+    d("nu_VisibleEnergyFracFromUncorrectedTrackCharge", m_nu_VisibleEnergyFracFromUncorrectedTrackCharge, Float_t,   0.f,   "")      \
+    d("nu_VisibleEnergyFracFromShowerCharge",           m_nu_VisibleEnergyFracFromShowerCharge,           Float_t,   0.f,   "")      \
+    d("nu_VertexX",                                     m_nu_VertexX,                                     Float_t,   0.f,   "cm")    \
+    d("nu_VertexY",                                     m_nu_VertexY,                                     Float_t,   0.f,   "cm")    \
+    d("nu_VertexZ",                                     m_nu_VertexZ,                                     Float_t,   0.f,   "cm")    \
+    d("nu_DirectionCosineX",                            m_nu_DirectionCosineX,                            Float_t,   0.f,   "")      \
+    d("nu_DirectionCosineY",                            m_nu_DirectionCosineY,                            Float_t,   0.f,   "")      \
+    d("nu_DirectionCosineZ",                            m_nu_DirectionCosineZ,                            Float_t,   0.f,   "")      \
+    d("nu_Momentum",                                    m_nu_Momentum,                                    Float_t,   0.f,   "GeV/c") \
+    d("nu_MomentumX",                                   m_nu_MomentumX,                                   Float_t,   0.f,   "GeV/c") \
+    d("nu_MomentumY",                                   m_nu_MomentumY,                                   Float_t,   0.f,   "GeV/c") \
+    d("nu_MomentumZ",                                   m_nu_MomentumZ,                                   Float_t,   0.f,   "GeV/c") \
+    d("nu_TypeTree",                                    m_nu_TypeTree,                                    TString,   "",    "")      \
+    d("nu_NumberOf3dHits",                              m_nu_NumberOf3dHits,                              UInt_t,    0U,    "")      \
+    d("nu_NumberOfCollectionPlaneHits",                 m_nu_NumberOfCollectionPlaneHits,                 UInt_t,    0U,    "")      \
+    d("nu_NumberOfRecoParticles",                       m_nu_NumberOfRecoParticles,                       UInt_t,    0U,    "")      \
+    d("nu_NumberOfRecoTracks",                          m_nu_NumberOfRecoTracks,                          UInt_t,    0U,    "")      \
+    d("nu_NumberOfRecoShowers",                         m_nu_NumberOfRecoShowers,                         UInt_t,    0UL,   "")      \
+    d("nu_mc_McParticleUid",                            m_nu_mc_McParticleUid,                            ULong64_t, 0ULL,  "")      \
+    d("nu_mc_Energy",                                   m_nu_mc_Energy,                                   Float_t,   0.f,   "GeV")   \
+    d("nu_mc_LongitudinalEnergy",                       m_nu_mc_LongitudinalEnergy,                       Float_t,   0.f,   "GeV")   \
+    d("nu_mc_TransverseEnergy",                         m_nu_mc_TransverseEnergy,                         Float_t,   0.f,   "GeV")   \
+    d("nu_mc_VisibleEnergy",                            m_nu_mc_VisibleEnergy,                            Float_t,   0.f,   "GeV")   \
+    d("nu_mc_VisibleLongitudinalEnergy",                m_nu_mc_VisibleLongitudinalEnergy,                Float_t,   0.f,   "GeV")   \
+    d("nu_mc_VisibleTransverseEnergy",                  m_nu_mc_VisibleTransverseEnergy,                  Float_t,   0.f,   "GeV")   \
+    d("nu_mc_VertexX",                                  m_nu_mc_VertexX,                                  Float_t,   0.f,   "cm")    \
+    d("nu_mc_VertexY",                                  m_nu_mc_VertexY,                                  Float_t,   0.f,   "cm")    \
+    d("nu_mc_VertexZ",                                  m_nu_mc_VertexZ,                                  Float_t,   0.f,   "cm")    \
+    d("nu_mc_DirectionCosineX",                         m_nu_mc_DirectionCosineX,                         Float_t,   0.f,   "")      \
+    d("nu_mc_DirectionCosineY",                         m_nu_mc_DirectionCosineY,                         Float_t,   0.f,   "")      \
+    d("nu_mc_DirectionCosineZ",                         m_nu_mc_DirectionCosineZ,                         Float_t,   0.f,   "")      \
+    d("nu_mc_Momentum",                                 m_nu_mc_Momentum,                                 Float_t,   0.f,   "GeV/c") \
+    d("nu_mc_MomentumX",                                m_nu_mc_MomentumX,                                Float_t,   0.f,   "GeV/c") \
+    d("nu_mc_MomentumY",                                m_nu_mc_MomentumY,                                Float_t,   0.f,   "GeV/c") \
+    d("nu_mc_MomentumZ",                                m_nu_mc_MomentumZ,                                Float_t,   0.f,   "GeV/c") \
+    d("nu_mc_IsVertexFiducial",                         m_nu_mc_IsVertexFiducial,                         Bool_t,    false, "")      \
+    d("nu_mc_IsContained",                              m_nu_mc_IsContained,                              Bool_t,    false, "")      \
+    d("nu_mc_ContainmentFraction",                      m_nu_mc_ContainmentFraction,                      Float_t,   0.f,   "")      \
+    d("nu_mc_TypeTree",                                 m_nu_mc_TypeTree,                                 TString,   "",    "")      \
+    d("nu_mc_InteractionType",                          m_nu_mc_InteractionType,                          TString,   "",    "")      \
+    d("nu_mc_IsChargedCurrent",                         m_nu_mc_IsChargedCurrent,                         Bool_t,    false, "")      \
+    d("nu_mc_VisibleEnergyFraction",                    m_nu_mc_VisibleEnergyFraction,                    Float_t,   0.f,   "")      \
+    d("nu_mc_PdgCode",                                  m_nu_mc_PdgCode,                                  Int_t,     0,     "")      \
+    d("primary_Number",                                 m_primary_Number,                                 UInt_t,    0U,    "")      \
+    d("cr_Number",                                      m_cr_Number,                                      UInt_t,    0U,    "")
+
+/**
+ *  @brief  Macro for performing operations on the primary non-MC tree member vectors: (variable name, member variable, type, default value, units, size)
+ * 
+ *  @param  d the macro
+ */
+#define TREE_VECTOR_MEMBERS_PRIMARY(d)                                                                                                                                    \
+    d("primary_WasReconstructed",                            m_primary_WasReconstructed,                            RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_IsVertexFiducial",                            m_primary_IsVertexFiducial,                            RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_IsContained",                                 m_primary_IsContained,                                 RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_FiducialHitFraction",                         m_primary_FiducialHitFraction,                         RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_HasMcInfo",                                   m_primary_HasMcInfo,                                   RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_KineticEnergy",                               m_primary_KineticEnergy,                               RFloatVector,     0.f,   "GeV",     m_primary_Number) \
+    d("primary_KineticEnergyFracFromRange",                  m_primary_KineticEnergyFracFromRange,                  RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_KineticEnergyFracFromCorrectedTrackCharge",   m_primary_KineticEnergyFracFromCorrectedTrackCharge,   RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_KineticEnergyFracFromUncorrectedTrackCharge", m_primary_KineticEnergyFracFromUncorrectedTrackCharge, RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_KineticEnergyFracFromShowerCharge",           m_primary_KineticEnergyFracFromShowerCharge,           RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_VertexX",                                     m_primary_VertexX,                                     RFloatVector,     0.f,   "cm",      m_primary_Number) \
+    d("primary_VertexY",                                     m_primary_VertexY,                                     RFloatVector,     0.f,   "cm",      m_primary_Number) \
+    d("primary_VertexZ",                                     m_primary_VertexZ,                                     RFloatVector,     0.f,   "cm",      m_primary_Number) \
+    d("primary_DirectionCosineX",                            m_primary_DirectionCosineX,                            RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_DirectionCosineY",                            m_primary_DirectionCosineY,                            RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_DirectionCosineZ",                            m_primary_DirectionCosineZ,                            RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_Momentum",                                    m_primary_Momentum,                                    RFloatVector,     0.f,   "GeV/c",   m_primary_Number) \
+    d("primary_MomentumX",                                   m_primary_MomentumX,                                   RFloatVector,     0.f,   "GeV/c",   m_primary_Number) \
+    d("primary_MomentumY",                                   m_primary_MomentumY,                                   RFloatVector,     0.f,   "GeV/c",   m_primary_Number) \
+    d("primary_MomentumZ",                                   m_primary_MomentumZ,                                   RFloatVector,     0.f,   "GeV/c",   m_primary_Number) \
+    d("primary_TypeTree",                                    m_primary_TypeTree,                                    RTextVector,      "",    "",        m_primary_Number) \
+    d("primary_IsShower",                                    m_primary_IsShower,                                    RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_IsTrack",                                     m_primary_IsTrack,                                     RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_IsProton",                                    m_primary_IsProton,                                    RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_IsPionOrMuon",                                m_primary_IsPionOrMuon,                                RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_NumberOf3dHits",                              m_primary_NumberOf3dHits,                              RUnsignedVector,  0U,    "",        m_primary_Number) \
+    d("primary_NumberOfCollectionPlaneHits",                 m_primary_NumberOfCollectionPlaneHits,                 RUnsignedVector,  0U,    "",        m_primary_Number) \
+    d("primary_NumberOfDownstreamParticles",                 m_primary_NumberOfDownstreamParticles,                 RUnsignedVector,  0U,    "",        m_primary_Number)
+
+/**
+ *  @brief  Macro for performing operations on the primary MC tree member vectors: (variable name, member variable, type, default value, units, size)
+ * 
+ *  @param  d the macro
+ */
+#define TREE_VECTOR_MEMBERS_PRIMARY_MC(d)                                                                                                                                 \
+    d("primary_mc_McParticleUid",                            m_primary_mc_McParticleUid,                            RUInt64Vector,    0LL,   "",        m_primary_Number) \
+    d("primary_mc_IsParticleSplitByReco",                    m_primary_mc_IsParticleSplitByReco,                    RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_mc_Energy",                                   m_primary_mc_Energy,                                   RFloatVector,     0.f,   "GeV",     m_primary_Number) \
+    d("primary_mc_KineticEnergy",                            m_primary_mc_KineticEnergy,                            RFloatVector,     0.f,   "GeV",     m_primary_Number) \
+    d("primary_mc_Mass",                                     m_primary_mc_Mass,                                     RFloatVector,     0.f,   "GeV/c^2", m_primary_Number) \
+    d("primary_mc_VertexX",                                  m_primary_mc_VertexX,                                  RFloatVector,     0.f,   "cm",      m_primary_Number) \
+    d("primary_mc_VertexY",                                  m_primary_mc_VertexY,                                  RFloatVector,     0.f,   "cm",      m_primary_Number) \
+    d("primary_mc_VertexZ",                                  m_primary_mc_VertexZ,                                  RFloatVector,     0.f,   "cm",      m_primary_Number) \
+    d("primary_mc_DirectionCosineX",                         m_primary_mc_DirectionCosineX,                         RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_mc_DirectionCosineY",                         m_primary_mc_DirectionCosineY,                         RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_mc_DirectionCosineZ",                         m_primary_mc_DirectionCosineZ,                         RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_mc_Momentum",                                 m_primary_mc_Momentum,                                 RFloatVector,     0.f,   "GeV/c",   m_primary_Number) \
+    d("primary_mc_MomentumX",                                m_primary_mc_MomentumX,                                RFloatVector,     0.f,   "GeV/c",   m_primary_Number) \
+    d("primary_mc_MomentumY",                                m_primary_mc_MomentumY,                                RFloatVector,     0.f,   "GeV/c",   m_primary_Number) \
+    d("primary_mc_MomentumZ",                                m_primary_mc_MomentumZ,                                RFloatVector,     0.f,   "GeV/c",   m_primary_Number) \
+    d("primary_mc_IsVertexFiducial",                         m_primary_mc_IsVertexFiducial,                         RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_mc_IsContained",                              m_primary_mc_IsContained,                              RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_mc_ContainmentFraction",                      m_primary_mc_ContainmentFraction,                      RFloatVector,     0.f,   "",        m_primary_Number) \
+    d("primary_mc_TypeTree",                                 m_primary_mc_TypeTree,                                 RTextVector,      "",    "",        m_primary_Number) \
+    d("primary_mc_IsShower",                                 m_primary_mc_IsShower,                                 RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_mc_IsTrack",                                  m_primary_mc_IsTrack,                                  RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_mc_IsProton",                                 m_primary_mc_IsProton,                                 RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_mc_IsPionOrMuon",                             m_primary_mc_IsPionOrMuon,                             RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_mc_IsCosmicRay",                              m_primary_mc_IsCosmicRay,                              RBoolVector,      false, "",        m_primary_Number) \
+    d("primary_mc_PdgCode",                                  m_primary_mc_PdgCode,                                  RIntVector,       0,     "",        m_primary_Number)
+
+/**
+ *  @brief  Macro for performing operations on the CR non-MC tree member vectors: (variable name, member variable, type, default value, units, size)
+ * 
+ *  @param  d the macro
+ */
+#define TREE_VECTOR_MEMBERS_CR(d)                                                                                                                                    \
+    d("cr_WasReconstructed",                                 m_cr_WasReconstructed,                                 RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_IsVertexFiducial",                                 m_cr_IsVertexFiducial,                                 RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_IsContained",                                      m_cr_IsContained,                                      RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_FiducialHitFraction",                              m_cr_FiducialHitFraction,                              RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_HasMcInfo",                                        m_cr_HasMcInfo,                                        RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_KineticEnergy",                                    m_cr_KineticEnergy,                                    RFloatVector,     0.f,   "GeV",     m_cr_Number) \
+    d("cr_KineticEnergyFracFromRange",                       m_cr_KineticEnergyFracFromRange,                       RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_KineticEnergyFracFromCorrectedTrackCharge",        m_cr_KineticEnergyFracFromCorrectedTrackCharge,        RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_KineticEnergyFracFromUncorrectedTrackCharge",      m_cr_KineticEnergyFracFromUncorrectedTrackCharge,      RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_KineticEnergyFracFromShowerCharge",                m_cr_KineticEnergyFracFromShowerCharge,                RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_VertexX",                                          m_cr_VertexX,                                          RFloatVector,     0.f,   "cm",      m_cr_Number) \
+    d("cr_VertexY",                                          m_cr_VertexY,                                          RFloatVector,     0.f,   "cm",      m_cr_Number) \
+    d("cr_VertexZ",                                          m_cr_VertexZ,                                          RFloatVector,     0.f,   "cm",      m_cr_Number) \
+    d("cr_DirectionCosineX",                                 m_cr_DirectionCosineX,                                 RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_DirectionCosineY",                                 m_cr_DirectionCosineY,                                 RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_DirectionCosineZ",                                 m_cr_DirectionCosineZ,                                 RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_Momentum",                                         m_cr_Momentum,                                         RFloatVector,     0.f,   "GeV/c",   m_cr_Number) \
+    d("cr_MomentumX",                                        m_cr_MomentumX,                                        RFloatVector,     0.f,   "GeV/c",   m_cr_Number) \
+    d("cr_MomentumY",                                        m_cr_MomentumY,                                        RFloatVector,     0.f,   "GeV/c",   m_cr_Number) \
+    d("cr_MomentumZ",                                        m_cr_MomentumZ,                                        RFloatVector,     0.f,   "GeV/c",   m_cr_Number) \
+    d("cr_TypeTree",                                         m_cr_TypeTree,                                         RTextVector,      "",    "",        m_cr_Number) \
+    d("cr_NumberOf3dHits",                                   m_cr_NumberOf3dHits,                                   RUnsignedVector,  0U,    "",        m_cr_Number) \
+    d("cr_NumberOfCollectionPlaneHits",                      m_cr_NumberOfCollectionPlaneHits,                      RUnsignedVector,  0U,    "",        m_cr_Number) \
+    d("cr_NumberOfDownstreamParticles",                      m_cr_NumberOfDownstreamParticles,                      RUnsignedVector,  0U,    "",        m_cr_Number)
+
+/**
+ *  @brief  Macro for performing operations on the CR MC tree member vectors: (variable name, member variable, type, default value, units, size)
+ * 
+ *  @param  d the macro
+ */
+#define TREE_VECTOR_MEMBERS_CR_MC(d)                                                                                                                                 \
+    d("cr_mc_McParticleUid",                                 m_cr_mc_McParticleUid,                                 RUInt64Vector,    0ULL,  "",        m_cr_Number) \
+    d("cr_mc_IsParticleSplitByReco",                         m_cr_mc_IsParticleSplitByReco,                         RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_mc_Energy",                                        m_cr_mc_Energy,                                        RFloatVector,     0.f,   "GeV",     m_cr_Number) \
+    d("cr_mc_KineticEnergy",                                 m_cr_mc_KineticEnergy,                                 RFloatVector,     0.f,   "GeV",     m_cr_Number) \
+    d("cr_mc_Mass",                                          m_cr_mc_Mass,                                          RFloatVector,     0.f,   "GeV/c^2", m_cr_Number) \
+    d("cr_mc_VertexX",                                       m_cr_mc_VertexX,                                       RFloatVector,     0.f,   "cm",      m_cr_Number) \
+    d("cr_mc_VertexY",                                       m_cr_mc_VertexY,                                       RFloatVector,     0.f,   "cm",      m_cr_Number) \
+    d("cr_mc_VertexZ",                                       m_cr_mc_VertexZ,                                       RFloatVector,     0.f,   "cm",      m_cr_Number) \
+    d("cr_mc_DirectionCosineX",                              m_cr_mc_DirectionCosineX,                              RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_mc_DirectionCosineY",                              m_cr_mc_DirectionCosineY,                              RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_mc_DirectionCosineZ",                              m_cr_mc_DirectionCosineZ,                              RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_mc_Momentum",                                      m_cr_mc_Momentum,                                      RFloatVector,     0.f,   "GeV/c",   m_cr_Number) \
+    d("cr_mc_MomentumX",                                     m_cr_mc_MomentumX,                                     RFloatVector,     0.f,   "GeV/c",   m_cr_Number) \
+    d("cr_mc_MomentumY",                                     m_cr_mc_MomentumY,                                     RFloatVector,     0.f,   "GeV/c",   m_cr_Number) \
+    d("cr_mc_MomentumZ",                                     m_cr_mc_MomentumZ,                                     RFloatVector,     0.f,   "GeV/c",   m_cr_Number) \
+    d("cr_mc_IsVertexFiducial",                              m_cr_mc_IsVertexFiducial,                              RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_mc_IsContained",                                   m_cr_mc_IsContained,                                   RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_mc_ContainmentFraction",                           m_cr_mc_ContainmentFraction,                           RFloatVector,     0.f,   "",        m_cr_Number) \
+    d("cr_mc_TypeTree",                                      m_cr_mc_TypeTree,                                      RTextVector,      "",    "",        m_cr_Number) \
+    d("cr_mc_IsShower",                                      m_cr_mc_IsShower,                                      RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_mc_IsTrack",                                       m_cr_mc_IsTrack,                                       RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_mc_IsProton",                                      m_cr_mc_IsProton,                                      RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_mc_IsPionOrMuon",                                  m_cr_mc_IsPionOrMuon,                                  RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_mc_IsCosmicRay",                                   m_cr_mc_IsCosmicRay,                                   RBoolVector,      false, "",        m_cr_Number) \
+    d("cr_mc_PdgCode",                                       m_cr_mc_PdgCode,                                       RIntVector,       0,     "",        m_cr_Number)
+
+/**
+ *  @brief  Declare a set of scalar members
+ */
+#define DECLARE_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units) \
+    memberType memberVariable;
+    
+/**
+ *  @brief  Declare a set of vector members
+ */
+#define DECLARE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) \
+    memberType memberVariable;
+    
+/**
+ *  @brief  Initialize a set of scalar members
+ */
+#define INITIALIZE_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units) \
+    memberVariable(defaultValue),
+
+/**
+ *  @brief  Initialize a set of vector members
+ */
+#define INITIALIZE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) \
+    memberVariable(),
+    
+/**
+ *  @brief  Set a set of scalar member TTree branches
+ */
+#define SET_SCALAR_MEMBER_BRANCH(name, memberVariable, memberType, defaultValue, units) \
+    m_pOutputTree->Branch(name, &m_treeParameters.memberVariable);
+    
+/**
+ *  @brief  Set a set of vector member TTree branches
+ */
+#define SET_VECTOR_MEMBER_BRANCH(name, memberVariable, memberType, defaultValue, units, sizeMember) \
+    m_pOutputTree->Branch(name, &m_treeParameters.memberVariable);
+    
+/**
+ *  @brief  Check the sizes of a set of vector members
+ */
+#define CHECK_VECTOR_MEMBER_SIZE(name, memberVariable, memberType, defaultValue, units, sizeMember) \
+    this->CheckSize(name, m_treeParameters.memberVariable, m_treeParameters.sizeMember);
+    
+/**
+ *  @brief  Push the default values to a set of vector members
+ */
+#define VECTOR_MEMBER_PUSH_DEFAULT(name, memberVariable, memberType, defaultValue, units, sizeMember) \
+    m_treeParameters.memberVariable.push_back(defaultValue);
+    
+/**
+ *  @brief  Macro for pushing a new value to a tree member vector
+ */
+#define PUSH_TREE_RECORD(treeMember, value) \
+    m_treeParameters.treeMember.push_back(value)
+    
 using namespace pandora;
 using namespace lar_content;
 
@@ -40,164 +287,14 @@ public:
      *  @brief  Default constructor
      */
     TreeParameters() noexcept;
-
-    Bool_t             m_nu_WasReconstructed;                                 ///< Whether the neutrino has been reconstructed
-    Bool_t             m_nu_IsVertexFiducial;                                 ///< Whether the neutrino vertex is fiducial
-    Bool_t             m_nu_IsContained;                                      ///< Whether the neutrino looks contained
-    Float_t            m_nu_FiducialHitFraction;                              ///< The fraction of the neutrino's hits that are fiducial
-    Bool_t             m_nu_HasMcInfo;                                        ///< Whether the neutrino has MC information
-    Float_t            m_nu_VisibleEnergy;                                    ///< The neutrino's reconstructed energy in GeV
-    Float_t            m_nu_VisibleLongitudinalEnergy;                        ///< The neutrino's reconstructed transverse energy in GeV
-    Float_t            m_nu_VisibleTransverseEnergy;                          ///< The neutrino's reconstructed longitudinal energy in GeV
-    Float_t            m_nu_VisibleEnergyFracFromRange;                       ///< The fraction of the reconstructed neutrino energy calculated from range
-    Float_t            m_nu_VisibleEnergyFracFromCorrectedTrackCharge;        ///< The fraction of the reconstructed neutrino energy calculated from recombination-corrected track charge
-    Float_t            m_nu_VisibleEnergyFracFromUncorrectedTrackCharge;      ///< The fraction of the reconstructed neutrino energy calculated from uncorrected track charge
-    Float_t            m_nu_VisibleEnergyFracFromShowerCharge;                ///< The fraction of the reconstructed neutrino energy calculated from shower charge
-    Float_t            m_nu_VertexX;                                          ///< The x-component of the neutrino vertex position in cm
-    Float_t            m_nu_VertexY;                                          ///< The y-component of the neutrino vertex position in cm
-    Float_t            m_nu_VertexZ;                                          ///< The z-component of the neutrino vertex position in cm
-    Float_t            m_nu_DirectionCosineX;                                 ///< The direction cosine of the neutrino in the x-direction
-    Float_t            m_nu_DirectionCosineY;                                 ///< The direction cosine of the neutrino in the y-direction
-    Float_t            m_nu_DirectionCosineZ;                                 ///< The direction cosine of the neutrino in the z-direction
-    TString            m_nu_TypeTree;                                         ///< The neutrino type tree
-    UInt_t             m_nu_NumberOf3dHits;                                   ///< The number of 3D hits in the neutrino
-    UInt_t             m_nu_NumberOfCollectionPlaneHits;                      ///< The number of collection-plane hits in the neutrino
-    UInt_t             m_nu_NumberOfDownstreamParticles;                      ///< The number of particles downstream of the neutrino
-    ULong64_t          m_nu_mc_McParticleUid;                                 ///< The UID of the MC particle
-    Float_t            m_nu_mc_Energy;                                        ///< The MC energy of the neutrino in GeV
-    Float_t            m_nu_mc_LongitudinalEnergy;                            ///< The MC longitudinal energy of the neutrino in GeV
-    Float_t            m_nu_mc_TransverseEnergy;                              ///< The MC transverse energy of the neutrino in GeV
-    Float_t            m_nu_mc_VisibleEnergy;                                 ///< The MC visible energy of the neutrino in GeV
-    Float_t            m_nu_mc_VisibleLongitudinalEnergy;                     ///< The MC visible longitudinal energy of the neutrino in GeV
-    Float_t            m_nu_mc_VisibleTransverseEnergy;                       ///< The MC visible transverse energy of the neutrino in GeV
-    Float_t            m_nu_mc_VertexX;                                       ///< The MC x-component of the neutrino vertex position in cm
-    Float_t            m_nu_mc_VertexY;                                       ///< The MC y-component of the neutrino vertex position in cm
-    Float_t            m_nu_mc_VertexZ;                                       ///< The MC x-component of the neutrino vertex position in cm
-    Float_t            m_nu_mc_DirectionCosineX;                              ///< The MC direction cosine of the neutrino in the x-direction
-    Float_t            m_nu_mc_DirectionCosineY;                              ///< The MC direction cosine of the neutrino in the y-direction
-    Float_t            m_nu_mc_DirectionCosineZ;                              ///< The MC direction cosine of the neutrino in the z-direction
-    Float_t            m_nu_mc_Momentum;                                      ///< The MC momentum of the neutrino in GeV/c
-    Float_t            m_nu_mc_MomentumX;                                     ///< The MC momentum of the neutrino in the x-direction in GeV/c
-    Float_t            m_nu_mc_MomentumY;                                     ///< The MC momentum of the neutrino in the y-direction in GeV/c
-    Float_t            m_nu_mc_MomentumZ;                                     ///< The MC momentum of the neutrino in the z-direction in GeV/c
-    Bool_t             m_nu_mc_IsVertexFiducial;                              ///< Whether the neutrino vertex is fiducial (MC quantity)
-    Bool_t             m_nu_mc_IsContained;                                   ///< Whether the neutrino is contained (MC quantity)
-    Float_t            m_nu_mc_ContainmentFraction;                           ///< The fraction of the neutrino that is contained (MC quantity)
-    TString            m_nu_mc_TypeTree;                                      ///< The neutrino's MC type tree
-    TString            m_nu_mc_InteractionType;                               ///< The neutrino interaction type (MC quantity)
-    Bool_t             m_nu_mc_IsChargedCurrent;                              ///< Whether the interaction is charged-current (MC quantity)
-    Float_t            m_nu_mc_VisibleEnergyFraction;                         ///< The fraction of the neutrino's energy that is visible (MC quantity)
-    Int_t              m_nu_mc_PdgCode;                                       ///< The neutrino's PDG code (MC quantity)
-    Float_t            m_nu_mc_HitPurity;                                     ///< The neutrino's hit number purity (MC quantity)
-    Float_t            m_nu_mc_HitCompleteness;                               ///< The neutrino's hit number completeness (MC quantity)
-    Float_t            m_nu_mc_CollectionPlaneHitPurity;                      ///< The neutrino's hit number purity in the collection plane (MC quantity)
-    Float_t            m_nu_mc_CollectionPlaneHitCompleteness;                ///< The neutrino's hit number completeness in the collection plane (MC quantity)
-
-    UInt_t             m_primary_Number;                                      ///< The number of primary daughters
-    RBoolVector        m_primary_WasReconstructed;                            ///< Whether each primary daughter has been reconstructed
-    RBoolVector        m_primary_IsVertexFiducial;                            ///< Whether each primary daughter's vertex is fiducial
-    RBoolVector        m_primary_IsContained;                                 ///< Whether the primary looks contained
-    RFloatVector       m_primary_FiducialHitFraction;                         ///< The fraction of the primary's hits that are fiducial
-    RBoolVector        m_primary_HasMcInfo;                                   ///< Whether each primary daughter has MC information
-    RFloatVector       m_primary_KineticEnergy;                               ///< The reconstructed kinetic energy of each primary daughter in GeV
-    RFloatVector       m_primary_KineticEnergyFracFromRange;                  ///< The fraction of each primary's reconstructed kinetic energy calculated from range
-    RFloatVector       m_primary_KineticEnergyFracFromCorrectedTrackCharge;   ///< The fraction of each primary's reconstructed kinetic energy calculated from recombination-corrected track charge
-    RFloatVector       m_primary_KineticEnergyFracFromUncorrectedTrackCharge; ///< The fraction of each primary's reconstructed kinetic energy calculated from uncorrected track charge
-    RFloatVector       m_primary_KineticEnergyFracFromShowerCharge;           ///< The fraction of each primary's reconstructed kinetic energy calculated from shower charge
-    RFloatVector       m_primary_VertexX;                                     ///< The x-component of each primary daughter's vertex position in cm
-    RFloatVector       m_primary_VertexY;                                     ///< The y-component of each primary daughter's vertex position in cm
-    RFloatVector       m_primary_VertexZ;                                     ///< The z-component of each primary daughter's vertex position in cm
-    RFloatVector       m_primary_DirectionCosineX;                            ///< The direction cosine of each primary daughter in the x-direction
-    RFloatVector       m_primary_DirectionCosineY;                            ///< The direction cosine of each primary daughter in the y-direction
-    RFloatVector       m_primary_DirectionCosineZ;                            ///< The direction cosine of each primary daughter in the z-direction
-    RTextVector        m_primary_TypeTree;                                    ///< The type tree of each primary daughter
-    RBoolVector        m_primary_IsShower;                                    ///< Whether each primary daughter is a shower
-    RBoolVector        m_primary_IsTrack;                                     ///< Whether each primary daughter is a track
-    RBoolVector        m_primary_IsProton;                                    ///< Whether each primary daughter is a proton
-    RBoolVector        m_primary_IsPionOrMuon;                                ///< Whether each primary daughter is a pion or muon
-    RUnsignedVector    m_primary_NumberOf3dHits;                              ///< The number of 3D hits in each primary daughter
-    RUnsignedVector    m_primary_NumberOfCollectionPlaneHits;                 ///< The number of collection-plane hits in each primary daughter
-    RUnsignedVector    m_primary_NumberOfDownstreamParticles;                 ///< The number of particles downstream of each primary daughter
-    RUInt64Vector      m_primary_mc_McParticleUid;                            ///< The UID of the MC particle corresponding to each primary
-    RBoolVector        m_primary_mc_IsParticleSplitByReco;                    ///< Whether the primary daughter's MC particle has been split by the reconstruction
-    RFloatVector       m_primary_mc_Energy;                                   ///< The MC energy of each primary daughter in GeV
-    RFloatVector       m_primary_mc_KineticEnergy;                            ///< The MC kinetic energy of each primary daughter in GeV
-    RFloatVector       m_primary_mc_Mass;                                     ///< The MC mass of each primary daughter in GeV/c^2
-    RFloatVector       m_primary_mc_VertexX;                                  ///< The MC x-component of each primary daughter's vertex position in cm
-    RFloatVector       m_primary_mc_VertexY;                                  ///< The MC y-component of each primary daughter's vertex position in cm
-    RFloatVector       m_primary_mc_VertexZ;                                  ///< The MC z-component of each primary daughter's vertex position inc m
-    RFloatVector       m_primary_mc_DirectionCosineX;                         ///< The MC direction cosine of each primary daughter in the x-direction
-    RFloatVector       m_primary_mc_DirectionCosineY;                         ///< The MC direction cosine of each primary daughter in the y-direction
-    RFloatVector       m_primary_mc_DirectionCosineZ;                         ///< The MC direction cosine of each primary daughter in the z-direction
-    RFloatVector       m_primary_mc_Momentum;                                 ///< The MC momentum of each primary daughter in GeV/c
-    RFloatVector       m_primary_mc_MomentumX;                                ///< The MC momentum of each primary daughter in the x-direction in GeV/c
-    RFloatVector       m_primary_mc_MomentumY;                                ///< The MC momentum of each primary daughter in the y-direction in GeV/c
-    RFloatVector       m_primary_mc_MomentumZ;                                ///< The MC momentum of each primary daughter in the z-direction in GeV/c
-    RBoolVector        m_primary_mc_IsVertexFiducial;                         ///< Whether each primary daughter's vertex is fiducial (MC quantity)
-    RBoolVector        m_primary_mc_IsContained;                              ///< Whether each primary daughter is contained (MC quantity)
-    RFloatVector       m_primary_mc_ContainmentFraction;                      ///< The fraction of the primary that is contained (MC quantity)
-    RTextVector        m_primary_mc_TypeTree;                                 ///< The MC type tree for each primary daughter
-    RBoolVector        m_primary_mc_IsShower;                                 ///< Whether each primary daughter is a shower (MC quantity)
-    RBoolVector        m_primary_mc_IsTrack;                                  ///< Whether each primary daughter is a track (MC quantity)
-    RBoolVector        m_primary_mc_IsProton;                                 ///< Whether each primary daughter is a proton (MC quantity)
-    RBoolVector        m_primary_mc_IsPionOrMuon;                             ///< Whether each primary daughter is a pion or muon (MC quantity)
-    RBoolVector        m_primary_mc_IsCosmicRay;                              ///< Whether each primary daughter is a cosmic ray (MC quantity)
-    RIntVector         m_primary_mc_PdgCode;                                  ///< The primary daughter's PDG code (MC quantity)
-    RFloatVector       m_primary_mc_HitPurity;                                ///< The primary daughter's hit number purity (MC quantity)
-    RFloatVector       m_primary_mc_HitCompleteness;                          ///< The primary daughter's hit number completeness (MC quantity)
-    RFloatVector       m_primary_mc_CollectionPlaneHitPurity;                 ///< The primary daughter's hit number purity in the collection plane (MC quantity)
-    RFloatVector       m_primary_mc_CollectionPlaneHitCompleteness;           ///< The primary daughter's hit number completeness in the collection plane (MC quantity)
-
-    UInt_t             m_cr_Number;                                           ///< The number of cosmic rays
-    RBoolVector        m_cr_WasReconstructed;                                 ///< Whether each cosmic ray has been reconstructed
-    RBoolVector        m_cr_IsVertexFiducial;                                 ///< Whether each cosmic ray's vertex is fiducial
-    RBoolVector        m_cr_IsContained;                                      ///< Whether the cosmic ray looks contained
-    RFloatVector       m_cr_FiducialHitFraction;                              ///< The fraction of the cosmic ray's hits that are fiducial
-    RBoolVector        m_cr_HasMcInfo;                                        ///< Whether each cosmic ray has MC information
-    RFloatVector       m_cr_KineticEnergy;                                    ///< The reconstructed kinetic energy of each cosmic ray in GeV
-    RFloatVector       m_cr_KineticEnergyFracFromRange;                       ///< The fraction of each cosmic ray's reconstructed kinetic energy calculated from range
-    RFloatVector       m_cr_KineticEnergyFracFromCorrectedTrackCharge;        ///< The fraction of each cosmic ray's reconstructed kinetic energy calculated from recombination-corrected track charge
-    RFloatVector       m_cr_KineticEnergyFracFromUncorrectedTrackCharge;      ///< The fraction of each cosmic ray's reconstructed kinetic energy calculated from uncorrected track charge
-    RFloatVector       m_cr_KineticEnergyFracFromShowerCharge;                ///< The fraction of each cosmic ray's reconstructed kinetic energy calculated from shower charge
-    RFloatVector       m_cr_VertexX;                                          ///< The x-component of each cosmic ray's vertex position in cm
-    RFloatVector       m_cr_VertexY;                                          ///< The y-component of each cosmic ray's vertex position in cm
-    RFloatVector       m_cr_VertexZ;                                          ///< The z-component of each cosmic ray's vertex position in cm
-    RFloatVector       m_cr_DirectionCosineX;                                 ///< The direction cosine of each cosmic ray in the x-direction
-    RFloatVector       m_cr_DirectionCosineY;                                 ///< The direction cosine of each cosmic ray in the y-direction
-    RFloatVector       m_cr_DirectionCosineZ;                                 ///< The direction cosine of each cosmic ray in the z-direction
-    RTextVector        m_cr_TypeTree;                                         ///< The type tree of each cosmic ray
-    RUnsignedVector    m_cr_NumberOf3dHits;                                   ///< The number of 3D hits in each cosmic ray
-    RUnsignedVector    m_cr_NumberOfCollectionPlaneHits;                      ///< The number of collection-plane hits in each cosmic ray
-    RUnsignedVector    m_cr_NumberOfDownstreamParticles;                      ///< The number of particles downstream of each cosmic ray
-    RUInt64Vector      m_cr_mc_McParticleUid;                                 ///< The UID of the MC particle corresponding to each cosmic ray
-    RBoolVector        m_cr_mc_IsParticleSplitByReco;                         ///< Whether the cosmic ray's MC particle has been split by the reconstruction
-    RFloatVector       m_cr_mc_Energy;                                        ///< The MC energy of each cosmic ray in GeV
-    RFloatVector       m_cr_mc_KineticEnergy;                                 ///< The MC kinetic energy of each cosmic ray in GeV
-    RFloatVector       m_cr_mc_Mass;                                          ///< The MC mass of each cosmic ray in GeV/c^2
-    RFloatVector       m_cr_mc_VertexX;                                       ///< The MC x-component of each cosmic ray's vertex position in cm
-    RFloatVector       m_cr_mc_VertexY;                                       ///< The MC y-component of each cosmic ray's vertex position in cm
-    RFloatVector       m_cr_mc_VertexZ;                                       ///< The MC z-component of each cosmic ray's vertex position in cm
-    RFloatVector       m_cr_mc_DirectionCosineX;                              ///< The MC direction cosine of each cosmic ray in the x-direction
-    RFloatVector       m_cr_mc_DirectionCosineY;                              ///< The MC direction cosine of each cosmic ray in the y-direction
-    RFloatVector       m_cr_mc_DirectionCosineZ;                              ///< The MC direction cosine of each cosmic ray in the z-direction
-    RFloatVector       m_cr_mc_Momentum;                                      ///< The MC momentum of each cosmic ray in GeV/c
-    RFloatVector       m_cr_mc_MomentumX;                                     ///< The MC momentum of each cosmic ray in the x-direction in GeV/c
-    RFloatVector       m_cr_mc_MomentumY;                                     ///< The MC momentum of each cosmic ray in the y-direction in GeV/c
-    RFloatVector       m_cr_mc_MomentumZ;                                     ///< The MC momentum of each cosmic ray in the z-direction in GeV/c
-    RBoolVector        m_cr_mc_IsVertexFiducial;                              ///< Whether each cosmic ray's vertex is fiducial (MC quantity)
-    RBoolVector        m_cr_mc_IsContained;                                   ///< Whether each cosmic ray is contained (MC quantity)
-    RFloatVector       m_cr_mc_ContainmentFraction;                           ///< The fraction of the CR that is contained (MC quantity)
-    RTextVector        m_cr_mc_TypeTree;                                      ///< The MC type tree for each cosmic ray
-    RBoolVector        m_cr_mc_IsShower;                                      ///< Whether each cosmic ray is a shower (MC quantity)
-    RBoolVector        m_cr_mc_IsTrack;                                       ///< Whether each cosmic ray is a track (MC quantity)
-    RBoolVector        m_cr_mc_IsProton;                                      ///< Whether each cosmic ray is a proton (MC quantity)
-    RBoolVector        m_cr_mc_IsPionOrMuon;                                  ///< Whether each cosmic ray is a pion or muon (MC quantity)
-    RBoolVector        m_cr_mc_IsCosmicRay;                                   ///< Whether each cosmic ray is a cosmic ray (MC quantity)
-    RIntVector         m_cr_mc_PdgCode;                                       ///< The cosmic ray's PDG code (MC quantity)
-    RFloatVector       m_cr_mc_HitPurity;                                     ///< The cosmic ray's hit number purity (MC quantity)
-    RFloatVector       m_cr_mc_HitCompleteness;                               ///< The cosmic ray's hit number completeness (MC quantity)
-    RFloatVector       m_cr_mc_CollectionPlaneHitPurity;                      ///< The cosmic ray's hit number purity in the collection plane (MC quantity)
-    RFloatVector       m_cr_mc_CollectionPlaneHitCompleteness;                ///< The cosmic ray's hit number completeness in the collection plane (MC quantity)
+    
+    TREE_SCALAR_MEMBERS(DECLARE_SCALAR_MEMBER)
+    TREE_VECTOR_MEMBERS_PRIMARY(DECLARE_VECTOR_MEMBER)
+    TREE_VECTOR_MEMBERS_PRIMARY_MC(DECLARE_VECTOR_MEMBER)
+    TREE_VECTOR_MEMBERS_CR(DECLARE_VECTOR_MEMBER)
+    TREE_VECTOR_MEMBERS_CR_MC(DECLARE_VECTOR_MEMBER)
+    
+    bool  m_dummy; ///< A dummy variable for the preprocessor trick.
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -228,6 +325,52 @@ private:
     using MCPrimaryMap = std::unordered_multimap<const MCParticle *, const LArAnalysisParticle *>; ///< Alias for a map from MC primaries to AnalysisParticles
 
     /**
+     *  @brief  Get the map from the MC primaries to their analysis particles
+     *
+     *  @param  pfoList the list of PFOs
+     * 
+     *  @return the map
+     */
+    MCPrimaryMap GetMainMcParticleMap(const PfoList &pfoList) const;
+    
+    /**
+     *  @brief  Write the parameters for any analysis particle
+     *
+     *  @param  pAnalysisParticle address of the analysis particle
+     *  @param  mainMcParticleMap the map from MC primaries to their analysis particles
+     *  @param  pMCParticleList address of the MC particle list
+     * 
+     *  @return success
+     */
+    bool ProcessAnalysisParticle(const LArAnalysisParticle *const pAnalysisParticle, const MCPrimaryMap &mainMcParticleMap,
+        const MCParticleList *const pMCParticleList) const;
+        
+    /**
+     *  @brief  Record MC information for all the unreconstructed particles
+     * 
+     *  @param  pMCParticleList address of the MC particle list
+     *  @param  mainMcParticleMap the map from MC primaries to their analysis particles
+     */
+    void RecordUnreconstructedParticles(const MCParticleList *const pMCParticleList, const MCPrimaryMap &mainMcParticleMap) const;
+    
+    /**
+     *  @brief  Record MC information for a given unreconstructed particle
+     * 
+     *  @param  pMCParticleList address of the MC particle list
+     *  @param  pMCPrimary address of the unreconstructed MC primary
+     */
+    void RecordUnreconstructedParticle(const MCParticleList *const pMCParticleList, const MCParticle *const pMCPrimary) const;
+        
+    /**
+     *  @brief  Get all the MC primaries
+     * 
+     *  @param  pMCParticleList address of the MC particle list
+     * 
+     *  @return the MC primaries
+     */
+    MCParticleSet GetAllMcPrimaries(const MCParticleList *const pMCParticleList) const;
+
+    /**
      *  @brief  Populate the tree parameters with neutrino information
      *
      *  @param  neutrinoAnalysisParticle the neutrino analysis particle
@@ -236,28 +379,40 @@ private:
     void PopulateNeutrinoParameters(const LArAnalysisParticle &neutrinoAnalysisParticle, const MCParticleList *const pMCParticleList) const;
 
     /**
+     *  @brief  Recurse through the LArAnalysisParticle hierarchy and count the numbers of tracks and showers
+     *
+     *  @param  currentAnalysisParticle the current analysis particle
+     *  @param  numberOfRecoTracks the number of reco tracks (to populate)
+     *  @param  numberOfRecoShowers the number of reco showers (to populate)
+     */
+    void CountRecoTracksAndShowers(const LArAnalysisParticle &currentAnalysisParticle, unsigned int &numberOfRecoTracks, 
+        unsigned int &numberOfRecoShowers) const;
+
+    /**
      *  @brief  Populate the tree parameters with neutrino MC information
      *
-     *  @param  pMainMcParticle address of the main MC particle
-     *  @param  mcEnergy the MC energy
-     *  @param  mcVertexPosition the MC vertex position
-     *  @param  mcDirectionCosines the MC direction cosines
-     *  @param  mcMomentum the MC momentum
-     *  @param  mcIsVertexFiducial whether the MC vertex is fiducial
-     *  @param  mcContainmentFraction the MC containment fraction
-     *  @param  mcPdgCode the MC PDG code
+     *  @param  pfoMcInfo the PFO MC info object
      *  @param  pMCParticleList address of the MC particle list
-     *  @param  mcHitPurity ahe MC hit purity
-     *  @param  mcHitCompleteness the MC hit completeness
-     *  @param  mcCollectionPlaneHitPurity the MC collection plane hit purity
-     *  @param  mcCollectionPlaneHitCompleteness the MC collection plane hit completeness
-     *  @param  mcTypeTree the MC type tree
      */
-    void PopulateNeutrinoMcParameters(const MCParticle *const pMainMcParticle, const float mcEnergy, const CartesianVector &mcVertexPosition,
-        const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum, const bool mcIsVertexFiducial,
-        const float mcContainmentFraction, const int mcPdgCode, const MCParticleList *const pMCParticleList,
-        const float mcHitPurity, const float mcHitCompleteness, const float mcCollectionPlaneHitPurity, const float mcCollectionPlaneHitCompleteness,
-        const LArAnalysisParticle::TypeTree mcTypeTree) const;
+    void PopulateNeutrinoMcParameters(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const MCParticleList *const pMCParticleList) const;
+
+    /**
+     *  @brief  Caculate the neutrino MC visible energy and momentum
+     * 
+     *  @param  pMCParticleList address of the MC particle list
+     *  @param  visibleEnergy the visible energy (to populate)
+     *  @param  visibleMomentum the visible momentum (to populate)
+     */
+    void CalculateNeutrinoMcVisibleMomentum(const MCParticleList *const pMCParticleList, float &visibleEnergy, CartesianVector &visibleMomentum) const;
+
+    /**
+     *  @brief  Get all the MC primary neutrino daughters
+     * 
+     *  @param  pMCParticleList address of the MC particle list
+     * 
+     *  @return the primary neutrino daughters
+     */
+    MCParticleSet GetAllMcPrimaryDaughters(const MCParticleList *const pMCParticleList) const;
 
     /**
      *  @brief  Get the interaction type for the event
@@ -275,28 +430,26 @@ private:
      *  @param  coveredMCPrimaries the list of MC primaries that have been covered so far
      */
     void AddPrimaryDaughterRecord(const LArAnalysisParticle &primaryAnalysisParticle, const MCPrimaryMap &coveredMCPrimaries) const;
+    
+    /**
+     *  @brief  Add a primary daughter MC record
+     * 
+     *  @param  pfoMcInfo the PFO MC info object
+     *  @param  particleSplitByReco whether the particle has been split by the reco
+     */
+    void AddPrimaryDaughterMcRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const bool particleSplitByReco) const;
+    
+    /**
+     *  @brief  Add a blank primary daughter MC record
+     */
+    void AddBlankPrimaryDaughterMcRecord() const;
 
     /**
      *  @brief  Add an MC-only primary daughter record
      *
-     *  @param  pMainMcParticle address of the main MC particle
-     *  @param  mcEnergy the MC energy
-     *  @param  mcKineticEnergy the MC kinetic energy
-     *  @param  mcMass the MC mass
-     *  @param  mcVertexPosition the MC vertex position
-     *  @param  mcDirectionCosines the MC direction cosines
-     *  @param  mcMomentum the MC momentum
-     *  @param  mcIsVertexFiducial whether the MC vertex is fiducial
-     *  @param  mcContainmentFraction the MC containment fraction
-     *  @param  mcType the MC type
-     *  @param  mcIsShower whether the MC particle is a shower
-     *  @param  mcPdgCode the MC PDG code
-     *  @param  mcTypeTree the MC type tree
+     *  @param  pfoMcInfo the PFO MC info object
      */
-    void AddMcOnlyPrimaryDaughterRecord(const MCParticle *const pMainMcParticle, const float mcEnergy, const float mcKineticEnergy,
-        const float mcMass, const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum,
-        const bool mcIsVertexFiducial, const float mcContainmentFraction, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower,
-        const int mcPdgCode, const LArAnalysisParticle::TypeTree mcTypeTree) const;
+    void AddMcOnlyPrimaryDaughterRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo) const;
 
     /**
      *  @brief  Add a cosmic ray record to the tree parameters
@@ -307,31 +460,44 @@ private:
     void AddCosmicRayRecord(const LArAnalysisParticle &cosmicRayAnalysisParticle, const MCPrimaryMap &coveredMCPrimaries) const;
 
     /**
-     *  @brief  Add an MC-only cosmic ray record
-     *
-     *  @param pMainMcParticle address of the main MC particle
-     *  @param mcEnergy the MC energy
-     *  @param mcKineticEnergy the MC kinetic energy
-     *  @param mcMass the MC mass
-     *  @param mcVertexPosition the MC vertex position
-     *  @param mcDirectionCosines the MC direction cosines
-     *  @param mcMomentum the MC momentum
-     *  @param mcIsVertexFiducial whether the MC vertex is fiducial
-     *  @param mcContainmentFraction the MC containment fraction
-     *  @param mcType the MC type
-     *  @param mcIsShower whether the MC particle is a shower
-     *  @param mcPdgCode the MC PDG code
-     *  @param mcTypeTree the MC type tree
+     *  @brief  Add a cosmic ray MC record
+     * 
+     *  @param  pfoMcInfo the PFO MC info object
+     *  @param  particleSplitByReco whether the particle has been split by the reco
      */
-    void AddMcOnlyCosmicRayRecord(const MCParticle *const pMainMcParticle, const float mcEnergy, const float mcKineticEnergy, const float mcMass,
-        const CartesianVector &mcVertexPosition, const CartesianVector &mcDirectionCosines, const CartesianVector &mcMomentum,
-        const bool mcIsVertexFiducial, const float mcContainmentFraction, const LArAnalysisParticle::TYPE mcType, const bool mcIsShower,
-        const int mcPdgCode, const LArAnalysisParticle::TypeTree mcTypeTree) const;
+    void AddCosmicRayMcRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const bool particleSplitByReco) const;
+    
+    /**
+     *  @brief  Add a blank cosmic ray MC record
+     */
+    void AddBlankCosmicRayMcRecord() const;
 
     /**
-     *  @brief  Dump the tree parameters
+     *  @brief  Add an MC-only cosmic ray record
+     *
+     *  @param  pfoMcInfo the PFO MC info object
      */
-    void DumpTree() const;
+    void AddMcOnlyCosmicRayRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo) const;
+
+    /**
+     *  @brief  Check that the sizes of the tree vectors are consistent
+     */
+    void CheckTreeVectorSizes() const;
+    
+    /**
+     *  @brief  Check the size of a given vector, throwing an error if it does not match
+     * 
+     *  @param  variableName the variable name (for printing an error message)
+     *  @param  vector the vector
+     *  @param  desiredSize the desired vector size
+     */
+    template <typename T>
+    void CheckSize(const std::string &variableName, const std::vector<T> &vector, const std::size_t desiredSize) const;
+
+    /**
+     *  @brief  Print the tree parameters
+     */
+    void PrintTree() const;
 
     /**
      *  @brief  Find out whether a given interaction type is charged-current
@@ -341,27 +507,48 @@ private:
      *  @return whether the interaction type is charged-current
      */
     bool IsChargedCurrent(const LArInteractionTypeHelper::InteractionType interactionType) const;
+    
+    /**
+     *  @brief  Initialize the analysis TTree
+     */
+    void InitializeTree();
 
-    std::string               m_pfoListName;                     ///< The neutrino PFO list name
-    std::string               m_outputFile;                      ///< The output file path
-    TFile                    *m_pOutputTFile;                    ///< The ROOT TFile associated with the tree
-    TTree                    *m_pOutputTree;                     ///< The ROOT TTree to which to write the data
-    bool                      m_verbose;                         ///< Whether to print some AnalysisParticle information to screen
-    mutable TreeParameters    m_treeParameters;                  ///< The tree parameters
-    std::string               m_mcParticleListName;              ///< The name of the MC particle list
-    float                     m_fiducialCutLowXMargin;           ///< The low-x fiducial volume margin
-    float                     m_fiducialCutHighXMargin;          ///< The high-x fiducial volume margin
-    float                     m_fiducialCutLowYMargin;           ///< The low-y fiducial volume margin
-    float                     m_fiducialCutHighYMargin;          ///< The high-y fiducial volume margin
-    float                     m_fiducialCutLowZMargin;           ///< The low-z fiducial volume margin
-    float                     m_fiducialCutHighZMargin;          ///< The high-z fiducial volume margin
-    CartesianVector           m_minCoordinates;                  ///< The set of detector minimum coordinates
-    CartesianVector           m_maxCoordinates;                  ///< The set of detector maximum coordinates
-    float                     m_mcContainmentFractionLowerBound; ///< The lower containment fraction bound for MC containment
-    float                     m_fiducialHitFractionLowerBound;   ///< The lower fiducial hit fraction bound for containment
-    float                     m_mcOnlyParticleContainmentCut;    ///< The lower containment fraction bound for including MC-only particles
-    float                     m_mcOnlyParticleEnergyCut;         ///< The lower energy bound for including MC-only particles
+    std::string               m_pfoListName;                        ///< The neutrino PFO list name
+    std::string               m_outputFile;                         ///< The output file path
+    std::string               m_treeName;                           ///< The name of the TTree
+    std::string               m_treeTitle;                          ///< The title of the TTree
+    TFile                    *m_pOutputTFile;                       ///< The ROOT TFile associated with the tree
+    TTree                    *m_pOutputTree;                        ///< The ROOT TTree to which to write the data
+    bool                      m_verbose;                            ///< Whether to print some AnalysisParticle information to screen
+    mutable TreeParameters    m_treeParameters;                     ///< The tree parameters
+    std::string               m_mcParticleListName;                 ///< The name of the MC particle list
+    float                     m_fiducialCutLowXMargin;              ///< The low-x fiducial volume margin
+    float                     m_fiducialCutHighXMargin;             ///< The high-x fiducial volume margin
+    float                     m_fiducialCutLowYMargin;              ///< The low-y fiducial volume margin
+    float                     m_fiducialCutHighYMargin;             ///< The high-y fiducial volume margin
+    float                     m_fiducialCutLowZMargin;              ///< The low-z fiducial volume margin
+    float                     m_fiducialCutHighZMargin;             ///< The high-z fiducial volume margin
+    CartesianVector           m_minCoordinates;                     ///< The set of detector minimum coordinates
+    CartesianVector           m_maxCoordinates;                     ///< The set of detector maximum coordinates
+    float                     m_mcContainmentFractionLowerBound;    ///< The lower containment fraction bound for MC containment
+    float                     m_fiducialHitFractionLowerBound;      ///< The lower fiducial hit fraction bound for containment
+    float                     m_mcOnlyParticleContainmentCut;       ///< The lower containment fraction bound for including MC-only particles
+    float                     m_mcOnlyParticleEnergyCut;            ///< The lower energy bound for including MC-only particles
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+inline void WriteAnalysisParticlesAlgorithm::CheckSize(const std::string &variableName, const std::vector<T> &vector,
+    const std::size_t desiredSize) const
+{
+    if (vector.size() != desiredSize)
+    {
+        std::cout << "WriteAnalysisParticlesAlgorithm: tree member variable '" <<  variableName << "' was of the wrong size" << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
+}
 
 } // namespace lar_physics_content
 

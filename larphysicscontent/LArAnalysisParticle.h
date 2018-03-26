@@ -1,11 +1,10 @@
 /**
- *  @file   LArPhysicsContent/include/LArAnalysisParticle.h
+ *  @file   larphysicscontent/LArAnalysisParticle.h
  *
  *  @brief  Header file for the lar analysis particle class.
  *
  *  $Log: $
  */
-
 #ifndef LAR_ANALYSIS_PARTICLE_H
 #define LAR_ANALYSIS_PARTICLE_H 1
 
@@ -31,8 +30,6 @@ class LArAnalysisParticleParameters;
 class LArAnalysisParticle : public ParticleFlowObject
 {
 public:
-    using List = std::list<LArAnalysisParticle>; ///< Alias for a list of LArAnalysisParticles
-
     /**
      *  @brief  Enum for the type of particle
      */
@@ -151,6 +148,13 @@ public:
      *  @return the initial direction
      */
     const CartesianVector & DirectionCosines() const noexcept;
+    
+    /**
+     *  @brief  Get the analysis momentum
+     *
+     *  @return the analysis momentum
+     */
+    const CartesianVector & AnalysisMomentum() const noexcept;
 
     /**
      *  @brief  Get the number of 3D hits
@@ -340,39 +344,40 @@ public:
     void Print() const;
 
 private:
-    TYPE               m_type;                                            ///< The particle type
-    TypeTree           m_typeTree;                                        ///< The type tree
-    float              m_kineticEnergy;                                   ///< The particle's reconstructed energy in GeV
-    bool               m_isVertexFiducial;                                ///< Whether the vertex is fiducial
-    float              m_fiducialHitFraction;                             ///< The fraction of hits that are fiducial
-    CartesianVector    m_vertexPosition;                                  ///< The vertex position in cm
-    CartesianVector    m_directionCosines;                                ///< The direction cosines at the vertex
-    unsigned           m_numberOf3dHits;                                  ///< The number of 3D hits
-    unsigned           m_numberOfCollectionPlaneHits;                     ///< The number of collection-plane hits
-    bool               m_isShower;                                        ///< Whether the particle is a shower
-    unsigned           m_numberOfDownstreamParticles;                     ///< The number of downstream particles
-    float              m_kineticEnergyFromRangeFraction;                  ///< The fraction of reconstructed kinetic energy calculated from particle range
-    float              m_kineticEnergyFromCorrectedTrackChargeFraction;   ///< The fraction of reconstructed kinetic energy calculated from recombination-corrected track charge
-    float              m_kineticEnergyFromUncorrectedTrackChargeFraction; ///< The fraction of reconstructed kinetic energy calculated from uncorrected track charge
-    float              m_kineticEnergyFromShowerChargeFraction;           ///< The fraction of reconstructed kinetic energy calculated from shower charge
-    bool               m_hasMcInfo;                                       ///< Whether the particle has MC info attached
-    TYPE               m_mcType;                                          ///< The MC type
-    TypeTree           m_mcTypeTree;                                      ///< The MC type tree
-    float              m_mcEnergy;                                        ///< The MC energy in GeV
-    float              m_mcKineticEnergy;                                 ///< The MC kinetic energy in GeV
-    float              m_mcMass;                                          ///< The MC mass in GeV/c^2
-    CartesianVector    m_mcMomentum;                                      ///< The MC momentum at the vertex in GeV/c
-    CartesianVector    m_mcVertexPosition;                                ///< The MC vertex position in cm
-    CartesianVector    m_mcDirectionCosines;                              ///< The MC direction cosines
-    bool               m_mcIsVertexFiducial;                              ///< Whether the vertex is fiducial (MC quantity)
-    float              m_mcContainmentFraction;                           ///< The fraction of the particle that is contained (MC quantity)
-    bool               m_mcIsShower;                                      ///< Whether the particle is a shower (MC quantity)
-    int                m_mcPdgCode;                                       ///< The PDG code of the particle (MC quantity)
-    float              m_mcHitPurity;                                     ///< The hit number purity (MC quantity)
-    float              m_mcHitCompleteness;                               ///< The hit number completeness (MC quantity)
-    float              m_mcCollectionPlaneHitPurity;                      ///< The hit number purity in the collection plane (MC quantity)
-    float              m_mcCollectionPlaneHitCompleteness;                ///< The hit number completeness in the collection plane (MC quantity)
-    const MCParticle * m_pMcMainMCParticle;                               ///< Address of the main MC particle (MC quantity)
+    TYPE                 m_type;                                               ///< The particle type
+    TypeTree             m_typeTree;                                           ///< The type tree
+    float                m_kineticEnergy;                                      ///< The particle's reconstructed energy in GeV
+    bool                 m_isVertexFiducial;                                   ///< Whether the vertex is fiducial
+    float                m_fiducialHitFraction;                                ///< The fraction of hits that are fiducial
+    CartesianVector      m_vertexPosition;                                     ///< The vertex position in cm
+    CartesianVector      m_directionCosines;                                   ///< The direction cosines at the vertex
+    CartesianVector      m_analysisMomentum;                                   ///< The analysis momentum
+    unsigned             m_numberOf3dHits;                                     ///< The number of 3D hits
+    unsigned             m_numberOfCollectionPlaneHits;                        ///< The number of collection-plane hits
+    bool                 m_isShower;                                           ///< Whether the particle is a shower
+    unsigned             m_numberOfDownstreamParticles;                        ///< The number of downstream particles
+    float                m_kineticEnergyFromRangeFraction;                     ///< The fraction of reconstructed kinetic energy calculated from particle range
+    float                m_kineticEnergyFromCorrectedTrackChargeFraction;      ///< The fraction of reconstructed kinetic energy calculated from recombination-corrected track charge
+    float                m_kineticEnergyFromUncorrectedTrackChargeFraction;    ///< The fraction of reconstructed kinetic energy calculated from uncorrected track charge
+    float                m_kineticEnergyFromShowerChargeFraction;              ///< The fraction of reconstructed kinetic energy calculated from shower charge
+    bool                 m_hasMcInfo;                                          ///< Whether the particle has MC info attached
+    TYPE                 m_mcType;                                             ///< The MC type
+    TypeTree             m_mcTypeTree;                                         ///< The MC type tree
+    float                m_mcEnergy;                                           ///< The MC energy in GeV
+    float                m_mcKineticEnergy;                                    ///< The MC kinetic energy in GeV
+    float                m_mcMass;                                             ///< The MC mass in GeV/c^2
+    CartesianVector      m_mcMomentum;                                         ///< The MC momentum at the vertex in GeV/c
+    CartesianVector      m_mcVertexPosition;                                   ///< The MC vertex position in cm
+    CartesianVector      m_mcDirectionCosines;                                 ///< The MC direction cosines
+    bool                 m_mcIsVertexFiducial;                                 ///< Whether the vertex is fiducial (MC quantity)
+    float                m_mcContainmentFraction;                              ///< The fraction of the particle that is contained (MC quantity)
+    bool                 m_mcIsShower;                                         ///< Whether the particle is a shower (MC quantity)
+    int                  m_mcPdgCode;                                          ///< The PDG code of the particle (MC quantity)
+    float                m_mcHitPurity;                                        ///< The hit number purity (MC quantity)
+    float                m_mcHitCompleteness;                                  ///< The hit number completeness (MC quantity)
+    float                m_mcCollectionPlaneHitPurity;                         ///< The hit number purity in the collection plane (MC quantity)
+    float                m_mcCollectionPlaneHitCompleteness;                   ///< The hit number completeness in the collection plane (MC quantity)
+    const MCParticle    *m_pMcMainMCParticle;                                  ///< Address of the main MC particle (MC quantity)
 
     /**
      *  @brief  Print an error message and throw if there is no MC information present
@@ -397,6 +402,7 @@ public:
     float                            m_fiducialHitFraction;
     CartesianVector                  m_vertexPosition;
     CartesianVector                  m_directionCosines;
+    CartesianVector                  m_analysisMomentum;
     unsigned                         m_numberOf3dHits;
     unsigned                         m_numberOfCollectionPlaneHits;
     bool                             m_isShower;
@@ -422,7 +428,7 @@ public:
     float                            m_mcHitCompleteness;
     float                            m_mcCollectionPlaneHitPurity;
     float                            m_mcCollectionPlaneHitCompleteness;
-    const MCParticle *               m_pMcMainMCParticle;
+    const MCParticle                *m_pMcMainMCParticle;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -470,77 +476,84 @@ public:
 
 inline LArAnalysisParticle::TYPE LArAnalysisParticle::Type() const noexcept
 {
-    return this->m_type;
+    return m_type;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const LArAnalysisParticle::TypeTree & LArAnalysisParticle::GetTypeTree() const noexcept
 {
-    return this->m_typeTree;
+    return m_typeTree;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float LArAnalysisParticle::KineticEnergy() const noexcept
 {
-    return this->m_kineticEnergy;
+    return m_kineticEnergy;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline bool LArAnalysisParticle::IsVertexFiducial() const noexcept
 {
-    return this->m_isVertexFiducial;
+    return m_isVertexFiducial;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float LArAnalysisParticle::FiducialHitFraction() const noexcept
 {
-    return this->m_fiducialHitFraction;
+    return m_fiducialHitFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const CartesianVector & LArAnalysisParticle::VertexPosition() const noexcept
 {
-    return this->m_vertexPosition;
+    return m_vertexPosition;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const CartesianVector & LArAnalysisParticle::DirectionCosines() const noexcept
 {
-    return this->m_directionCosines;
+    return m_directionCosines;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const CartesianVector & LArAnalysisParticle::AnalysisMomentum() const noexcept
+{
+    return m_analysisMomentum;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline unsigned LArAnalysisParticle::NumberOf3dHits() const noexcept
 {
-    return this->m_numberOf3dHits;
+    return m_numberOf3dHits;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline unsigned LArAnalysisParticle::NumberOfCollectionPlaneHits() const noexcept
 {
-    return this->m_numberOfCollectionPlaneHits;
+    return m_numberOfCollectionPlaneHits;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline bool LArAnalysisParticle::IsShower() const noexcept
 {
-    return this->m_isShower;
+    return m_isShower;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline unsigned LArAnalysisParticle::NumberOfDownstreamParticles() const noexcept
 {
-    return this->m_numberOfDownstreamParticles;
+    return m_numberOfDownstreamParticles;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -575,7 +588,7 @@ inline float LArAnalysisParticle::KineticEnergyFromShowerChargeFraction() const 
 
 inline bool LArAnalysisParticle::HasMcInfo() const noexcept
 {
-    return this->m_hasMcInfo;
+    return m_hasMcInfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -583,7 +596,7 @@ inline bool LArAnalysisParticle::HasMcInfo() const noexcept
 inline LArAnalysisParticle::TYPE LArAnalysisParticle::McType() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcType;
+    return m_mcType;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -591,7 +604,7 @@ inline LArAnalysisParticle::TYPE LArAnalysisParticle::McType() const
 inline const LArAnalysisParticle::TypeTree & LArAnalysisParticle::GetMcTypeTree() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcTypeTree;
+    return m_mcTypeTree;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -599,7 +612,7 @@ inline const LArAnalysisParticle::TypeTree & LArAnalysisParticle::GetMcTypeTree(
 inline float LArAnalysisParticle::McEnergy() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcEnergy;
+    return m_mcEnergy;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -607,7 +620,7 @@ inline float LArAnalysisParticle::McEnergy() const
 inline float LArAnalysisParticle::McKineticEnergy() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcKineticEnergy;
+    return m_mcKineticEnergy;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -615,7 +628,7 @@ inline float LArAnalysisParticle::McKineticEnergy() const
 inline float LArAnalysisParticle::McMass() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcMass;
+    return m_mcMass;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -623,7 +636,7 @@ inline float LArAnalysisParticle::McMass() const
 inline const CartesianVector & LArAnalysisParticle::McMomentum() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcMomentum;
+    return m_mcMomentum;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -631,7 +644,7 @@ inline const CartesianVector & LArAnalysisParticle::McMomentum() const
 inline const CartesianVector & LArAnalysisParticle::McVertexPosition() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcVertexPosition;
+    return m_mcVertexPosition;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -639,7 +652,7 @@ inline const CartesianVector & LArAnalysisParticle::McVertexPosition() const
 inline const CartesianVector & LArAnalysisParticle::McDirectionCosines() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcDirectionCosines;
+    return m_mcDirectionCosines;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -647,7 +660,7 @@ inline const CartesianVector & LArAnalysisParticle::McDirectionCosines() const
 inline bool LArAnalysisParticle::McIsVertexFiducial() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcIsVertexFiducial;
+    return m_mcIsVertexFiducial;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -655,7 +668,7 @@ inline bool LArAnalysisParticle::McIsVertexFiducial() const
 inline float LArAnalysisParticle::McContainmentFraction() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcContainmentFraction;
+    return m_mcContainmentFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -663,7 +676,7 @@ inline float LArAnalysisParticle::McContainmentFraction() const
 inline bool LArAnalysisParticle::McIsShower() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcIsShower;
+    return m_mcIsShower;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -671,7 +684,7 @@ inline bool LArAnalysisParticle::McIsShower() const
 inline int LArAnalysisParticle::McPdgCode() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcPdgCode;
+    return m_mcPdgCode;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -679,7 +692,7 @@ inline int LArAnalysisParticle::McPdgCode() const
 inline float LArAnalysisParticle::McHitPurity() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcHitPurity;
+    return m_mcHitPurity;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -687,7 +700,7 @@ inline float LArAnalysisParticle::McHitPurity() const
 inline float LArAnalysisParticle::McHitCompleteness() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcHitCompleteness;
+    return m_mcHitCompleteness;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -695,7 +708,7 @@ inline float LArAnalysisParticle::McHitCompleteness() const
 inline float LArAnalysisParticle::McCollectionPlaneHitPurity() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcCollectionPlaneHitPurity;
+    return m_mcCollectionPlaneHitPurity;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -703,7 +716,7 @@ inline float LArAnalysisParticle::McCollectionPlaneHitPurity() const
 inline float LArAnalysisParticle::McCollectionPlaneHitCompleteness() const
 {
     ThrowIfNoMcInfo();
-    return this->m_mcCollectionPlaneHitCompleteness;
+    return m_mcCollectionPlaneHitCompleteness;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -711,7 +724,7 @@ inline float LArAnalysisParticle::McCollectionPlaneHitCompleteness() const
 inline const MCParticle * LArAnalysisParticle::McMainMCParticle() const
 {
     ThrowIfNoMcInfo();
-    return this->m_pMcMainMCParticle;
+    return m_pMcMainMCParticle;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -740,23 +753,23 @@ inline LArAnalysisParticle::TypeTree::TypeTree(const TYPE type) noexcept :
 
 inline LArAnalysisParticle::TYPE LArAnalysisParticle::TypeTree::Type() const noexcept
 {
-    return this->m_type;
+    return m_type;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const LArAnalysisParticle::TypeTree::List & LArAnalysisParticle::TypeTree::Daughters() const noexcept
 {
-    return this->m_daughterTypes;
+    return m_daughterTypes;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline void LArAnalysisParticle::ThrowIfNoMcInfo() const
 {
-    if (!this->m_hasMcInfo)
+    if (!m_hasMcInfo)
     {
-        std::cerr << "Could not get MC property of LArAnalysisParticle as no MC information was attached" << std::endl;
+        std::cout << "LArAnalysisParticle: could not get MC property of LArAnalysisParticle as no MC information was attached" << std::endl;
         throw STATUS_CODE_NOT_FOUND;
     }
 }

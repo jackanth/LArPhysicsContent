@@ -1,20 +1,20 @@
 /**
- *  @file LArPhysicsContent/include/AnalysisDataAlgorithm.h
+ *  @file   larphysicscontent/AnalysisDataAlgorithm.h
  *
- *  @brief Header file for the LEE analysis data algorithm class.
+ *  @brief  Header file for the lar analysis data algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_LEE_ANALYSIS_DATA_ALGORITHM_H
-#define LAR_LEE_ANALYSIS_DATA_ALGORITHM_H 1
+#ifndef LAR_ANALYSIS_DATA_ALGORITHM_H
+#define LAR_ANALYSIS_DATA_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
 #include "Objects/ParticleFlowObject.h"
 #include "Objects/MCParticle.h"
 
-#include "BirksHitSelectionTool.h"
-#include "LArAnalysisParticleHelper.h"
+#include "larphysicscontent/HitPurityTool.h"
+#include "larphysicscontent/LArAnalysisParticleHelper.h"
 
 #include "TNtuple.h"
 #include "TTree.h"
@@ -51,29 +51,28 @@ private:
     using MCParticleMap = std::unordered_map<const ParticleFlowObject *, const MCParticle *>; ///< Alias for a map from PFOs to MC particles
     using PdgCodeSet    = std::unordered_set<int>;                                            ///< Alias for a set of PDG codes
 
-    float                  m_fiducialCutLowXMargin;              ///< The low-x fiducial cut margin
-    float                  m_fiducialCutHighXMargin;             ///< The high-x fiducial cut margin
-    float                  m_fiducialCutLowYMargin;              ///< The low-y fiducial cut margin
-    float                  m_fiducialCutHighYMargin;             ///< The high-y fiducial cut margin
-    float                  m_fiducialCutLowZMargin;              ///< The low-z fiducial cut margin
-    float                  m_fiducialCutHighZMargin;             ///< The high-z fiducial cut margin
-    unsigned int           m_trackSlidingFitWindow;              ///< The sliding fit window for the 3D track fits
-    bool                   m_produceBirksFitData;                ///< Whether to produce the Birks fit data
-    bool                   m_produceEnergyFromRangeData;         ///< Whether to produce energy-from-range data
-    bool                   m_producePidData;                     ///< Whether to produce proton PID data
-    std::string            m_pfoListName;                        ///< The PFO list name
-    std::string            m_rootDataFileName;                   ///< The file path to save the fit data
-    std::string            m_caloHitListName;                    ///< The CaloHit list name
-    std::string            m_pidDataProtonsTTreeName;            ///< The name of the TTree to use for the proton PID data
-    std::string            m_pidDataMuonsPionsTTreeName;         ///< The name of the TTree to use for the pion/muon PID data
-
-    TFile                 *m_pRootDataFile;                      ///< Address of the fit data TFile object
-    TTree                 *m_pBirksFitDataTree;                  ///< Address of the Birks fit data TTree object
-    TNtuple               *m_pEnergyFromRangeProtonDataNtuple;   ///< Address of the proton energy-from-range data TNtuple object
-    TNtuple               *m_pEnergyFromRangePionMuonDataNtuple; ///< Address of the pion/muon energy-from-range data TNtuple object
-    BirksHitSelectionTool *m_pBirksHitSelectionTool;             ///< Address of the Birks hit-selection tool
-
-    mutable int            m_uniquePlotIdentifier;               ///< The unique plot identifier (ATTN: temporary)
+    float            m_fiducialCutLowXMargin;                 ///< The low-x fiducial cut margin
+    float            m_fiducialCutHighXMargin;                ///< The high-x fiducial cut margin
+    float            m_fiducialCutLowYMargin;                 ///< The low-y fiducial cut margin
+    float            m_fiducialCutHighYMargin;                ///< The high-y fiducial cut margin
+    float            m_fiducialCutLowZMargin;                 ///< The low-z fiducial cut margin
+    float            m_fiducialCutHighZMargin;                ///< The high-z fiducial cut margin
+    float            m_mcContainmentFractionLowerBound;       ///< The lower containment fraction bound for MC containment
+    unsigned int     m_trackSlidingFitWindow;                 ///< The sliding fit window for the 3D track fits
+    bool             m_produceBirksFitData;                   ///< Whether to produce the Birks fit data
+    bool             m_produceEnergyFromRangeData;            ///< Whether to produce energy-from-range data
+    bool             m_producePidData;                        ///< Whether to produce proton PID data
+    std::string      m_pfoListName;                           ///< The PFO list name
+    std::string      m_rootDataFileName;                      ///< The file path to save the fit data
+    std::string      m_caloHitListName;                       ///< The CaloHit list name
+    std::string      m_pidDataProtonsTTreeName;               ///< The name of the TTree to use for the proton PID data
+    std::string      m_pidDataMuonsPionsTTreeName;            ///< The name of the TTree to use for the pion/muon PID data
+                                                              
+    TFile           *m_pRootDataFile;                         ///< Address of the fit data TFile object
+    TTree           *m_pBirksFitDataTree;                     ///< Address of the Birks fit data TTree object
+    TNtuple         *m_pEnergyFromRangeProtonDataNtuple;      ///< Address of the proton energy-from-range data TNtuple object
+    TNtuple         *m_pEnergyFromRangePionMuonDataNtuple;    ///< Address of the pion/muon energy-from-range data TNtuple object
+    HitPurityTool   *m_pHitPurityTool;                        ///< Address of the hit purity tool
 
     /**
      *  @brief  Recurse through the PFO hierarchy and append the track hit energy map
@@ -93,7 +92,8 @@ private:
      *
      *  @return the track hit energy vector for the PFO
      */
-    LArTrackHitEnergy::Vector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &trackFit) const;
+    LArAnalysisParticleHelper::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo, 
+        const ThreeDSlidingFitResult &trackFit) const;
 
     /**
      *  @brief  Recurse through the PFO hierarchy and append the MC particle map
@@ -149,8 +149,8 @@ private:
      *  @param  birksAdcIntegrals the vector of ADC integrals to be corrected for recombination (to be populated)
      *  @param  threeDDistances the vector of 3D distances over which the charges were deposited (to be populated)
      */
-    void GetTrackAdcsAndDistances(const LArTrackHitEnergy::Vector &trackHitEnergies, float &totalNoBirksAdcIntegral, FloatVector &birksAdcIntegrals,
-        FloatVector &threeDDistances) const;
+    void GetTrackAdcsAndDistances(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergies, float &totalNoBirksAdcIntegral, 
+        FloatVector &birksAdcIntegrals, FloatVector &threeDDistances) const;
 
     /**
      *  @brief  Recurse through the PFO hierarchy and produce energy from range data for a given set of PDG codes
@@ -187,4 +187,4 @@ private:
 
 } // namespace lar_physics_content
 
-#endif // #ifndef LAR_LEE_ANALYSIS_DATA_ALGORITHM_H
+#endif // #ifndef LAR_ANALYSIS_DATA_ALGORITHM_H

@@ -1,7 +1,7 @@
 /**
- *  @file   LArPhysicsContent/include/LArPhysicsContent.h
+ *  @file   larphysicscontent/LArPhysicsContent.h
  *
- *  @brief  Header file detailing content for use with physics analyses
+ *  @brief  Header file detailing content for use with physics analyses.
  *
  *  $Log: $
  */

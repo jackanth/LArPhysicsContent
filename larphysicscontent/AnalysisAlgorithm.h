@@ -1,5 +1,5 @@
 /**
- *  @file LArPhysicsContent/include/AnalysisAlgorithm.h
+ *  @file  larphysicscontent/AnalysisAlgorithm.h
  *
  *  @brief Header file for the analysis algorithm class.
  *
@@ -13,10 +13,10 @@
 #include "larpandoracontent/LArCustomParticles/CustomParticleCreationAlgorithm.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "LArAnalysisParticleHelper.h"
-#include "LArAnalysisParticle.h"
-#include "LArTrackHitEnergy.h"
-#include "BirksHitSelectionTool.h"
+#include "larphysicscontent/LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArAnalysisParticle.h"
+#include "larphysicscontent/LArTrackHitValue.h"
+#include "larphysicscontent/HitPurityTool.h"
 
 #include "TNtuple.h"
 #include "TMVA/Tools.h"
@@ -71,37 +71,37 @@ private:
 
     using EnergyFromRangeDataVector = std::vector<EnergyFromRangeData>; ///< Alias for a vector of energy-from-range data entries
 
-    float                     m_fiducialCutLowXMargin;             ///< The low-x fiducial margin
-    float                     m_fiducialCutHighXMargin;            ///< The high-x fiducial cut margin
-    float                     m_fiducialCutLowYMargin;             ///< The low-y fiducial cut margin
-    float                     m_fiducialCutHighYMargin;            ///< The high-y fiducial cut margin
-    float                     m_fiducialCutLowZMargin;             ///< The low-z fiducial cut margin
-    float                     m_fiducialCutHighZMargin;            ///< The high-z fiducial cut margin
-    float                     m_birksSelectionMaxdEdX;             ///< The maximum corrected dEdX value allowed.
-    float                     m_mcContainmentFractionLowerBound;   ///< The lower containment fraction bound for MC containment
-    unsigned int              m_trackSlidingFitWindow;             ///< The sliding fit window for 3D track fits
-    std::string               m_mcParticleListName;                ///< The name of the MC particle list
-    std::string               m_parametersFile;                    ///< The path to the file containing the fit data
-    std::string               m_birksFitNtupleName;                ///< The name of the Birks fit ntuple
-    std::string               m_protonEnergyFromRangeNtupleName;   ///< The name of the proton energy-from-range ntuple
-    std::string               m_pionMuonEnergyFromRangeNtupleName; ///< The name of the pion/muon energy-from-range ntuple
-    std::string               m_caloHitListName;                   ///< The name of the CaloHit list
-    std::string               m_tmvaWeights;                       ///< The path to the file containing the TMVA weights for proton ID
-    bool                      m_addMcInformation;                  ///< Whether to add MC information to the analysis particles
-
-    float                     m_birksFitAlpha;                     ///< The Birks fit alpha parameter
-    float                     m_birksFitBeta;                      ///< The Birks fit beta parameter
-    float                     m_birksFitPole;                      ///< The Birks fit dEdX pole value
-    EnergyFromRangeDataVector m_protonEnergyFromRangeDataVector;   ///< The vector of proton energy-from-range data entries
-    EnergyFromRangeDataVector m_pionMuonEnergyFromRangeDataVector; ///< The vector of pion/muon energy-from-range data entries
-    CartesianVector           m_minCoordinates;                    ///< The detector's minimum fiducial coordinates
-    CartesianVector           m_maxCoordinates;                    ///< The detector's maximum fiducial coordinates
-    BirksHitSelectionTool    *m_pBirksHitSelectionTool;            ///< Address of the Birks hit-selection tool
-    TMVA::Reader             *m_pTmvaReader;                       ///< Address of the TMVA Reader object
-
-    mutable float             m_tmvaTrackLength;                   ///< Mutable track length member variable for TMVA to use
-    mutable float             m_tmvaAvgEnergyDeposition;           ///< Mutable average energy deposition member variable for TMVA to use
-    mutable int               m_uniquePlotIdentifier;              ///< Unique plot identifier (ATTN temporary)
+    float                        m_fiducialCutLowXMargin;                ///< The low-x fiducial margin
+    float                        m_fiducialCutHighXMargin;               ///< The high-x fiducial cut margin
+    float                        m_fiducialCutLowYMargin;                ///< The low-y fiducial cut margin
+    float                        m_fiducialCutHighYMargin;               ///< The high-y fiducial cut margin
+    float                        m_fiducialCutLowZMargin;                ///< The low-z fiducial cut margin
+    float                        m_fiducialCutHighZMargin;               ///< The high-z fiducial cut margin
+    float                        m_birksSelectionMaxdEdX;                ///< The maximum corrected dEdX value allowed.
+    float                        m_mcContainmentFractionLowerBound;      ///< The lower containment fraction bound for MC containment
+    unsigned int                 m_trackSlidingFitWindow;                ///< The sliding fit window for 3D track fits
+    std::string                  m_mcParticleListName;                   ///< The name of the MC particle list
+    std::string                  m_parametersFile;                       ///< The path to the file containing the fit data
+    std::string                  m_birksFitNtupleName;                   ///< The name of the Birks fit ntuple
+    std::string                  m_protonEnergyFromRangeNtupleName;      ///< The name of the proton energy-from-range ntuple
+    std::string                  m_pionMuonEnergyFromRangeNtupleName;    ///< The name of the pion/muon energy-from-range ntuple
+    std::string                  m_caloHitListName;                      ///< The name of the CaloHit list
+    std::string                  m_tmvaWeights;                          ///< The path to the file containing the TMVA weights for proton ID
+    bool                         m_addMcInformation;                     ///< Whether to add MC information to the analysis particles
+                                                                         
+    float                        m_birksFitAlpha;                        ///< The Birks fit alpha parameter
+    float                        m_birksFitBeta;                         ///< The Birks fit beta parameter
+    float                        m_birksFitPole;                         ///< The Birks fit dEdX pole value
+    EnergyFromRangeDataVector    m_protonEnergyFromRangeDataVector;      ///< The vector of proton energy-from-range data entries
+    EnergyFromRangeDataVector    m_pionMuonEnergyFromRangeDataVector;    ///< The vector of pion/muon energy-from-range data entries
+    CartesianVector              m_minCoordinates;                       ///< The detector's minimum fiducial coordinates
+    CartesianVector              m_maxCoordinates;                       ///< The detector's maximum fiducial coordinates
+    HitPurityTool               *m_pHitPurityTool;                       ///< Address of the hit purity tool
+    TMVA::Reader                *m_pTmvaReader;                          ///< Address of the TMVA Reader object
+                                                                         
+    mutable float                m_tmvaTrackLength;                      ///< Mutable track length member variable for TMVA to use
+    mutable float                m_tmvaAvgEnergyDeposition;              ///< Mutable average energy deposition member variable for TMVA to use
+    mutable int                  m_uniquePlotIdentifier;                 ///< Unique plot identifier (ATTN temporary)
 
     /**
      *  @brief  Recurse through the PFO hierarchy and append the track hit energy map
@@ -110,8 +110,8 @@ private:
      *  @param  trackHitEnergyMap the track hit energy map to append
      *  @param  trackFitMap the track fit map
      */
-    void RecursivelyAppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
-        LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap) const;
+    void RecursivelyAppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo, LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap,
+        const LArAnalysisParticleHelper::TrackFitMap &trackFitMap) const;
 
     /**
      *  @brief  Append the track hit energy map for a given PFO
@@ -121,7 +121,8 @@ private:
      *
      *  @return the vector of track hit energies
      */
-    LArTrackHitEnergy::Vector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &trackFit) const;
+    LArAnalysisParticleHelper::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
+        const ThreeDSlidingFitResult &trackFit) const;
 
     /**
      *  @brief  Recurse through the PFO hierarchy and append the particle type map
@@ -208,14 +209,14 @@ private:
      *
      *  @return the estimated track energy
      */
-    float EstimateTrackEnergyFromCharge(const LArTrackHitEnergy::Vector &trackHitEnergyVector) const;
+    float EstimateTrackEnergyFromCharge(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector) const;
 
     /**
      *  @brief  Decide which track hits to correct for recombination for a track-like PFO
      *
      *  @param  trackHitEnergyVector the track hit energy vector for the track-like PFO
      */
-    void DecideWhichTrackHitsToCorrect(LArTrackHitEnergy::Vector &trackHitEnergyVector) const;
+    void DecideWhichTrackHitsToCorrect(LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector) const;
 
     /**
      *  @brief  Estimate the energy of a track-like PFO using its range
@@ -228,7 +229,7 @@ private:
      *  @return the estimated energy
      */
     float EstimateTrackEnergyFromRange(const ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &trackFit,
-        const LArAnalysisParticle::TYPE particleType, const LArTrackHitEnergy::Vector &trackHitEnergyVector) const;
+        const LArAnalysisParticle::TYPE particleType, const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector) const;
 
     /**
      *  @brief  Create a type tree for a given PFO and its descendents using the type map
@@ -275,10 +276,7 @@ private:
      *
      *  @return success
      */
-    bool GetMcInformation(const ParticleFlowObject *const pPfo, float &mcEnergy, float &mcKineticEnergy, float &mcMass,
-        LArAnalysisParticle::TypeTree &typeTree, LArAnalysisParticle::TYPE &mcType, CartesianVector &mcVertexPosition, CartesianVector &mcMomentum,
-        int &mcPdgCode, const bool isNeutrino, float &mcContainmentFraction, const MCParticle * &pMcMainMCParticle, float &mcHitPurity,
-        float &mcHitCompleteness, float &mcCollectionPlaneHitPurity, float &mcCollectionPlaneHitCompleteness) const;
+    bool GetMcInformation(const ParticleFlowObject *const pPfo, LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const bool isNeutrino) const;
 
     /**
      *  @brief  Recursively count the number of reconstructed downstream particles of a PFO
