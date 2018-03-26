@@ -49,7 +49,7 @@ public:
          *  @brief  Default constructor
          */
         PfoMcInfo() noexcept;
-        
+
         const MCParticle             *m_pMCParticle;
         float                         m_mcEnergy;
         float                         m_mcKineticEnergy;

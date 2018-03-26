@@ -46,7 +46,7 @@ public:
      *  @return the coordinate
      */
     float Coordinate() const noexcept;
-    
+
     /**
      *  @brief  Get the 3D distance this his corresponds to
      *
@@ -60,7 +60,7 @@ public:
      *  @return the calorimetric quantity
      */
     float CaloValue() const noexcept;
-    
+
     /**
      *  @brief  Set the calorimetric quantity
      *

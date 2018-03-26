@@ -88,7 +88,7 @@ private:
     std::string                  m_caloHitListName;                      ///< The name of the CaloHit list
     std::string                  m_tmvaWeights;                          ///< The path to the file containing the TMVA weights for proton ID
     bool                         m_addMcInformation;                     ///< Whether to add MC information to the analysis particles
-                                                                         
+
     float                        m_birksFitAlpha;                        ///< The Birks fit alpha parameter
     float                        m_birksFitBeta;                         ///< The Birks fit beta parameter
     float                        m_birksFitPole;                         ///< The Birks fit dEdX pole value
@@ -98,7 +98,7 @@ private:
     CartesianVector              m_maxCoordinates;                       ///< The detector's maximum fiducial coordinates
     HitPurityTool               *m_pHitPurityTool;                       ///< Address of the hit purity tool
     TMVA::Reader                *m_pTmvaReader;                          ///< Address of the TMVA Reader object
-                                                                         
+
     mutable float                m_tmvaTrackLength;                      ///< Mutable track length member variable for TMVA to use
     mutable float                m_tmvaAvgEnergyDeposition;              ///< Mutable average energy deposition member variable for TMVA to use
     mutable int                  m_uniquePlotIdentifier;                 ///< Unique plot identifier (ATTN temporary)

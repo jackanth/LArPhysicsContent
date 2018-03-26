@@ -148,7 +148,7 @@ public:
      *  @return the initial direction
      */
     const CartesianVector & DirectionCosines() const noexcept;
-    
+
     /**
      *  @brief  Get the analysis momentum
      *

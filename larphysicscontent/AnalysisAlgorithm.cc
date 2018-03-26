@@ -116,7 +116,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     this->CountNumberOfDownstreamParticles(pInputPfo, numberOfDownstreamParticles);
     analysisParticleParameters.m_numberOfDownstreamParticles = numberOfDownstreamParticles;
 
-    analysisParticleParameters.m_fiducialHitFraction = LArAnalysisParticleHelper::GetFractionOfFiducialHits(pInputPfo, m_minCoordinates, 
+    analysisParticleParameters.m_fiducialHitFraction = LArAnalysisParticleHelper::GetFractionOfFiducialHits(pInputPfo, m_minCoordinates,
         m_maxCoordinates);
 
     analysisParticleParameters.m_hasMcInfo = gotMcInformation;
@@ -156,7 +156,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
 
         float analysisEnergy(0.f), energySourcedFromRange(0.f), energySourcedFromCorrectedTrackCharge(0.f),
             energySourcedFromTrackCharge(0.f), energySourcedFromShowerCharge(0.f);
-            
+
         CartesianVector analysisMomentum(0.f, 0.f, 0.f);
 
         unsigned numberOf3dHits(0U), numberOfCollectionPlaneHits(0U);
@@ -627,14 +627,14 @@ CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject
         std::cout << "AnalysisAlgorithm: PCA eigenvectors were empty" << std::endl;
         return CartesianVector{0.f, 0.f, 0.f};
     }
-    
+
     CartesianVector fitDirection = eigenVectors.at(0);
     const CartesianVector vertexToCentroid = centroid - pVertex->GetPosition();
-    
+
     // We want the fit direction to be mostly aligned with the vertex-to-centroid direction.
     if (vertexToCentroid.GetDotProduct(fitDirection) < 0.f)
         fitDirection *= -1.f;
-    
+
     return fitDirection;
 }
 
@@ -644,7 +644,7 @@ bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, L
     const bool isNeutrino) const
 {
     const MCParticle *pMcMainMCParticle(nullptr);
-    
+
     if (isNeutrino)
     {
         const MCParticleList *pMCParticleList(nullptr);

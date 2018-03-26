@@ -226,19 +226,19 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
                 fitDirection = maxDirection;
         }
     }
-    
+
     if (pointTowardsMiddle)
     {
         const CartesianVector &minToMaxVector = maxPosition - minPosition;
-    
+
         if (std::fabs(maxCoordinate - displacementAlongFittedTrack) < std::fabs(displacementAlongFittedTrack - minCoordinate))
         {
             // If closer to the maximum coordinate, we want the fit direction and the min-to-max vector to be more anti-aligned.
             if (minToMaxVector.GetDotProduct(fitDirection) > 0.f)
                 fitDirection *= -1.f;
-            
+
         }
-        
+
         else
         {
             // If closer to the minimum coordinate, we want the fit direction and the min-to-max vector to be more aligned.
@@ -246,16 +246,16 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
                 fitDirection *= -1.f;
         }
     }
-    
+
     else
     {
         if (fitDirection.GetDotProduct(CartesianVector(0.f, -1.f, 0.f)) < 0.f)
             fitDirection *= -1.f;
     }
-    
+
     return fitDirection;
 }
-    
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
@@ -494,7 +494,7 @@ bool LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(const ParticleFlowObje
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArAnalysisParticleHelper::PfoMcInfo LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCParticle, 
+LArAnalysisParticleHelper::PfoMcInfo LArAnalysisParticleHelper::GetMcInformation(const MCParticle *const pMCParticle,
     const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates, const float mcContainmentFractionLowerBound)
 {
     if (!pMCParticle)
@@ -502,7 +502,7 @@ LArAnalysisParticleHelper::PfoMcInfo LArAnalysisParticleHelper::GetMcInformation
         std::cout << "LArAnalysisParticleHelper: could not get MC information because there was no MC particle" << std::endl;
         throw STATUS_CODE_INVALID_PARAMETER;
     }
-    
+
     LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo;
     pfoMcInfo.m_pMCParticle = pMCParticle;
     LArAnalysisParticleHelper::CreateMcTypeTree(pMCParticle, pfoMcInfo.m_mcTypeTree);
@@ -513,12 +513,12 @@ LArAnalysisParticleHelper::PfoMcInfo LArAnalysisParticleHelper::GetMcInformation
     pfoMcInfo.m_mcType             = pfoMcInfo.m_mcTypeTree.Type();
     pfoMcInfo.m_mcVertexPosition   = pMCParticle->GetVertex();
     pfoMcInfo.m_mcMomentum         = pMCParticle->GetMomentum();
-    
+
     if (pfoMcInfo.m_mcMomentum.GetMagnitude() < std::numeric_limits<float>::epsilon())
             std::cout << "LArAnalysisParticleHelper: could not get direction from MC momentum as it was too small" << std::endl;
     else
         pfoMcInfo.m_mcDirectionCosines = pfoMcInfo.m_mcMomentum.GetUnitVector();
-        
+
     pfoMcInfo.m_mcPdgCode = pMCParticle->GetParticleId();
 
     float escapedEnergy(0.f), totalEnergy(0.f);
@@ -529,7 +529,7 @@ LArAnalysisParticleHelper::PfoMcInfo LArAnalysisParticleHelper::GetMcInformation
 
     else
         pfoMcInfo.m_mcContainmentFraction = 0.f;
-        
+
     pfoMcInfo.m_mcIsContained  = (pfoMcInfo.m_mcContainmentFraction >= mcContainmentFractionLowerBound);
     pfoMcInfo.m_mcIsShower     = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::SHOWER);
     pfoMcInfo.m_mcIsProton     = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PROTON);

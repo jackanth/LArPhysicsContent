@@ -46,7 +46,7 @@ WriteAnalysisParticlesAlgorithm::WriteAnalysisParticlesAlgorithm() :
 
 WriteAnalysisParticlesAlgorithm::~WriteAnalysisParticlesAlgorithm()
 {
-    // Write any remaining data in the TTree. 
+    // Write any remaining data in the TTree.
     if (m_pOutputTree)
         m_pOutputTree->Write();
 
@@ -91,7 +91,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
     // Use the multimap entries to add records for unreconstructed particles.
     if (pMCParticleList)
         this->RecordUnreconstructedParticles(pMCParticleList, mainMcParticleMap);
-        
+
     this->CheckTreeVectorSizes();
 
     if (m_verbose)
@@ -106,7 +106,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
 WriteAnalysisParticlesAlgorithm::MCPrimaryMap WriteAnalysisParticlesAlgorithm::GetMainMcParticleMap(const PfoList &pfoList) const
 {
     MCPrimaryMap mainMcParticleMap;
-    
+
     // Find all the analysis particles with associated MC particles and add them to the map.
     for (const ParticleFlowObject * const pPfo : pfoList)
     {
@@ -116,7 +116,7 @@ WriteAnalysisParticlesAlgorithm::MCPrimaryMap WriteAnalysisParticlesAlgorithm::G
                 mainMcParticleMap.emplace(pAnalysisParticle->McMainMCParticle(), pAnalysisParticle);
         }
     }
-    
+
     return mainMcParticleMap;
 }
 
@@ -155,7 +155,7 @@ bool WriteAnalysisParticlesAlgorithm::ProcessAnalysisParticle(const LArAnalysisP
         std::cout << "WriteAnalysisParticlesAlgorithm: analysis particle was not a cosmic ray, neutrino or primary daughter" << std::endl;
         return false;
     }
-    
+
     return true;
 }
 
@@ -176,7 +176,7 @@ void WriteAnalysisParticlesAlgorithm::RecordUnreconstructedParticles(const MCPar
         {
             continue;
         }
-        
+
         this->RecordUnreconstructedParticle(pMCParticleList, pMCPrimary);
     }
 }
@@ -241,7 +241,7 @@ MCParticleSet WriteAnalysisParticlesAlgorithm::GetAllMcPrimaries(const MCParticl
             continue;
         }
     }
-    
+
     return mcPrimarySet;
 }
 
@@ -251,7 +251,7 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
     const MCParticleList *const pMCParticleList) const
 {
     // m_nu_WasReconstructed is dealt with by the calling method.
-    
+
     m_treeParameters.m_nu_IsVertexFiducial                            = neutrinoAnalysisParticle.IsVertexFiducial();
     m_treeParameters.m_nu_IsContained                                 = (neutrinoAnalysisParticle.FiducialHitFraction() >= m_fiducialHitFractionLowerBound);
     m_treeParameters.m_nu_FiducialHitFraction                         = neutrinoAnalysisParticle.FiducialHitFraction();
@@ -275,14 +275,14 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
     m_treeParameters.m_nu_NumberOf3dHits                              = neutrinoAnalysisParticle.NumberOf3dHits();
     m_treeParameters.m_nu_NumberOfCollectionPlaneHits                 = neutrinoAnalysisParticle.NumberOfCollectionPlaneHits();
     m_treeParameters.m_nu_NumberOfRecoParticles                       = neutrinoAnalysisParticle.NumberOfDownstreamParticles();
-    
+
     // Recurse through the analysis particle hierarchy, counting the numbers of tracks and showers.
     unsigned int numberOfRecoTracks(0UL), numberOfRecoShowers(0UL);
     this->CountRecoTracksAndShowers(neutrinoAnalysisParticle, numberOfRecoTracks, numberOfRecoShowers);
-    
+
     m_treeParameters.m_nu_NumberOfRecoTracks  = numberOfRecoTracks;
     m_treeParameters.m_nu_NumberOfRecoShowers = numberOfRecoShowers;
-    
+
     // Use the 'momentum' to get the transverse and longitudinal visible energy components.
     const CartesianVector zAxis(0.f, 0.f, 1.f);
     m_treeParameters.m_nu_VisibleLongitudinalEnergy = neutrinoAnalysisParticle.AnalysisMomentum().GetDotProduct(zAxis);
@@ -291,9 +291,9 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
     // Populate the MC parameters if the info exists - if not, they can be left at default values.
     if (neutrinoAnalysisParticle.HasMcInfo() && neutrinoAnalysisParticle.McMainMCParticle())
     {
-        const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(neutrinoAnalysisParticle.McMainMCParticle(), m_minCoordinates, 
+        const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(neutrinoAnalysisParticle.McMainMCParticle(), m_minCoordinates,
             m_maxCoordinates, m_mcContainmentFractionLowerBound);
-            
+
         this->PopulateNeutrinoMcParameters(pfoMcInfo, pMCParticleList);
     }
 }
@@ -309,10 +309,10 @@ void WriteAnalysisParticlesAlgorithm::CountRecoTracksAndShowers(const LArAnalysi
         {
             if (pAnalysisDaughter->IsShower())
                 ++numberOfRecoShowers;
-                
+
             else
                 ++numberOfRecoTracks;
-            
+
             // Recurse through the analysis particle hierarchy.
             this->CountRecoTracksAndShowers(*pAnalysisDaughter, numberOfRecoTracks, numberOfRecoShowers);
         }
@@ -352,7 +352,7 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const LArAnal
         std::cout << "WriteAnalysisParticlesAlgorithm: no valid MC particle list name provided but neutrino analysis particle has MC info" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
-    
+
     // Use the MC neutrino's visible primary daughters to construct the MC analogues of the energy and momentum measurements.
     CartesianVector visibleMomentum(0.f, 0.f, 0.f);
     float visibleEnergy(0.f);
@@ -386,7 +386,7 @@ void WriteAnalysisParticlesAlgorithm::CalculateNeutrinoMcVisibleMomentum(const M
 {
     visibleMomentum = CartesianVector(0.f, 0.f, 0.f);
     visibleEnergy   = 0.f;
-    
+
     // Sum over the visible primary daughters of the MC neutrino.
     for (const MCParticle *const pMCPrimary : this->GetAllMcPrimaryDaughters(pMCParticleList))
     {
@@ -420,7 +420,7 @@ MCParticleSet WriteAnalysisParticlesAlgorithm::GetAllMcPrimaryDaughters(const MC
             continue;
         }
     }
-    
+
     return mcPrimarySet;
 }
 
@@ -433,21 +433,21 @@ LArInteractionTypeHelper::InteractionType WriteAnalysisParticlesAlgorithm::GetIn
         std::cout << "WriteAnalysisParticlesAlgorithm: could not get interaction type because there was no MC particle list" << std::endl;
         throw STATUS_CODE_NOT_FOUND;
     }
-    
+
     MCParticleList mcPrimaryList;
-    
+
     for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
         if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))
             mcPrimaryList.push_back(pMCParticle);
     }
-    
+
     if (mcPrimaryList.empty())
     {
         std::cout << "WriteAnalysisParticlesAlgorithm: could not get interaction type because the MC particle list was empty" << std::endl;
         throw STATUS_CODE_NOT_FOUND;
     }
-    
+
     return LArInteractionTypeHelper::GetInteractionType(mcPrimaryList);
 }
 
@@ -490,9 +490,9 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
     // Add the MC record if the info is there, otherwise populate a blank record.
     if (primaryAnalysisParticle.HasMcInfo() && primaryAnalysisParticle.McMainMCParticle())
     {
-        const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(primaryAnalysisParticle.McMainMCParticle(), 
+        const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(primaryAnalysisParticle.McMainMCParticle(),
             m_minCoordinates, m_maxCoordinates, m_mcContainmentFractionLowerBound);
-            
+
         const bool particleSplitByReco = (coveredMCPrimaries.count(primaryAnalysisParticle.McMainMCParticle()) > 1U);
         this->AddPrimaryDaughterMcRecord(pfoMcInfo, particleSplitByReco);
     }
@@ -552,7 +552,7 @@ void WriteAnalysisParticlesAlgorithm::AddBlankPrimaryDaughterMcRecord() const
 void WriteAnalysisParticlesAlgorithm::AddMcOnlyPrimaryDaughterRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo) const
 {
     // m_primary_Number is dealt with by the calling method.
-    
+
     TREE_VECTOR_MEMBERS_PRIMARY(VECTOR_MEMBER_PUSH_DEFAULT)
 
     this->AddPrimaryDaughterMcRecord(pfoMcInfo, false); // cannot refer to a split particle by construction
@@ -593,9 +593,9 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
     // Add the MC record if the info is there, otherwise populate a blank record.
     if (cosmicRayAnalysisParticle.HasMcInfo())
     {
-        const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(cosmicRayAnalysisParticle.McMainMCParticle(), 
+        const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(cosmicRayAnalysisParticle.McMainMCParticle(),
             m_minCoordinates, m_maxCoordinates, m_mcContainmentFractionLowerBound);
-            
+
         const bool particleSplitByReco = (coveredMCPrimaries.count(cosmicRayAnalysisParticle.McMainMCParticle()) > 1U);
         this->AddCosmicRayMcRecord(pfoMcInfo, particleSplitByReco);
     }
@@ -606,7 +606,7 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::AddCosmicRayMcRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, 
+void WriteAnalysisParticlesAlgorithm::AddCosmicRayMcRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo,
     const bool particleSplitByReco) const
 {
     if (pfoMcInfo.m_pMCParticle)
@@ -656,9 +656,9 @@ void WriteAnalysisParticlesAlgorithm::AddBlankCosmicRayMcRecord() const
 void WriteAnalysisParticlesAlgorithm::AddMcOnlyCosmicRayRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo) const
 {
     // m_cr_Number is dealt with by the calling method.
-    
+
     TREE_VECTOR_MEMBERS_CR(VECTOR_MEMBER_PUSH_DEFAULT)
-    
+
     this->AddCosmicRayMcRecord(pfoMcInfo, false); // cannot refer to a split particle by construction
 }
 

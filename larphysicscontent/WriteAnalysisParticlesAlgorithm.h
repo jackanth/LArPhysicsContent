@@ -20,7 +20,7 @@
 
 /**
  *  @brief  Macro for performing operations on the tree member scalars: (variable name, member variable, type, default value, units)
- * 
+ *
  *  @param  d the macro
  */
 #define TREE_SCALAR_MEMBERS(d)                                                                                                       \
@@ -82,7 +82,7 @@
 
 /**
  *  @brief  Macro for performing operations on the primary non-MC tree member vectors: (variable name, member variable, type, default value, units, size)
- * 
+ *
  *  @param  d the macro
  */
 #define TREE_VECTOR_MEMBERS_PRIMARY(d)                                                                                                                                    \
@@ -117,7 +117,7 @@
 
 /**
  *  @brief  Macro for performing operations on the primary MC tree member vectors: (variable name, member variable, type, default value, units, size)
- * 
+ *
  *  @param  d the macro
  */
 #define TREE_VECTOR_MEMBERS_PRIMARY_MC(d)                                                                                                                                 \
@@ -149,7 +149,7 @@
 
 /**
  *  @brief  Macro for performing operations on the CR non-MC tree member vectors: (variable name, member variable, type, default value, units, size)
- * 
+ *
  *  @param  d the macro
  */
 #define TREE_VECTOR_MEMBERS_CR(d)                                                                                                                                    \
@@ -180,7 +180,7 @@
 
 /**
  *  @brief  Macro for performing operations on the CR MC tree member vectors: (variable name, member variable, type, default value, units, size)
- * 
+ *
  *  @param  d the macro
  */
 #define TREE_VECTOR_MEMBERS_CR_MC(d)                                                                                                                                 \
@@ -215,13 +215,13 @@
  */
 #define DECLARE_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units) \
     memberType memberVariable;
-    
+
 /**
  *  @brief  Declare a set of vector members
  */
 #define DECLARE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) \
     memberType memberVariable;
-    
+
 /**
  *  @brief  Initialize a set of scalar members
  */
@@ -233,37 +233,37 @@
  */
 #define INITIALIZE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) \
     memberVariable(),
-    
+
 /**
  *  @brief  Set a set of scalar member TTree branches
  */
 #define SET_SCALAR_MEMBER_BRANCH(name, memberVariable, memberType, defaultValue, units) \
     m_pOutputTree->Branch(name, &m_treeParameters.memberVariable);
-    
+
 /**
  *  @brief  Set a set of vector member TTree branches
  */
 #define SET_VECTOR_MEMBER_BRANCH(name, memberVariable, memberType, defaultValue, units, sizeMember) \
     m_pOutputTree->Branch(name, &m_treeParameters.memberVariable);
-    
+
 /**
  *  @brief  Check the sizes of a set of vector members
  */
 #define CHECK_VECTOR_MEMBER_SIZE(name, memberVariable, memberType, defaultValue, units, sizeMember) \
     this->CheckSize(name, m_treeParameters.memberVariable, m_treeParameters.sizeMember);
-    
+
 /**
  *  @brief  Push the default values to a set of vector members
  */
 #define VECTOR_MEMBER_PUSH_DEFAULT(name, memberVariable, memberType, defaultValue, units, sizeMember) \
     m_treeParameters.memberVariable.push_back(defaultValue);
-    
+
 /**
  *  @brief  Macro for pushing a new value to a tree member vector
  */
 #define PUSH_TREE_RECORD(treeMember, value) \
     m_treeParameters.treeMember.push_back(value)
-    
+
 using namespace pandora;
 using namespace lar_content;
 
@@ -287,13 +287,13 @@ public:
      *  @brief  Default constructor
      */
     TreeParameters() noexcept;
-    
+
     TREE_SCALAR_MEMBERS(DECLARE_SCALAR_MEMBER)
     TREE_VECTOR_MEMBERS_PRIMARY(DECLARE_VECTOR_MEMBER)
     TREE_VECTOR_MEMBERS_PRIMARY_MC(DECLARE_VECTOR_MEMBER)
     TREE_VECTOR_MEMBERS_CR(DECLARE_VECTOR_MEMBER)
     TREE_VECTOR_MEMBERS_CR_MC(DECLARE_VECTOR_MEMBER)
-    
+
     bool  m_dummy; ///< A dummy variable for the preprocessor trick.
 };
 
@@ -328,44 +328,44 @@ private:
      *  @brief  Get the map from the MC primaries to their analysis particles
      *
      *  @param  pfoList the list of PFOs
-     * 
+     *
      *  @return the map
      */
     MCPrimaryMap GetMainMcParticleMap(const PfoList &pfoList) const;
-    
+
     /**
      *  @brief  Write the parameters for any analysis particle
      *
      *  @param  pAnalysisParticle address of the analysis particle
      *  @param  mainMcParticleMap the map from MC primaries to their analysis particles
      *  @param  pMCParticleList address of the MC particle list
-     * 
+     *
      *  @return success
      */
     bool ProcessAnalysisParticle(const LArAnalysisParticle *const pAnalysisParticle, const MCPrimaryMap &mainMcParticleMap,
         const MCParticleList *const pMCParticleList) const;
-        
+
     /**
      *  @brief  Record MC information for all the unreconstructed particles
-     * 
+     *
      *  @param  pMCParticleList address of the MC particle list
      *  @param  mainMcParticleMap the map from MC primaries to their analysis particles
      */
     void RecordUnreconstructedParticles(const MCParticleList *const pMCParticleList, const MCPrimaryMap &mainMcParticleMap) const;
-    
+
     /**
      *  @brief  Record MC information for a given unreconstructed particle
-     * 
+     *
      *  @param  pMCParticleList address of the MC particle list
      *  @param  pMCPrimary address of the unreconstructed MC primary
      */
     void RecordUnreconstructedParticle(const MCParticleList *const pMCParticleList, const MCParticle *const pMCPrimary) const;
-        
+
     /**
      *  @brief  Get all the MC primaries
-     * 
+     *
      *  @param  pMCParticleList address of the MC particle list
-     * 
+     *
      *  @return the MC primaries
      */
     MCParticleSet GetAllMcPrimaries(const MCParticleList *const pMCParticleList) const;
@@ -385,7 +385,7 @@ private:
      *  @param  numberOfRecoTracks the number of reco tracks (to populate)
      *  @param  numberOfRecoShowers the number of reco showers (to populate)
      */
-    void CountRecoTracksAndShowers(const LArAnalysisParticle &currentAnalysisParticle, unsigned int &numberOfRecoTracks, 
+    void CountRecoTracksAndShowers(const LArAnalysisParticle &currentAnalysisParticle, unsigned int &numberOfRecoTracks,
         unsigned int &numberOfRecoShowers) const;
 
     /**
@@ -398,7 +398,7 @@ private:
 
     /**
      *  @brief  Caculate the neutrino MC visible energy and momentum
-     * 
+     *
      *  @param  pMCParticleList address of the MC particle list
      *  @param  visibleEnergy the visible energy (to populate)
      *  @param  visibleMomentum the visible momentum (to populate)
@@ -407,9 +407,9 @@ private:
 
     /**
      *  @brief  Get all the MC primary neutrino daughters
-     * 
+     *
      *  @param  pMCParticleList address of the MC particle list
-     * 
+     *
      *  @return the primary neutrino daughters
      */
     MCParticleSet GetAllMcPrimaryDaughters(const MCParticleList *const pMCParticleList) const;
@@ -430,15 +430,15 @@ private:
      *  @param  coveredMCPrimaries the list of MC primaries that have been covered so far
      */
     void AddPrimaryDaughterRecord(const LArAnalysisParticle &primaryAnalysisParticle, const MCPrimaryMap &coveredMCPrimaries) const;
-    
+
     /**
      *  @brief  Add a primary daughter MC record
-     * 
+     *
      *  @param  pfoMcInfo the PFO MC info object
      *  @param  particleSplitByReco whether the particle has been split by the reco
      */
     void AddPrimaryDaughterMcRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const bool particleSplitByReco) const;
-    
+
     /**
      *  @brief  Add a blank primary daughter MC record
      */
@@ -461,12 +461,12 @@ private:
 
     /**
      *  @brief  Add a cosmic ray MC record
-     * 
+     *
      *  @param  pfoMcInfo the PFO MC info object
      *  @param  particleSplitByReco whether the particle has been split by the reco
      */
     void AddCosmicRayMcRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const bool particleSplitByReco) const;
-    
+
     /**
      *  @brief  Add a blank cosmic ray MC record
      */
@@ -483,10 +483,10 @@ private:
      *  @brief  Check that the sizes of the tree vectors are consistent
      */
     void CheckTreeVectorSizes() const;
-    
+
     /**
      *  @brief  Check the size of a given vector, throwing an error if it does not match
-     * 
+     *
      *  @param  variableName the variable name (for printing an error message)
      *  @param  vector the vector
      *  @param  desiredSize the desired vector size
@@ -507,7 +507,7 @@ private:
      *  @return whether the interaction type is charged-current
      */
     bool IsChargedCurrent(const LArInteractionTypeHelper::InteractionType interactionType) const;
-    
+
     /**
      *  @brief  Initialize the analysis TTree
      */

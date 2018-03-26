@@ -67,7 +67,7 @@ private:
     std::string      m_caloHitListName;                       ///< The CaloHit list name
     std::string      m_pidDataProtonsTTreeName;               ///< The name of the TTree to use for the proton PID data
     std::string      m_pidDataMuonsPionsTTreeName;            ///< The name of the TTree to use for the pion/muon PID data
-                                                              
+
     TFile           *m_pRootDataFile;                         ///< Address of the fit data TFile object
     TTree           *m_pBirksFitDataTree;                     ///< Address of the Birks fit data TTree object
     TNtuple         *m_pEnergyFromRangeProtonDataNtuple;      ///< Address of the proton energy-from-range data TNtuple object
@@ -92,7 +92,7 @@ private:
      *
      *  @return the track hit energy vector for the PFO
      */
-    LArAnalysisParticleHelper::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo, 
+    LArAnalysisParticleHelper::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
         const ThreeDSlidingFitResult &trackFit) const;
 
     /**
@@ -149,7 +149,7 @@ private:
      *  @param  birksAdcIntegrals the vector of ADC integrals to be corrected for recombination (to be populated)
      *  @param  threeDDistances the vector of 3D distances over which the charges were deposited (to be populated)
      */
-    void GetTrackAdcsAndDistances(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergies, float &totalNoBirksAdcIntegral, 
+    void GetTrackAdcsAndDistances(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergies, float &totalNoBirksAdcIntegral,
         FloatVector &birksAdcIntegrals, FloatVector &threeDDistances) const;
 
     /**
