@@ -20,9 +20,6 @@
 #include "PandoraMonitoringApi.h"
 #include "Helpers/MCParticleHelper.h"
 
-#include "TFile.h"
-#include "TCanvas.h"
-
 using namespace pandora;
 using namespace lar_content;
 
@@ -182,41 +179,6 @@ bool LArAnalysisParticleHelper::IsPointFiducial(const CartesianVector &point, co
         return false;
 
     return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArAnalysisParticleHelper::WriteNTuple(TNtuple *const pNtuple, const std::string &fileName, const bool verboseMode)
-{
-    if (verboseMode)
-        pNtuple->Print();
-
-    TFile *pFile = new TFile(fileName.c_str(), "NEW");
-    pNtuple->Write();
-
-    pFile->Close();
-    delete pFile;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-TNtuple * LArAnalysisParticleHelper::LoadNTupleFromFile(const std::string &filePath, const std::string &nTupleName)
-{
-    TFile *pFile = new TFile(filePath.c_str(), "READ");
-
-    if (!pFile->IsOpen())
-    {
-        std::cout << "LArAnalysisParticleHelper: failed to open file at " << filePath << std::endl;
-        return NULL;
-    }
-
-    if (!pFile->GetListOfKeys()->Contains(nTupleName.c_str()))
-    {
-        std::cout << "LArAnalysisParticleHelper: data file at " << filePath << " did not contain key '" << nTupleName << "'" << std::endl;
-        return NULL;
-    }
-
-    return (TNtuple *)pFile->Get(nTupleName.c_str());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

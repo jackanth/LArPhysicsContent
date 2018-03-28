@@ -17,8 +17,6 @@
 #include "larphysicscontent/LArObjects/LArTrackHitValue.h"
 #include "larphysicscontent/LArObjects/LArFittedTrackInfo.h"
 
-#include "TNtuple.h"
-
 #include <tuple>
 #include <unordered_map>
 
@@ -137,25 +135,6 @@ public:
      *  @return whether the point is fiducial
      */
     static bool IsPointFiducial(const CartesianVector &point, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
-
-    /**
-     *  @brief  Write a TNtuple object to a file
-     *
-     *  @param  pNtuple address of the TNtuple object
-     *  @param  fileName the path to the new ROOT file
-     *  @param  verboseMode whether to save in verbose mode
-     */
-    static void WriteNTuple(TNtuple *const pNtuple, const std::string &fileName, const bool verboseMode);
-
-    /**
-     *  @brief  Load a TNtuple object from a file
-     *
-     *  @param  filePath the path to the ROOT file
-     *  @param  nTupleName the name of the TNtuple object to load
-     *
-     *  @return address of the loaded TNtuple object
-     */
-    static TNtuple * LoadNTupleFromFile(const std::string &filePath, const std::string &nTupleName);
 
     /**
      *  @brief  Get a majority-wins main MC particle for a PFO

@@ -8,6 +8,8 @@
 
 #include "larphysicscontent/LArAnalysis/AnalysisAlgorithm.h"
 
+#include "larphysicscontent/LArHelpers/LArRootHelper.h"
+
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
@@ -640,7 +642,7 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TmvaWeights", m_tmvaWeights));
 
-    TNtuple *const pBirksNtuple = LArAnalysisParticleHelper::LoadNTupleFromFile(m_parametersFile, m_birksFitNtupleName);
+    TNtuple *const pBirksNtuple = LArRootHelper::LoadNTupleFromFile(m_parametersFile, m_birksFitNtupleName);
 
     if (!pBirksNtuple)
     {
@@ -668,7 +670,7 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     //--------------------------------------------------------------------------------------------------------------------------------------
 
-    TNtuple *const pEnergyFromRangeNtupleProton = LArAnalysisParticleHelper::LoadNTupleFromFile(m_parametersFile, m_protonEnergyFromRangeNtupleName);
+    TNtuple *const pEnergyFromRangeNtupleProton = LArRootHelper::LoadNTupleFromFile(m_parametersFile, m_protonEnergyFromRangeNtupleName);
 
     if (!pEnergyFromRangeNtupleProton)
     {
@@ -692,7 +694,7 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     //--------------------------------------------------------------------------------------------------------------------------------------
 
-    TNtuple *const pEnergyFromRangeNtuplePionMuon = LArAnalysisParticleHelper::LoadNTupleFromFile(m_parametersFile, m_pionMuonEnergyFromRangeNtupleName);
+    TNtuple *const pEnergyFromRangeNtuplePionMuon = LArRootHelper::LoadNTupleFromFile(m_parametersFile, m_pionMuonEnergyFromRangeNtupleName);
 
     if (!pEnergyFromRangeNtuplePionMuon)
     {
