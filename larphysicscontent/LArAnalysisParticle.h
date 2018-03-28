@@ -342,7 +342,7 @@ public:
      *  @brief  Print some information about the particle
      */
     void Print() const;
-    
+
     /**
      *  @brief  Get the particle type as a string
      *

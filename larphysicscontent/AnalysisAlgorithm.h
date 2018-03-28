@@ -77,7 +77,7 @@ private:
     CartesianVector              m_fiducialCutHighMargins;               ///< The high fiducial cut margins
     CartesianVector              m_minCoordinates;                       ///< The detector's minimum fiducial coordinates
     CartesianVector              m_maxCoordinates;                       ///< The detector's maximum fiducial coordinates
-    
+
     float                        m_birksSelectionMaxdEdX;                ///< The maximum corrected dEdX value allowed.
     float                        m_mcContainmentFractionLowerBound;      ///< The lower containment fraction bound for MC containment
     unsigned int                 m_trackSlidingFitWindow;                ///< The sliding fit window for 3D track fits
@@ -95,7 +95,7 @@ private:
     float                        m_birksFitPole;                         ///< The Birks fit dEdX pole value
     EnergyFromRangeDataVector    m_protonEnergyFromRangeDataVector;      ///< The vector of proton energy-from-range data entries
     EnergyFromRangeDataVector    m_pionMuonEnergyFromRangeDataVector;    ///< The vector of pion/muon energy-from-range data entries
-    
+
     TrackHitEnergyTool *m_pTrackHitEnergyTool;                        ///< Address of the track hit energy tool
     McInfoTool *m_pMcInfoTool;                        ///< Address of the MC info tool
     HitPurityTool               *m_pHitPurityTool;                       ///< Address of the hit purity tool

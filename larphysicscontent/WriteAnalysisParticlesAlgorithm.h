@@ -259,14 +259,14 @@
  */
 #define VECTOR_MEMBER_PUSH_DEFAULT(name, memberVariable, memberType, defaultValue, units, sizeMember) \
     m_treeParameters.memberVariable.push_back(defaultValue);
-    
+
 /**
  *  @brief  Print a set of scalar members to stdout (uses variables `label`, `maxLabelWidth`) in local scope
  */
 #define PRINT_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units)                                                  \
     std::cout << label << name << ((strlen(name) < maxLabelWidth) ? std::string(maxLabelWidth - strlen(name), ' ') : std::string{}) \
               << ": (" << #memberType << ") " << m_treeParameters.memberVariable << ' ' << units << '\n';
-        
+
 /**
  *  @brief  Print a set of vector members to stdout (uses variables `label`, `maxLabelWidth` and `i` in local scope)
  */

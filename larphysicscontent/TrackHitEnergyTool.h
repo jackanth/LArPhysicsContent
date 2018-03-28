@@ -28,7 +28,7 @@ class TrackHitEnergyTool : public AlgorithmTool
 {
 public:
     using HitPurityToolCallback = std::function<bool(LArFittedTrackInfo::TrackHitValueVector &, float &)>; ///< Alias for hit purity tool callback
-    
+
     /**
      *  @brief  Default constructor
      */
@@ -40,11 +40,11 @@ public:
 private:
     using HitProjectionPair   = std::pair<const CaloHit *, float>; ///< Alias for a map from CaloHits to their projected track coordinate
     using HitProjectionVector = std::vector<HitProjectionPair>;    ///< Alias for a vector of hit projection pairs
-    
+
     unsigned    m_trackSlidingFitWindow;    ///< The track sliding fit window to use.
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    
+
     /**
      *  @brief  Recurse through the PFO hierarchy and append the track fit map
      *
@@ -55,7 +55,7 @@ private:
      */
     void RecursivelyAppendMap(const ParticleFlowObject *const pPfo, float &excessCharge, HitPurityToolCallback hitPurityToolCallback,
         LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
-    
+
     /**
      *  @brief  Perform a 3D sliding track fit for a given PFO
      *
@@ -66,7 +66,7 @@ private:
      *  @return the 3D track fit
      */
     ThreeDSlidingFitResult PerformSlidingTrackFit(const ParticleFlowObject *const pPfo) const;
-    
+
     /**
      *  @brief  Append the track hit energy map for a given PFO
      *
@@ -77,7 +77,7 @@ private:
      */
     LArFittedTrackInfo::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
         const ThreeDSlidingFitResult &trackFit, float &excessCharge, HitPurityToolCallback hitPurityToolCallback) const;
-        
+
     /**
      *  @brief  Get a 3D distance from a cell
      *
@@ -88,7 +88,7 @@ private:
      *  @return the 3D distance
      */
     float CellToThreeDDistance(const float hitWidth, const float wirePitch, const CartesianVector &fitDirection) const;
-    
+
     /**
      *  @brief  Get the 3D distance from a CaloHit
      *
@@ -108,7 +108,7 @@ private:
      *  @return the polar and azimuthal angles
      */
     std::pair<float, float> GetPolarAnglesFromDirection(const CartesianVector &direction) const;
-    
+
         /**
      *  @brief  Get the range of a track-like PFO
      *

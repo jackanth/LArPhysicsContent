@@ -32,13 +32,13 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    
+
     CartesianVector    m_fiducialCutLowMargins;              ///< The low fiducial margins
     CartesianVector    m_fiducialCutHighMargins;             ///< The high fiducial cut margins
     CartesianVector              m_minCoordinates;                       ///< The detector's minimum fiducial coordinates
     CartesianVector              m_maxCoordinates;                       ///< The detector's maximum fiducial coordinates
     float              m_mcContainmentFractionLowerBound;    ///< The lower containment fraction bound for MC containment
-    
+
     /**
      *  @brief  Get MC information for a given MC particle
      *
@@ -49,7 +49,7 @@ private:
      *  @return the mc information
      */
     LArAnalysisParticleHelper::PfoMcInfo GetMcInformation(const MCParticle *const pMCParticle) const;
-        
+
       /**
      *  @brief  Recurse through the MC particle hierarchy and add up the escaped energy for the containment fraction calculation
      *

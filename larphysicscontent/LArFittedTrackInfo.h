@@ -26,7 +26,7 @@ class LArFittedTrackInfo
     using TrackHitValueVector  = std::vector<LArTrackHitValue>; ///< Alias for a vector of LArTrackHitValues
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  pPfo address of the PFO
      *  @param  hitChargeVector the hit charge vector
      *  @param  fit the 3D fit
@@ -36,7 +36,7 @@ class LArFittedTrackInfo
 
     /**
      *  @brief  Get the address of the PFO
-     * 
+     *
      *  @return the PFO address
      */
     const ParticleFlowObject * Pfo() const noexcept;

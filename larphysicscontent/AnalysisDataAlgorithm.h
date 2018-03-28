@@ -57,7 +57,7 @@ private:
     CartesianVector              m_fiducialCutHighMargins;               ///< The high fiducial cut margins
     CartesianVector              m_minCoordinates;                       ///< The detector's minimum fiducial coordinates
     CartesianVector              m_maxCoordinates;                       ///< The detector's maximum fiducial coordinates
-    
+
     bool             m_produceBirksFitData;                   ///< Whether to produce the Birks fit data
     bool             m_produceEnergyFromRangeData;            ///< Whether to produce energy-from-range data
     bool             m_producePidData;                        ///< Whether to produce proton PID data

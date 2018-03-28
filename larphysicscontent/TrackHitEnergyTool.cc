@@ -29,12 +29,12 @@ TrackHitEnergyTool::TrackHitEnergyTool() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TrackHitEnergyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo,
-    LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, float &excessCharge, 
+    LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, float &excessCharge,
     const HitPurityToolCallback &hitPurityToolCallback)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-    
+
     this->RecursivelyAppendMap(pPfo, excessCharge, hitPurityToolCallback, fittedTrackInfoMap);
     return true;
 }
@@ -51,7 +51,7 @@ void TrackHitEnergyTool::RecursivelyAppendMap(const ParticleFlowObject *const pP
             const ThreeDSlidingFitResult fitResult = this->PerformSlidingTrackFit(pPfo);
             const LArFittedTrackInfo::TrackHitValueVector hitChargeVector = this->AppendLArTrackHitEnergyMap(pPfo, fitResult, excessCharge, hitPurityToolCallback);
             const float range = this->GetParticleRange(pPfo, fitResult);
-            
+
             fittedTrackInfoMap.emplace(pPfo, LArFittedTrackInfo(pPfo, hitChargeVector, fitResult, range));
         }
 

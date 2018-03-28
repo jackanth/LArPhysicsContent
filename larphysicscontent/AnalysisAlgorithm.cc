@@ -206,7 +206,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     {
         LArAnalysisParticleHelper::FittedTrackInfoMap fittedTrackInfoMap;
         float excessCaloValue(0.f);
-        
+
         m_pTrackHitEnergyTool->Run(this, pInputPfo, fittedTrackInfoMap, excessCaloValue,
             [&](LArFittedTrackInfo::TrackHitValueVector &trackHitValueVector, float &excessCaloValue) -> bool
             {
@@ -729,13 +729,13 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     if (!(m_pHitPurityTool = dynamic_cast<HitPurityTool *>(pHitPurityAlgorithmTool)))
         throw STATUS_CODE_FAILURE;
-        
+
     AlgorithmTool *pMcInfoAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "McInfo", pMcInfoAlgorithmTool));
 
     if (!(m_pMcInfoTool = dynamic_cast<McInfoTool *>(pMcInfoAlgorithmTool)))
         throw STATUS_CODE_FAILURE;
-        
+
     AlgorithmTool *pTrackHitEnergyAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "TrackHitEnergy", pTrackHitEnergyAlgorithmTool));
 

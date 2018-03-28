@@ -667,11 +667,11 @@ void WriteAnalysisParticlesAlgorithm::CheckTreeVectorSizes() const
 void WriteAnalysisParticlesAlgorithm::PrintTree() const
 {
     std::cout << "Pandora Tree:\n";
-    
+
     constexpr std::size_t maxLabelWidth = 34UL;
     std::string label = " - [nu]        ";
     TREE_SCALAR_MEMBERS(PRINT_SCALAR_MEMBER)
-    
+
     for (int i = 0; i < m_treeParameters.m_primary_Number; ++i)
     {
         label = " - [primary " + std::to_string(i) + "] ";

@@ -139,7 +139,7 @@ StatusCode AnalysisDataAlgorithm::Run()
         // For each tracklike PFO, try to perform a 3D sliding linear fit and store it in a map.
         LArAnalysisParticleHelper::FittedTrackInfoMap fittedTrackInfoMap;
         float excessCaloValue(0.f);
-        
+
         m_pTrackHitEnergyTool->Run(this, pPfo, fittedTrackInfoMap, excessCaloValue,
             [&](LArFittedTrackInfo::TrackHitValueVector &trackHitValueVector, float &excessCaloValue) -> bool
             {
@@ -243,7 +243,7 @@ bool AnalysisDataAlgorithm::GetBirksFitData(const ParticleFlowObject *const pPfo
         totalNoBirksAdcIntegral += this->AddUpShowerAdcs(pPfo);
         return true;
     }
-    
+
     const auto findIter = fittedTrackInfoMap.find(pPfo);
     if (findIter == fittedTrackInfoMap.end())
     {
@@ -416,13 +416,13 @@ StatusCode AnalysisDataAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     if (!(m_pHitPurityTool = dynamic_cast<HitPurityTool *>(pHitPurityAlgorithmTool)))
         throw STATUS_CODE_FAILURE;
-        
+
     AlgorithmTool *pMcInfoAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "McInfo", pMcInfoAlgorithmTool));
 
     if (!(m_pMcInfoTool = dynamic_cast<McInfoTool *>(pMcInfoAlgorithmTool)))
         throw STATUS_CODE_FAILURE;
-        
+
     AlgorithmTool *pTrackHitEnergyAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "TrackHitEnergy", pTrackHitEnergyAlgorithmTool));
 
