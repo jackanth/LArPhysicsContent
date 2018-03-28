@@ -1,5 +1,5 @@
 /**
- *  @file   larphysicscontent/McInfoTool.h
+ *  @file   larphysicscontent/LArAnalysis/McInfoTool.h
  *
  *  @brief  Header file for the track hit energy tool class.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/AlgorithmTool.h"
 
-#include "larphysicscontent/LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
 
 using namespace pandora;
 

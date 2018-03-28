@@ -1,14 +1,14 @@
 /**
- *  @file   larphysicscontent/TrackHitEnergyTool.cc
+ *  @file   larphysicscontent/LArAnalysis/TrackHitEnergyTool.cc
  *
  *  @brief  Implementation of the track hit energy tool class.
  *
  *  $Log: $
  */
 
-#include "larphysicscontent/TrackHitEnergyTool.h"
+#include "larphysicscontent/LArAnalysis/TrackHitEnergyTool.h"
 
-#include "larphysicscontent/LArFittedTrackInfo.h"
+#include "larphysicscontent/LArObjects/LArFittedTrackInfo.h"
 
 #include "Pandora/AlgorithmHeaders.h"
 

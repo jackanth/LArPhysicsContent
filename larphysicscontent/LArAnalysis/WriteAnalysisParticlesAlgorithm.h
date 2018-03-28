@@ -1,5 +1,5 @@
 /**
- *  @file   larphysicscontent/WriteAnalysisParticlesAlgorithm.h
+ *  @file   larphysicscontent/LArAnalysis/WriteAnalysisParticlesAlgorithm.h
  *
  *  @brief  Header file for the write AnalysisParticles algorithm class.
  *
@@ -10,9 +10,9 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larphysicscontent/LArAnalysisParticle.h"
-#include "larphysicscontent/LArAnalysisParticleHelper.h"
-#include "larphysicscontent/McInfoTool.h"
+#include "larphysicscontent/LArObjects/LArAnalysisParticle.h"
+#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArAnalysis/McInfoTool.h"
 
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 

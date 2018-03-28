@@ -1,5 +1,5 @@
 /**
- *  @file   larphysicscontent/HitPurityTool.h
+ *  @file   larphysicscontent/LArAnalysis/HitPurityTool.h
  *
  *  @brief  Header file for the hit purity tool class.
  *
@@ -10,9 +10,10 @@
 
 #include "Pandora/AlgorithmTool.h"
 
-#include "larphysicscontent/LArTrackHitValue.h"
-#include "larphysicscontent/LArAnalysisParticleHelper.h"
-#include "larphysicscontent/LArFittedTrackInfo.h"
+#include "larphysicscontent/LArObjects/LArTrackHitValue.h"
+#include "larphysicscontent/LArObjects/LArFittedTrackInfo.h"
+
+#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
 
 using namespace pandora;
 

@@ -1,7 +1,7 @@
 /**
- *  @file  larphysicscontent/AnalysisAlgorithm.h
+ *  @file   larphysicscontent/LArAnalysis/AnalysisAlgorithm.h
  *
- *  @brief Header file for the analysis algorithm class.
+ *  @brief  Header file for the analysis algorithm class.
  *
  *  $Log: $
  */
@@ -13,12 +13,14 @@
 #include "larpandoracontent/LArCustomParticles/CustomParticleCreationAlgorithm.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "larphysicscontent/LArAnalysisParticleHelper.h"
-#include "larphysicscontent/LArAnalysisParticle.h"
-#include "larphysicscontent/LArTrackHitValue.h"
-#include "larphysicscontent/TrackHitEnergyTool.h"
-#include "larphysicscontent/McInfoTool.h"
-#include "larphysicscontent/HitPurityTool.h"
+#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
+
+#include "larphysicscontent/LArObjects/LArAnalysisParticle.h"
+#include "larphysicscontent/LArObjects/LArTrackHitValue.h"
+
+#include "larphysicscontent/LArAnalysis/TrackHitEnergyTool.h"
+#include "larphysicscontent/LArAnalysis/McInfoTool.h"
+#include "larphysicscontent/LArAnalysis/HitPurityTool.h"
 
 #include "TNtuple.h"
 #include "TMVA/Tools.h"

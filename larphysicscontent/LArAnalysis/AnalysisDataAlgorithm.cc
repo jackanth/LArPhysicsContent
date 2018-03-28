@@ -1,13 +1,13 @@
 /**
- *  @file LArPhysicsContent/src/AnalysisDataAlgorithm.cxx
+ *  @file   larphysicscontent/LArAnalysis/AnalysisDataAlgorithm.cxx
  *
- *  @brief Implementation of the LEE analysis data algorithm class.
+ *  @brief  Implementation of the lar analysis data algorithm class.
  *
  *  $Log: $
  */
 
-#include "larphysicscontent/AnalysisDataAlgorithm.h"
-#include "larphysicscontent/LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArAnalysis/AnalysisDataAlgorithm.h"
+#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
 
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/PdgTable.h"

@@ -1,13 +1,14 @@
 /**
- *  @file   larphysicscontent/LArAnalysisParticle.cc
+ *  @file   larphysicscontent/LArObjects/LArAnalysisParticle.cc
  *
  *  @brief  Implementation of the lar analysis particle class.
  *
  *  $Log: $
  */
 
-#include "larphysicscontent/LArAnalysisParticle.h"
-#include "larphysicscontent/LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArObjects/LArAnalysisParticle.h"
+
+#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
 
 using namespace pandora;
 

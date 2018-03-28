@@ -1,12 +1,12 @@
 /**
- *  @file   larphysicscontent/McInfoTool.cc
+ *  @file   larphysicscontent/LArAnalysis/McInfoTool.cc
  *
  *  @brief  Implementation of the MC info tool class.
  *
  *  $Log: $
  */
 
-#include "larphysicscontent/McInfoTool.h"
+#include "larphysicscontent/LArAnalysis/McInfoTool.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 

@@ -1,5 +1,5 @@
 /**
- *  @file   larphysicscontent/AnalysisDataAlgorithm.h
+ *  @file   larphysicscontent/LArAnalysis/AnalysisDataAlgorithm.h
  *
  *  @brief  Header file for the lar analysis data algorithm class.
  *
@@ -13,10 +13,11 @@
 #include "Objects/ParticleFlowObject.h"
 #include "Objects/MCParticle.h"
 
-#include "larphysicscontent/TrackHitEnergyTool.h"
-#include "larphysicscontent/McInfoTool.h"
-#include "larphysicscontent/HitPurityTool.h"
-#include "larphysicscontent/LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArAnalysis/TrackHitEnergyTool.h"
+#include "larphysicscontent/LArAnalysis/McInfoTool.h"
+#include "larphysicscontent/LArAnalysis/HitPurityTool.h"
+
+#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
 
 #include "TNtuple.h"
 #include "TTree.h"

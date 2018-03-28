@@ -1,5 +1,5 @@
 /**
- *  @file   larphysicscontent/LArFittedTrackInfo.h
+ *  @file   larphysicscontent/LArObjects/LArFittedTrackInfo.h
  *
  *  @brief  Header file for the lar fitted track info class.
  *
@@ -8,7 +8,8 @@
 #ifndef LAR_FITTED_TRACK_INFO_H
 #define LAR_FITTED_TRACK_INFO_H 1
 
-#include "larphysicscontent/LArTrackHitValue.h"
+#include "larphysicscontent/LArObjects/LArTrackHitValue.h"
+
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 using namespace pandora;

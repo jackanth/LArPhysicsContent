@@ -13,12 +13,12 @@
 
 #include "larphysicscontent/LArPhysicsContent.h"
 
-#include "larphysicscontent/AnalysisAlgorithm.h"
-#include "larphysicscontent/AnalysisDataAlgorithm.h"
-#include "larphysicscontent/WriteAnalysisParticlesAlgorithm.h"
-#include "larphysicscontent/TrackHitEnergyTool.h"
-#include "larphysicscontent/McInfoTool.h"
-#include "larphysicscontent/HitPurityTool.h"
+#include "larphysicscontent/LArAnalysis/AnalysisAlgorithm.h"
+#include "larphysicscontent/LArAnalysis/AnalysisDataAlgorithm.h"
+#include "larphysicscontent/LArAnalysis/WriteAnalysisParticlesAlgorithm.h"
+#include "larphysicscontent/LArAnalysis/TrackHitEnergyTool.h"
+#include "larphysicscontent/LArAnalysis/McInfoTool.h"
+#include "larphysicscontent/LArAnalysis/HitPurityTool.h"
 
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
     d("LArAnalysis",                AnalysisAlgorithm)                                                                          \

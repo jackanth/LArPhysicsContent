@@ -1,18 +1,18 @@
 /**
- *  @file   larphysicscontent/HitPurityTool.cc
+ *  @file   larphysicscontent/LArAnalysis/HitPurityTool.cc
  *
  *  @brief  Implementation of the hit purity tool class.
  *
  *  $Log: $
  */
 
-#include "larphysicscontent/HitPurityTool.h"
+#include "larphysicscontent/LArAnalysis/HitPurityTool.h"
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "../root/Common.h" // ATTN temporary
-#include "TNtuple.h"        // ATTN temporary
-#include "TCanvas.h"        // ATTN temporary
+#include "../../root/Common.h" // ATTN temporary
+#include "TNtuple.h"           // ATTN temporary
+#include "TCanvas.h"           // ATTN temporary
 
 using namespace pandora;
 

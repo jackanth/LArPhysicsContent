@@ -1,5 +1,5 @@
 /**
- *  @file   larphysicscontent/LArAnalysisParticle.h
+ *  @file   larphysicscontent/LArObjects/LArAnalysisParticle.h
  *
  *  @brief  Header file for the lar analysis particle class.
  *

@@ -1,12 +1,12 @@
 /**
- *  @file   larphysicscontent/LArAnalysisParticleHelper.cxx
+ *  @file   larphysicscontent/LArHelpers/LArAnalysisParticleHelper.cxx
  *
  *  @brief  Implementation of the lar analysis particle helper class.
  *
  *  $Log: $
  */
 
-#include "larphysicscontent/LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"

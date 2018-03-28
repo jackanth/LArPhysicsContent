@@ -1,12 +1,12 @@
 /**
- *  @file   larphysicscontent/WriteAnalysisParticlesAlgorithm.cc
+ *  @file   larphysicscontent/LArAnalysis/WriteAnalysisParticlesAlgorithm.cc
  *
  *  @brief  Implementation of the write AnalysisParticles algorithm class.
  *
  *  $Log: $
  */
 
-#include "larphysicscontent/WriteAnalysisParticlesAlgorithm.h"
+#include "larphysicscontent/LArAnalysis/WriteAnalysisParticlesAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 

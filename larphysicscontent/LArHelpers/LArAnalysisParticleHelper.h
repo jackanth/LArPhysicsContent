@@ -1,5 +1,5 @@
 /**
- *  @file   larphysicscontent/LArAnalysisParticleHelper.h
+ *  @file   larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h
  *
  *  @brief  Header file for the lar analysis particle helper class.
  *
@@ -13,9 +13,9 @@
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "larphysicscontent/LArAnalysisParticle.h"
-#include "larphysicscontent/LArTrackHitValue.h"
-#include "larphysicscontent/LArFittedTrackInfo.h"
+#include "larphysicscontent/LArObjects/LArAnalysisParticle.h"
+#include "larphysicscontent/LArObjects/LArTrackHitValue.h"
+#include "larphysicscontent/LArObjects/LArFittedTrackInfo.h"
 
 #include "TNtuple.h"
 

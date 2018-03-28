@@ -1,5 +1,5 @@
 /**
- *  @file   larphysicscontent/TrackHitEnergyTool.h
+ *  @file   larphysicscontent/LArAnalysis/TrackHitEnergyTool.h
  *
  *  @brief  Header file for the track hit energy tool class.
  *
@@ -10,9 +10,10 @@
 
 #include "Pandora/AlgorithmTool.h"
 
-#include "larphysicscontent/LArTrackHitValue.h"
-#include "larphysicscontent/LArAnalysisParticleHelper.h"
-#include "larphysicscontent/LArFittedTrackInfo.h"
+#include "larphysicscontent/LArObjects/LArTrackHitValue.h"
+#include "larphysicscontent/LArObjects/LArFittedTrackInfo.h"
+
+#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
 
 #include <functional>
 

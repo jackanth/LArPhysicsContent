@@ -1,5 +1,5 @@
 /**
- *  @file   larphysicscontent/LArTrackHitValue.h
+ *  @file   larphysicscontent/LArObjects/LArTrackHitValue.h
  *
  *  @brief  Header file for the track hit value class.
  *
