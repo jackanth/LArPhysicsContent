@@ -16,6 +16,8 @@
 #include "larphysicscontent/LArAnalysisParticleHelper.h"
 #include "larphysicscontent/LArAnalysisParticle.h"
 #include "larphysicscontent/LArTrackHitValue.h"
+#include "larphysicscontent/TrackHitEnergyTool.h"
+#include "larphysicscontent/McInfoTool.h"
 #include "larphysicscontent/HitPurityTool.h"
 
 #include "TNtuple.h"
@@ -71,12 +73,11 @@ private:
 
     using EnergyFromRangeDataVector = std::vector<EnergyFromRangeData>; ///< Alias for a vector of energy-from-range data entries
 
-    float                        m_fiducialCutLowXMargin;                ///< The low-x fiducial margin
-    float                        m_fiducialCutHighXMargin;               ///< The high-x fiducial cut margin
-    float                        m_fiducialCutLowYMargin;                ///< The low-y fiducial cut margin
-    float                        m_fiducialCutHighYMargin;               ///< The high-y fiducial cut margin
-    float                        m_fiducialCutLowZMargin;                ///< The low-z fiducial cut margin
-    float                        m_fiducialCutHighZMargin;               ///< The high-z fiducial cut margin
+    CartesianVector              m_fiducialCutLowMargins;                ///< The low fiducial margins
+    CartesianVector              m_fiducialCutHighMargins;               ///< The high fiducial cut margins
+    CartesianVector              m_minCoordinates;                       ///< The detector's minimum fiducial coordinates
+    CartesianVector              m_maxCoordinates;                       ///< The detector's maximum fiducial coordinates
+    
     float                        m_birksSelectionMaxdEdX;                ///< The maximum corrected dEdX value allowed.
     float                        m_mcContainmentFractionLowerBound;      ///< The lower containment fraction bound for MC containment
     unsigned int                 m_trackSlidingFitWindow;                ///< The sliding fit window for 3D track fits
@@ -94,35 +95,15 @@ private:
     float                        m_birksFitPole;                         ///< The Birks fit dEdX pole value
     EnergyFromRangeDataVector    m_protonEnergyFromRangeDataVector;      ///< The vector of proton energy-from-range data entries
     EnergyFromRangeDataVector    m_pionMuonEnergyFromRangeDataVector;    ///< The vector of pion/muon energy-from-range data entries
-    CartesianVector              m_minCoordinates;                       ///< The detector's minimum fiducial coordinates
-    CartesianVector              m_maxCoordinates;                       ///< The detector's maximum fiducial coordinates
+    
+    TrackHitEnergyTool *m_pTrackHitEnergyTool;                        ///< Address of the track hit energy tool
+    McInfoTool *m_pMcInfoTool;                        ///< Address of the MC info tool
     HitPurityTool               *m_pHitPurityTool;                       ///< Address of the hit purity tool
     TMVA::Reader                *m_pTmvaReader;                          ///< Address of the TMVA Reader object
 
     mutable float                m_tmvaTrackLength;                      ///< Mutable track length member variable for TMVA to use
     mutable float                m_tmvaAvgEnergyDeposition;              ///< Mutable average energy deposition member variable for TMVA to use
     mutable int                  m_uniquePlotIdentifier;                 ///< Unique plot identifier (ATTN temporary)
-
-    /**
-     *  @brief  Recurse through the PFO hierarchy and append the track hit energy map
-     *
-     *  @param  pPfo address of the current PFO
-     *  @param  trackHitEnergyMap the track hit energy map to append
-     *  @param  trackFitMap the track fit map
-     */
-    void RecursivelyAppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo, LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap,
-        const LArAnalysisParticleHelper::TrackFitMap &trackFitMap) const;
-
-    /**
-     *  @brief  Append the track hit energy map for a given PFO
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  trackFit the PFO's 3D fit
-     *
-     *  @return the vector of track hit energies
-     */
-    LArAnalysisParticleHelper::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
-        const ThreeDSlidingFitResult &trackFit) const;
 
     /**
      *  @brief  Recurse through the PFO hierarchy and append the particle type map
@@ -133,7 +114,7 @@ private:
      *  @param  trackFitMap the track fit map
      */
     void RecursivelyAppendParticleTypeMap(const ParticleFlowObject *const pPfo, LArAnalysisParticle::PfoTypeMap &pfoTypeMap,
-        const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap) const;
+        const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
 
     /**
      *  @brief  Estimate the particle type for a given PFO
@@ -145,7 +126,7 @@ private:
      *  @return the estimated particle type
      */
     LArAnalysisParticle::TYPE EstimateParticleType(const ParticleFlowObject *const pPfo,
-        const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap) const;
+        const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
 
     /**
      *  @brief  Estimate the energy of a PFO
@@ -161,7 +142,7 @@ private:
      *  @param  energySourcedFromCorrectedTrackCharge the amount of energy sourced from Birks-corrected track charge value to populate
      */
     void EstimateParticleEnergy(const ParticleFlowObject *const pPfo, const LArAnalysisParticle::PfoTypeMap &typeMap,
-        const LArAnalysisParticleHelper::TrackFitMap &trackFitMap, const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap,
+        const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
         float &particleEnergy, float &energySourcedFromRange, float &energySourcedFromShowerCharge, float &energySourcedFromTrackCharge,
         float &energySourcedFromCorrectedTrackCharge) const;
 
@@ -209,14 +190,14 @@ private:
      *
      *  @return the estimated track energy
      */
-    float EstimateTrackEnergyFromCharge(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector) const;
+    float EstimateTrackEnergyFromCharge(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector) const;
 
     /**
      *  @brief  Decide which track hits to correct for recombination for a track-like PFO
      *
      *  @param  trackHitEnergyVector the track hit energy vector for the track-like PFO
      */
-    void DecideWhichTrackHitsToCorrect(LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector) const;
+    void DecideWhichTrackHitsToCorrect(LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector) const;
 
     /**
      *  @brief  Estimate the energy of a track-like PFO using its range
@@ -228,8 +209,7 @@ private:
      *
      *  @return the estimated energy
      */
-    float EstimateTrackEnergyFromRange(const ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &trackFit,
-        const LArAnalysisParticle::TYPE particleType, const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector) const;
+    float EstimateTrackEnergyFromRange(const LArFittedTrackInfo &fittedTrackInfo, const LArAnalysisParticle::TYPE particleType) const;
 
     /**
      *  @brief  Create a type tree for a given PFO and its descendents using the type map
@@ -251,7 +231,7 @@ private:
      *
      *  @return the direction of the PFO at the vertex
      */
-    CartesianVector GetDirectionAtVertex(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
+    CartesianVector GetDirectionAtVertex(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
         const Vertex *const pVertex, const bool isCosmicRay) const;
 
     /**

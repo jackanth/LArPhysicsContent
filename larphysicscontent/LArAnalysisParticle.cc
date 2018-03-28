@@ -60,10 +60,10 @@ void LArAnalysisParticle::Print() const
     if (m_hasMcInfo)
     {
         std::cout << "LArAnalysisParticle at " << this << ": \n"
-              << "    - Type:                      " << LArAnalysisParticleHelper::TypeAsString(m_type) << "\n"
-              << "    - MC type:                   " << LArAnalysisParticleHelper::TypeAsString(m_mcType) << "\n"
-              << "    - Type tree:                 " << LArAnalysisParticleHelper::TypeTreeAsString(m_typeTree) << "\n"
-              << "    - MC type tree:              " << LArAnalysisParticleHelper::TypeTreeAsString(m_mcTypeTree) << "\n"
+              << "    - Type:                      " << LArAnalysisParticle::TypeAsString(m_type) << '\n'
+              << "    - MC type:                   " << LArAnalysisParticle::TypeAsString(m_mcType) << '\n'
+              << "    - Type tree:                 " << LArAnalysisParticleHelper::TypeTreeAsString(m_typeTree) << '\n'
+              << "    - MC type tree:              " << LArAnalysisParticleHelper::TypeTreeAsString(m_mcTypeTree) << '\n'
               << "    - Kinetic energy:            " << 1000.f * m_kineticEnergy << "MeV\n"
               << "    - MC kinetic energy:         " << 1000.f * m_mcKineticEnergy << "MeV\n"
               << "    - MC energy:                 " << 1000.f * m_mcEnergy << "MeV\n"
@@ -72,8 +72,8 @@ void LArAnalysisParticle::Print() const
               << "    - KE from corr track charge: " << 100.f * m_kineticEnergyFromCorrectedTrackChargeFraction << "%\n"
               << "    - KE from track charge:      " << 100.f * m_kineticEnergyFromUncorrectedTrackChargeFraction << "%\n"
               << "    - KE from shower charge:     " << 100.f * m_kineticEnergyFromShowerChargeFraction << "%\n"
-              << "    - Is vertex fiducial:        " << std::boolalpha << m_isVertexFiducial << std::noboolalpha << "\n"
-              << "    - MC is vertex fiducial:     " << std::boolalpha << m_mcIsVertexFiducial << std::noboolalpha << "\n"
+              << "    - Is vertex fiducial:        " << std::boolalpha << m_isVertexFiducial << std::noboolalpha << '\n'
+              << "    - MC is vertex fiducial:     " << std::boolalpha << m_mcIsVertexFiducial << std::noboolalpha << '\n'
               << "    - Fiducial hit fraction:     " << 100.f * m_fiducialHitFraction << "%\n"
               << "    - MC containment fraction:   " << 100.f * m_mcContainmentFraction << "%\n"
               << "    - Vertex:                    " << "(" << m_vertexPosition.GetX() << ", " << m_vertexPosition.GetY()
@@ -89,13 +89,13 @@ void LArAnalysisParticle::Print() const
                                                      << 1000.f * m_analysisMomentum.GetZ() << ") MeV/c\n"
               << "    - MC momentum:               " << "(" << 1000.f * m_mcMomentum.GetX() << ", " << 1000.f * m_mcMomentum.GetY() << ", "
                                                      << 1000.f * m_mcMomentum.GetZ() << ") MeV/c\n"
-              << "    - Num 3D hits:               " << m_numberOf3dHits << "\n"
-              << "    - Num collection-plane hits: " << m_numberOfCollectionPlaneHits << "\n"
-              << "    - Is shower:                 " << std::boolalpha << m_isShower << std::noboolalpha << "\n"
-              << "    - MC is shower:              " << std::boolalpha << m_mcIsShower << std::noboolalpha << "\n"
-              << "    - Num downstream particles:  " << m_numberOfDownstreamParticles << "\n"
-              << "    - Has MC info:               " << std::boolalpha << m_hasMcInfo << std::noboolalpha << "\n"
-              << "    - MC PDG code:               " << m_mcPdgCode << "\n"
+              << "    - Num 3D hits:               " << m_numberOf3dHits << '\n'
+              << "    - Num collection-plane hits: " << m_numberOfCollectionPlaneHits << '\n'
+              << "    - Is shower:                 " << std::boolalpha << m_isShower << std::noboolalpha << '\n'
+              << "    - MC is shower:              " << std::boolalpha << m_mcIsShower << std::noboolalpha << '\n'
+              << "    - Num downstream particles:  " << m_numberOfDownstreamParticles << '\n'
+              << "    - Has MC info:               " << std::boolalpha << m_hasMcInfo << std::noboolalpha << '\n'
+              << "    - MC PDG code:               " << m_mcPdgCode << '\n'
               << "    - MC hit purity:             " << 100.f * m_mcHitPurity << "%\n"
               << "    - MC hit completeness:       " << 100.f * m_mcHitCompleteness << "%\n"
               << "    - MC hit purity (W):         " << 100.f * m_mcCollectionPlaneHitPurity << "%\n"
@@ -107,7 +107,7 @@ void LArAnalysisParticle::Print() const
     else
     {
         std::cout << "LArAnalysisParticle at " << this << ": \n"
-                  << "    - Type:                      " << LArAnalysisParticleHelper::TypeAsString(m_type) << "\n"
+                  << "    - Type:                      " << LArAnalysisParticle::TypeAsString(m_type) << '\n'
                   << "    - Type tree:                 " << LArAnalysisParticleHelper::TypeTreeAsString(m_typeTree) << "\n"
                   << "    - Kinetic energy:            " << 1000.f * m_kineticEnergy << "MeV\n"
                   << "    - KE from range:             " << 100.f * m_kineticEnergyFromRangeFraction << "%\n"
@@ -115,7 +115,7 @@ void LArAnalysisParticle::Print() const
                   << "    - KE from track charge:      " << 100.f * m_kineticEnergyFromUncorrectedTrackChargeFraction << "%\n"
                   << "    - KE from shower charge:     " << 100.f * m_kineticEnergyFromShowerChargeFraction << "%\n"
                   << "    - Is vertex fiducial:        " << std::boolalpha << m_isVertexFiducial << std::noboolalpha
-                                                         << "\n"
+                                                         << '\n'
                   << "    - Fiducial hit fraction:     " << 100.f * m_fiducialHitFraction << "%\n"
                   << "    - Vertex:                    " << "(" << m_vertexPosition.GetX() << ", " << m_vertexPosition.GetY()
                                                          << ", " << m_vertexPosition.GetZ() << ") cm\n"
@@ -124,13 +124,31 @@ void LArAnalysisParticle::Print() const
                   << "    - Momentum:                  " << "(" << 1000.f * m_analysisMomentum.GetX() << ", "
                                                          << 1000.f * m_analysisMomentum.GetY() << ", "
                                                          << 1000.f * m_analysisMomentum.GetZ() << ") MeV/c\n"
-                  << "    - Num 3D hits:               " << m_numberOf3dHits << "\n"
-                  << "    - Num collection-plane hits: " << m_numberOfCollectionPlaneHits << "\n"
-                  << "    - Is shower:                 " << std::boolalpha << m_isShower << std::noboolalpha << "\n"
-                  << "    - Num downstream particles:  " << m_numberOfDownstreamParticles << "\n"
+                  << "    - Num 3D hits:               " << m_numberOf3dHits << '\n'
+                  << "    - Num collection-plane hits: " << m_numberOfCollectionPlaneHits << '\n'
+                  << "    - Is shower:                 " << std::boolalpha << m_isShower << std::noboolalpha << '\n'
+                  << "    - Num downstream particles:  " << m_numberOfDownstreamParticles << '\n'
                   << "    - Has MC info:               " << std::boolalpha << m_hasMcInfo << std::noboolalpha
                   << std::endl;
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::string LArAnalysisParticle::TypeAsString(const LArAnalysisParticle::TYPE type)
+{
+    switch (type)
+    {
+        case TYPE::PION_MUON:  return "PION_MUON";
+        case TYPE::PROTON:     return "PROTON";
+        case TYPE::SHOWER:     return "SHOWER";
+        case TYPE::TRACK:      return "TRACK";
+        case TYPE::NEUTRINO:   return "NEUTRINO";
+        case TYPE::COSMIC_RAY: return "COSMIC_RAY";
+        default: break;
+    }
+
+    return "UNKNOWN";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

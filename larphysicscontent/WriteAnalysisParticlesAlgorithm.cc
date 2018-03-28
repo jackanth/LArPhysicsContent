@@ -5,6 +5,7 @@
  *
  *  $Log: $
  */
+
 #include "larphysicscontent/WriteAnalysisParticlesAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
@@ -27,18 +28,10 @@ WriteAnalysisParticlesAlgorithm::WriteAnalysisParticlesAlgorithm() :
     m_verbose(false),
     m_treeParameters(),
     m_mcParticleListName(),
-    m_fiducialCutLowXMargin(10.f),
-    m_fiducialCutHighXMargin(10.f),
-    m_fiducialCutLowYMargin(20.f),
-    m_fiducialCutHighYMargin(20.f),
-    m_fiducialCutLowZMargin(10.f),
-    m_fiducialCutHighZMargin(10.f),
-    m_minCoordinates(0.f, 0.f, 0.f),
-    m_maxCoordinates(0.f, 0.f, 0.f),
-    m_mcContainmentFractionLowerBound(0.9f),
     m_fiducialHitFractionLowerBound(0.9f),
     m_mcOnlyParticleContainmentCut(0.f),
-    m_mcOnlyParticleEnergyCut(0.f)
+    m_mcOnlyParticleEnergyCut(0.f),
+    m_pMcInfoTool(nullptr)
 {
 }
 
@@ -186,8 +179,8 @@ void WriteAnalysisParticlesAlgorithm::RecordUnreconstructedParticles(const MCPar
 void WriteAnalysisParticlesAlgorithm::RecordUnreconstructedParticle(const MCParticleList *const pMCParticleList, const MCParticle *const pMCPrimary) const
 {
     // Perform any quality cuts before recording.
-    const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(pMCPrimary, m_minCoordinates, m_maxCoordinates,
-        m_mcContainmentFractionLowerBound);
+    LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo;
+    m_pMcInfoTool->Run(this, pMCPrimary, pfoMcInfo);
 
     if ((pfoMcInfo.m_mcEnergy < m_mcOnlyParticleEnergyCut) || (pfoMcInfo.m_mcContainmentFraction < m_mcOnlyParticleContainmentCut))
         return;
@@ -291,9 +284,8 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
     // Populate the MC parameters if the info exists - if not, they can be left at default values.
     if (neutrinoAnalysisParticle.HasMcInfo() && neutrinoAnalysisParticle.McMainMCParticle())
     {
-        const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(neutrinoAnalysisParticle.McMainMCParticle(), m_minCoordinates,
-            m_maxCoordinates, m_mcContainmentFractionLowerBound);
-
+        LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo;
+        m_pMcInfoTool->Run(this, neutrinoAnalysisParticle.McMainMCParticle(), pfoMcInfo);
         this->PopulateNeutrinoMcParameters(pfoMcInfo, pMCParticleList);
     }
 }
@@ -490,8 +482,8 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysis
     // Add the MC record if the info is there, otherwise populate a blank record.
     if (primaryAnalysisParticle.HasMcInfo() && primaryAnalysisParticle.McMainMCParticle())
     {
-        const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(primaryAnalysisParticle.McMainMCParticle(),
-            m_minCoordinates, m_maxCoordinates, m_mcContainmentFractionLowerBound);
+        LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo;
+        m_pMcInfoTool->Run(this, primaryAnalysisParticle.McMainMCParticle(), pfoMcInfo);
 
         const bool particleSplitByReco = (coveredMCPrimaries.count(primaryAnalysisParticle.McMainMCParticle()) > 1U);
         this->AddPrimaryDaughterMcRecord(pfoMcInfo, particleSplitByReco);
@@ -552,7 +544,6 @@ void WriteAnalysisParticlesAlgorithm::AddBlankPrimaryDaughterMcRecord() const
 void WriteAnalysisParticlesAlgorithm::AddMcOnlyPrimaryDaughterRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo) const
 {
     // m_primary_Number is dealt with by the calling method.
-
     TREE_VECTOR_MEMBERS_PRIMARY(VECTOR_MEMBER_PUSH_DEFAULT)
 
     this->AddPrimaryDaughterMcRecord(pfoMcInfo, false); // cannot refer to a split particle by construction
@@ -593,8 +584,8 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
     // Add the MC record if the info is there, otherwise populate a blank record.
     if (cosmicRayAnalysisParticle.HasMcInfo())
     {
-        const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(cosmicRayAnalysisParticle.McMainMCParticle(),
-            m_minCoordinates, m_maxCoordinates, m_mcContainmentFractionLowerBound);
+        LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo;
+        m_pMcInfoTool->Run(this, cosmicRayAnalysisParticle.McMainMCParticle(), pfoMcInfo);
 
         const bool particleSplitByReco = (coveredMCPrimaries.count(cosmicRayAnalysisParticle.McMainMCParticle()) > 1U);
         this->AddCosmicRayMcRecord(pfoMcInfo, particleSplitByReco);
@@ -656,7 +647,6 @@ void WriteAnalysisParticlesAlgorithm::AddBlankCosmicRayMcRecord() const
 void WriteAnalysisParticlesAlgorithm::AddMcOnlyCosmicRayRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo) const
 {
     // m_cr_Number is dealt with by the calling method.
-
     TREE_VECTOR_MEMBERS_CR(VECTOR_MEMBER_PUSH_DEFAULT)
 
     this->AddCosmicRayMcRecord(pfoMcInfo, false); // cannot refer to a split particle by construction
@@ -676,179 +666,24 @@ void WriteAnalysisParticlesAlgorithm::CheckTreeVectorSizes() const
 
 void WriteAnalysisParticlesAlgorithm::PrintTree() const
 {
-    const std::string nuLabel = " - [nu]        ";
-
     std::cout << "Pandora Tree:\n";
-    std::cout << nuLabel << "Was reconstructed:                " << std::boolalpha << m_treeParameters.m_nu_WasReconstructed << std::noboolalpha << '\n';
-    std::cout << nuLabel << "Is vertex fiducial:               " << std::boolalpha << m_treeParameters.m_nu_IsVertexFiducial << std::noboolalpha << '\n';
-    std::cout << nuLabel << "Is contained:                     " << std::boolalpha << m_treeParameters.m_nu_IsContained << std::noboolalpha << '\n';
-    std::cout << nuLabel << "Fiducial hit fraction:            " << 100.f * m_treeParameters.m_nu_FiducialHitFraction << "%\n";
-    std::cout << nuLabel << "Has MC info:                      " << std::boolalpha << m_treeParameters.m_nu_HasMcInfo << std::noboolalpha << '\n';
-    std::cout << nuLabel << "Visible energy:                   " << 1000.f * m_treeParameters.m_nu_VisibleEnergy << " MeV\n";
-    std::cout << nuLabel << "Longitudinal visible energy:      " << 1000.f * m_treeParameters.m_nu_VisibleLongitudinalEnergy << " MeV\n";
-    std::cout << nuLabel << "Transverse visible energy:        " << 1000.f * m_treeParameters.m_nu_VisibleTransverseEnergy << " MeV\n";
-    std::cout << nuLabel << "E frac from range:                " << 100.f * m_treeParameters.m_nu_VisibleEnergyFracFromRange << "%\n";
-    std::cout << nuLabel << "E frac from cor. track charge:    " << 100.f * m_treeParameters.m_nu_VisibleEnergyFracFromCorrectedTrackCharge << "%\n";
-    std::cout << nuLabel << "E frac from uncor. track charge:  " << 100.f * m_treeParameters.m_nu_VisibleEnergyFracFromUncorrectedTrackCharge << "%\n";
-    std::cout << nuLabel << "E frac from shower charge:        " << 100.f * m_treeParameters.m_nu_VisibleEnergyFracFromShowerCharge << "%\n";
-    std::cout << nuLabel << "Vertex x:                         " << m_treeParameters.m_nu_VertexX << " cm\n";
-    std::cout << nuLabel << "Vertex y:                         " << m_treeParameters.m_nu_VertexY << " cm\n";
-    std::cout << nuLabel << "Vertex z:                         " << m_treeParameters.m_nu_VertexZ << " cm\n";
-    std::cout << nuLabel << "Dir cosine x:                     " << m_treeParameters.m_nu_DirectionCosineX << '\n';
-    std::cout << nuLabel << "Dir cosine y:                     " << m_treeParameters.m_nu_DirectionCosineY << '\n';
-    std::cout << nuLabel << "Dir cosine z:                     " << m_treeParameters.m_nu_DirectionCosineZ << '\n';
-    std::cout << nuLabel << "Momentum:                         " << 1000.f * m_treeParameters.m_nu_Momentum << " MeV/c\n";
-    std::cout << nuLabel << "Momentum x:                       " << 1000.f * m_treeParameters.m_nu_MomentumX << " MeV/c\n";
-    std::cout << nuLabel << "Momentum y:                       " << 1000.f * m_treeParameters.m_nu_MomentumY << " MeV/c\n";
-    std::cout << nuLabel << "Momentum z:                       " << 1000.f * m_treeParameters.m_nu_MomentumZ << " MeV/c\n";
-    std::cout << nuLabel << "Type tree:                        " << m_treeParameters.m_nu_TypeTree << '\n';
-    std::cout << nuLabel << "Number of 3D hits:                " << m_treeParameters.m_nu_NumberOf3dHits << '\n';
-    std::cout << nuLabel << "Number of coll plane hits:        " << m_treeParameters.m_nu_NumberOfCollectionPlaneHits << '\n';
-    std::cout << nuLabel << "Number of reco particles:         " << m_treeParameters.m_nu_NumberOfRecoParticles << '\n';
-    std::cout << nuLabel << "Number of reco tracks:            " << m_treeParameters.m_nu_NumberOfRecoTracks << '\n';
-    std::cout << nuLabel << "Number of reco showers:           " << m_treeParameters.m_nu_NumberOfRecoShowers << '\n';
-    std::cout << nuLabel << "MC particle UID:                  " << m_treeParameters.m_nu_mc_McParticleUid << '\n';
-    std::cout << nuLabel << "MC energy:                        " << 1000.f * m_treeParameters.m_nu_mc_Energy << " MeV\n";
-    std::cout << nuLabel << "MC longitudinal energy:           " << 1000.f * m_treeParameters.m_nu_mc_LongitudinalEnergy << " MeV\n";
-    std::cout << nuLabel << "MC transverse energy:             " << 1000.f * m_treeParameters.m_nu_mc_TransverseEnergy << " MeV\n";
-    std::cout << nuLabel << "MC visible energy:                " << 1000.f * m_treeParameters.m_nu_mc_VisibleEnergy << " MeV\n";
-    std::cout << nuLabel << "MC visible long energy:           " << 1000.f * m_treeParameters.m_nu_mc_VisibleLongitudinalEnergy << " MeV\n";
-    std::cout << nuLabel << "MC visible trans energy:          " << 1000.f * m_treeParameters.m_nu_mc_VisibleTransverseEnergy << " MeV\n";
-    std::cout << nuLabel << "MC vertex x:                      " << m_treeParameters.m_nu_mc_VertexX << " cm\n";
-    std::cout << nuLabel << "MC vertex y:                      " << m_treeParameters.m_nu_mc_VertexY << " cm\n";
-    std::cout << nuLabel << "MC vertex z:                      " << m_treeParameters.m_nu_mc_VertexZ << " cm\n";
-    std::cout << nuLabel << "MC dir cosine x:                  " << m_treeParameters.m_nu_mc_DirectionCosineX << '\n';
-    std::cout << nuLabel << "MC dir cosine y:                  " << m_treeParameters.m_nu_mc_DirectionCosineY << '\n';
-    std::cout << nuLabel << "MC dir cosine z:                  " << m_treeParameters.m_nu_mc_DirectionCosineZ << '\n';
-    std::cout << nuLabel << "MC momentum:                      " << 1000.f * m_treeParameters.m_nu_mc_Momentum << " MeV/c\n";
-    std::cout << nuLabel << "MC momentum x:                    " << 1000.f * m_treeParameters.m_nu_mc_MomentumX << " MeV/c\n";
-    std::cout << nuLabel << "MC momentum y:                    " << 1000.f * m_treeParameters.m_nu_mc_MomentumY << " MeV/c\n";
-    std::cout << nuLabel << "MC momentum z:                    " << 1000.f * m_treeParameters.m_nu_mc_MomentumZ << " MeV/c\n";
-    std::cout << nuLabel << "MC is vertex fiducial:            " << std::boolalpha << m_treeParameters.m_nu_mc_IsVertexFiducial << std::noboolalpha << '\n';
-    std::cout << nuLabel << "MC is contained:                  " << std::boolalpha << m_treeParameters.m_nu_mc_IsContained << std::noboolalpha << '\n';
-    std::cout << nuLabel << "MC containment fraction:          " << 100.f * m_treeParameters.m_nu_mc_ContainmentFraction << "%\n";
-    std::cout << nuLabel << "MC type tree:                     " << m_treeParameters.m_nu_mc_TypeTree << '\n';
-    std::cout << nuLabel << "MC interaction type:              " << m_treeParameters.m_nu_mc_InteractionType << '\n';
-    std::cout << nuLabel << "MC is charged-current:            " << std::boolalpha << m_treeParameters.m_nu_mc_IsChargedCurrent << std::noboolalpha << '\n';
-    std::cout << nuLabel << "MC visible energy frac:           " << 100.f * m_treeParameters.m_nu_mc_VisibleEnergyFraction << "%\n";
-    std::cout << nuLabel << "MC PDG code:                      " << m_treeParameters.m_nu_mc_PdgCode << '\n';
-
-    std::cout << " - [primary]   Number of primaries:              " << m_treeParameters.m_primary_Number << '\n';
-
+    
+    constexpr std::size_t maxLabelWidth = 34UL;
+    std::string label = " - [nu]        ";
+    TREE_SCALAR_MEMBERS(PRINT_SCALAR_MEMBER)
+    
     for (int i = 0; i < m_treeParameters.m_primary_Number; ++i)
     {
-        const std::string label = " - [primary " + std::to_string(i) + "] ";
-
-        std::cout << label << "Was reconstructed:                " << std::boolalpha << m_treeParameters.m_primary_WasReconstructed.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Is vertex fiducial:               " << std::boolalpha << m_treeParameters.m_primary_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Is contained:                     " << std::boolalpha << m_treeParameters.m_primary_IsContained.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Fiducial hit fraction:            " << 100.f * m_treeParameters.m_primary_FiducialHitFraction.at(i) << "%\n";
-        std::cout << label << "Has MC info:                      " << std::boolalpha << m_treeParameters.m_primary_HasMcInfo.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Kinetic energy:                   " << 1000.f * m_treeParameters.m_primary_KineticEnergy.at(i) << " MeV\n";
-        std::cout << label << "KE frac from range:               " << 100.f * m_treeParameters.m_primary_KineticEnergyFracFromRange.at(i) << "%\n";
-        std::cout << label << "KE frac from cor. track charge:   " << 100.f * m_treeParameters.m_primary_KineticEnergyFracFromCorrectedTrackCharge.at(i) << "%\n";
-        std::cout << label << "KE frac from uncor. track charge: " << 100.f * m_treeParameters.m_primary_KineticEnergyFracFromUncorrectedTrackCharge.at(i) << "%\n";
-        std::cout << label << "KE frac from shower charge:       " << 100.f * m_treeParameters.m_primary_KineticEnergyFracFromShowerCharge.at(i) << "%\n";
-        std::cout << label << "Vertex x:                         " << m_treeParameters.m_primary_VertexX.at(i) << " cm\n";
-        std::cout << label << "Vertex y:                         " << m_treeParameters.m_primary_VertexY.at(i) << " cm\n";
-        std::cout << label << "Vertex z:                         " << m_treeParameters.m_primary_VertexZ.at(i) << " cm\n";
-        std::cout << label << "Dir cosine x:                     " << m_treeParameters.m_primary_DirectionCosineX.at(i) << '\n';
-        std::cout << label << "Dir cosine y:                     " << m_treeParameters.m_primary_DirectionCosineY.at(i) << '\n';
-        std::cout << label << "Dir cosine z:                     " << m_treeParameters.m_primary_DirectionCosineZ.at(i) << '\n';
-        std::cout << label << "Momentum:                         " << 1000.f * m_treeParameters.m_primary_Momentum.at(i) << " MeV/c\n";
-        std::cout << label << "Momentum x:                       " << 1000.f * m_treeParameters.m_primary_MomentumX.at(i) << " MeV/c\n";
-        std::cout << label << "Momentum y:                       " << 1000.f * m_treeParameters.m_primary_MomentumY.at(i) << " MeV/c\n";
-        std::cout << label << "Momentum z:                       " << 1000.f * m_treeParameters.m_primary_MomentumZ.at(i) << " MeV/c\n";
-        std::cout << label << "Type tree:                        " << m_treeParameters.m_primary_TypeTree.at(i) << '\n';
-        std::cout << label << "Is shower:                        " << std::boolalpha << m_treeParameters.m_primary_IsShower.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Is track:                         " << std::boolalpha << m_treeParameters.m_primary_IsTrack.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Is proton:                        " << std::boolalpha << m_treeParameters.m_primary_IsProton.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Is pion or muon:                  " << std::boolalpha << m_treeParameters.m_primary_IsPionOrMuon.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Number of 3D hits:                " << m_treeParameters.m_primary_NumberOf3dHits.at(i) << '\n';
-        std::cout << label << "Number of coll plane hits:        " << m_treeParameters.m_primary_NumberOfCollectionPlaneHits.at(i) << '\n';
-        std::cout << label << "Number of downstream pfos:        " << m_treeParameters.m_primary_NumberOfDownstreamParticles.at(i) << '\n';
-        std::cout << label << "MC particle UID:                  " << m_treeParameters.m_primary_mc_McParticleUid.at(i) << '\n';
-        std::cout << label << "MC is particle split by reco:     " << std::boolalpha << m_treeParameters.m_primary_mc_IsParticleSplitByReco.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC energy:                        " << 1000.f * m_treeParameters.m_primary_mc_Energy.at(i) << " MeV\n";
-        std::cout << label << "MC kinetic energy:                " << 1000.f * m_treeParameters.m_primary_mc_KineticEnergy.at(i) << " MeV\n";
-        std::cout << label << "MC mass:                          " << 1000.f * m_treeParameters.m_primary_mc_Mass.at(i) << " MeV/c^2\n";
-        std::cout << label << "MC vertex x:                      " << m_treeParameters.m_primary_mc_VertexX.at(i) << " cm\n";
-        std::cout << label << "MC vertex y:                      " << m_treeParameters.m_primary_mc_VertexY.at(i) << " cm\n";
-        std::cout << label << "MC vertex z:                      " << m_treeParameters.m_primary_mc_VertexZ.at(i) << " cm\n";
-        std::cout << label << "MC dir cosine x:                  " << m_treeParameters.m_primary_mc_DirectionCosineX.at(i) << '\n';
-        std::cout << label << "MC dir cosine y:                  " << m_treeParameters.m_primary_mc_DirectionCosineY.at(i) << '\n';
-        std::cout << label << "MC dir cosine z:                  " << m_treeParameters.m_primary_mc_DirectionCosineZ.at(i) << '\n';
-        std::cout << label << "MC momentum:                      " << 1000.f * m_treeParameters.m_primary_mc_Momentum.at(i) << " MeV/c\n";
-        std::cout << label << "MC momentum x:                    " << 1000.f * m_treeParameters.m_primary_mc_MomentumX.at(i) << " MeV/c\n";
-        std::cout << label << "MC momentum y:                    " << 1000.f * m_treeParameters.m_primary_mc_MomentumY.at(i) << " MeV/c\n";
-        std::cout << label << "MC momentum z:                    " << 1000.f * m_treeParameters.m_primary_mc_MomentumZ.at(i) << " MeV/c\n";
-        std::cout << label << "MC is vertex fiducial:            " << std::boolalpha << m_treeParameters.m_primary_mc_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC is contained:                  " << std::boolalpha << m_treeParameters.m_primary_mc_IsContained.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC containment fraction:          " << 100.f * m_treeParameters.m_primary_mc_ContainmentFraction.at(i) << "%\n";
-        std::cout << label << "MC type tree:                     " << m_treeParameters.m_primary_mc_TypeTree.at(i) << '\n';
-        std::cout << label << "MC is shower:                     " << std::boolalpha << m_treeParameters.m_primary_mc_IsShower.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC is track:                      " << std::boolalpha << m_treeParameters.m_primary_mc_IsTrack.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC is proton:                     " << std::boolalpha << m_treeParameters.m_primary_mc_IsProton.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC is pion or muon:               " << std::boolalpha << m_treeParameters.m_primary_mc_IsPionOrMuon.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC is cosmic ray:                 " << std::boolalpha << m_treeParameters.m_primary_mc_IsCosmicRay.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC PDG code:                      " << m_treeParameters.m_primary_mc_PdgCode.at(i) << '\n';
+        label = " - [primary " + std::to_string(i) + "] ";
+        TREE_VECTOR_MEMBERS_PRIMARY(PRINT_VECTOR_MEMBER)
+        TREE_VECTOR_MEMBERS_PRIMARY_MC(PRINT_VECTOR_MEMBER)
     }
-
-    std::cout << " - [cr]        Number of cosmic rays:            " << m_treeParameters.m_cr_Number << '\n';
 
     for (int i = 0; i < m_treeParameters.m_cr_Number; ++i)
     {
-        const std::string label = " - [cr " + std::to_string(i) + "]      ";
-
-        std::cout << label << "Was reconstructed:                " << std::boolalpha << m_treeParameters.m_cr_WasReconstructed.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Is vertex fiducial:               " << std::boolalpha << m_treeParameters.m_cr_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Is contained:                     " << std::boolalpha << m_treeParameters.m_cr_IsContained.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Fiducial hit fraction:            " << 100.f * m_treeParameters.m_cr_FiducialHitFraction.at(i) << "%\n";
-        std::cout << label << "Has MC info:                      " << std::boolalpha << m_treeParameters.m_cr_HasMcInfo.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "Kinetic energy:                   " << 1000.f * m_treeParameters.m_cr_KineticEnergy.at(i) << " MeV\n";
-        std::cout << label << "KE frac from range:               " << 100.f * m_treeParameters.m_cr_KineticEnergyFracFromRange.at(i) << "%\n";
-        std::cout << label << "KE frac from cor. track charge:   " << 100.f * m_treeParameters.m_cr_KineticEnergyFracFromCorrectedTrackCharge.at(i) << "%\n";
-        std::cout << label << "KE frac from uncor. track charge: " << 100.f * m_treeParameters.m_cr_KineticEnergyFracFromUncorrectedTrackCharge.at(i) << "%\n";
-        std::cout << label << "KE frac from shower charge:       " << 100.f * m_treeParameters.m_cr_KineticEnergyFracFromShowerCharge.at(i) << "%\n";
-        std::cout << label << "Vertex x:                         " << m_treeParameters.m_cr_VertexX.at(i) << " cm\n";
-        std::cout << label << "Vertex y:                         " << m_treeParameters.m_cr_VertexY.at(i) << " cm\n";
-        std::cout << label << "Vertex z:                         " << m_treeParameters.m_cr_VertexZ.at(i) << " cm\n";
-        std::cout << label << "Dir cosine x:                     " << m_treeParameters.m_cr_DirectionCosineX.at(i) << '\n';
-        std::cout << label << "Dir cosine y:                     " << m_treeParameters.m_cr_DirectionCosineY.at(i) << '\n';
-        std::cout << label << "Dir cosine z:                     " << m_treeParameters.m_cr_DirectionCosineZ.at(i) << '\n';
-        std::cout << label << "Momentum:                         " << m_treeParameters.m_cr_Momentum.at(i) << " MeV/c\n";
-        std::cout << label << "Momentum x:                       " << m_treeParameters.m_cr_MomentumX.at(i) << " MeV/c\n";
-        std::cout << label << "Momentum y:                       " << m_treeParameters.m_cr_MomentumY.at(i) << " MeV/c\n";
-        std::cout << label << "Momentum z:                       " << m_treeParameters.m_cr_MomentumZ.at(i) << " MeV/c\n";
-        std::cout << label << "Type tree:                        " << m_treeParameters.m_cr_TypeTree.at(i) << '\n';
-        std::cout << label << "Number of 3D hits:                " << m_treeParameters.m_cr_NumberOf3dHits.at(i) << '\n';
-        std::cout << label << "Number of coll plane hits:        " << m_treeParameters.m_cr_NumberOfCollectionPlaneHits.at(i) << '\n';
-        std::cout << label << "Number of downstream pfos:        " << m_treeParameters.m_cr_NumberOfDownstreamParticles.at(i) << '\n';
-        std::cout << label << "MC particle UID:                  " << m_treeParameters.m_cr_mc_McParticleUid.at(i) << '\n';
-        std::cout << label << "MC is particle split by reco:     " << std::boolalpha << m_treeParameters.m_cr_mc_IsParticleSplitByReco.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC energy:                        " << 1000.f * m_treeParameters.m_cr_mc_Energy.at(i) << " MeV\n";
-        std::cout << label << "MC kinetic energy:                " << 1000.f * m_treeParameters.m_cr_mc_KineticEnergy.at(i) << " MeV\n";
-        std::cout << label << "MC mass:                          " << 1000.f * m_treeParameters.m_cr_mc_Mass.at(i) << " MeV/c^2\n";
-        std::cout << label << "MC vertex x:                      " << m_treeParameters.m_cr_mc_VertexX.at(i) << " cm\n";
-        std::cout << label << "MC vertex y:                      " << m_treeParameters.m_cr_mc_VertexY.at(i) << " cm\n";
-        std::cout << label << "MC vertex z:                      " << m_treeParameters.m_cr_mc_VertexZ.at(i) << " cm\n";
-        std::cout << label << "MC dir cosine x:                  " << m_treeParameters.m_cr_mc_DirectionCosineX.at(i) << '\n';
-        std::cout << label << "MC dir cosine y:                  " << m_treeParameters.m_cr_mc_DirectionCosineY.at(i) << '\n';
-        std::cout << label << "MC dir cosine z:                  " << m_treeParameters.m_cr_mc_DirectionCosineZ.at(i) << '\n';
-        std::cout << label << "MC momentum:                      " << 1000.f * m_treeParameters.m_cr_mc_Momentum.at(i) << " MeV/c\n";
-        std::cout << label << "MC momentum x:                    " << 1000.f * m_treeParameters.m_cr_mc_MomentumX.at(i) << " MeV/c\n";
-        std::cout << label << "MC momentum y:                    " << 1000.f * m_treeParameters.m_cr_mc_MomentumY.at(i) << " MeV/c\n";
-        std::cout << label << "MC momentum z:                    " << 1000.f * m_treeParameters.m_cr_mc_MomentumZ.at(i) << " MeV/c\n";
-        std::cout << label << "MC is vertex fiducial:            " << std::boolalpha << m_treeParameters.m_cr_mc_IsVertexFiducial.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC is contained:                  " << std::boolalpha << m_treeParameters.m_cr_mc_IsContained.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC containment fraction:          " << 100.f * m_treeParameters.m_cr_mc_ContainmentFraction.at(i) << "%\n";
-        std::cout << label << "MC type tree:                     " << m_treeParameters.m_cr_mc_TypeTree.at(i) << '\n';
-        std::cout << label << "MC is shower:                     " << std::boolalpha << m_treeParameters.m_cr_mc_IsShower.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC is track:                      " << std::boolalpha << m_treeParameters.m_cr_mc_IsTrack.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC is proton:                     " << std::boolalpha << m_treeParameters.m_cr_mc_IsProton.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC is pion or muon:               " << std::boolalpha << m_treeParameters.m_cr_mc_IsPionOrMuon.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC is cosmic ray:                 " << std::boolalpha << m_treeParameters.m_cr_mc_IsCosmicRay.at(i) << std::noboolalpha << '\n';
-        std::cout << label << "MC PDG code:                      " << m_treeParameters.m_cr_mc_PdgCode.at(i) << '\n';
+        label = " - [cr " + std::to_string(i) + "]      ";
+        TREE_VECTOR_MEMBERS_CR(PRINT_VECTOR_MEMBER)
+        TREE_VECTOR_MEMBERS_CR_MC(PRINT_VECTOR_MEMBER)
     }
 }
 
@@ -938,22 +773,15 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TreeName", m_treeName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TreeTitle", m_treeTitle));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Verbose", m_verbose));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowXMargin", m_fiducialCutLowXMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighXMargin", m_fiducialCutHighXMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowYMargin", m_fiducialCutLowYMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighYMargin", m_fiducialCutHighYMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowZMargin", m_fiducialCutLowZMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighZMargin", m_fiducialCutHighZMargin));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McContainmentFractionLowerBound", m_mcContainmentFractionLowerBound));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialHitFractionLowerBound", m_fiducialHitFractionLowerBound));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McOnlyParticleContainmentCut", m_mcOnlyParticleContainmentCut));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McOnlyParticleEnergyCut", m_mcOnlyParticleEnergyCut));
 
-    // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
-    LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), m_fiducialCutLowXMargin, m_fiducialCutHighXMargin,
-        m_fiducialCutLowYMargin, m_fiducialCutHighYMargin, m_fiducialCutLowZMargin, m_fiducialCutHighZMargin, m_minCoordinates, m_maxCoordinates);
+    AlgorithmTool *pMcInfoAlgorithmTool(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "McInfo", pMcInfoAlgorithmTool));
+
+    if (!(m_pMcInfoTool = dynamic_cast<McInfoTool *>(pMcInfoAlgorithmTool)))
+        throw STATUS_CODE_FAILURE;
 
     this->InitializeTree();
     return STATUS_CODE_SUCCESS;

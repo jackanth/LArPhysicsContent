@@ -20,14 +20,10 @@
 namespace lar_physics_content
 {
 AnalysisDataAlgorithm::AnalysisDataAlgorithm() :
-    m_fiducialCutLowXMargin(10.f),
-    m_fiducialCutHighXMargin(10.f),
-    m_fiducialCutLowYMargin(20.f),
-    m_fiducialCutHighYMargin(20.f),
-    m_fiducialCutLowZMargin(10.f),
-    m_fiducialCutHighZMargin(10.f),
-    m_mcContainmentFractionLowerBound(0.9f),
-    m_trackSlidingFitWindow(25U),
+    m_fiducialCutLowMargins(10.f, 20.f, 10.f),
+    m_fiducialCutHighMargins(10.f, 20.f, 10.f),
+    m_minCoordinates(0.f, 0.f, 0.f),
+    m_maxCoordinates(0.f, 0.f, 0.f),
     m_produceBirksFitData(true),
     m_produceEnergyFromRangeData(true),
     m_producePidData(true),
@@ -40,6 +36,8 @@ AnalysisDataAlgorithm::AnalysisDataAlgorithm() :
     m_pBirksFitDataTree(nullptr),
     m_pEnergyFromRangeProtonDataNtuple(nullptr),
     m_pEnergyFromRangePionMuonDataNtuple(nullptr),
+    m_pTrackHitEnergyTool(nullptr),
+    m_pMcInfoTool(nullptr),
     m_pHitPurityTool(nullptr)
 {
 }
@@ -97,15 +95,6 @@ StatusCode AnalysisDataAlgorithm::Run()
             pfoList.push_back(pPfo);
     }
 
-    // Move the below to ReadSettings
-
-    // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
-    CartesianVector minCoordinates(0.f, 0.f, 0.f), maxCoordinates(0.f, 0.f, 0.f);
-
-    LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), m_fiducialCutLowXMargin, m_fiducialCutHighXMargin,
-        m_fiducialCutLowYMargin, m_fiducialCutHighYMargin, m_fiducialCutLowZMargin, m_fiducialCutHighZMargin,
-        minCoordinates, maxCoordinates);
-
     for (const ParticleFlowObject *const pPfo : pfoList)
     {
         if (LArAnalysisParticleHelper::IsCosmicRay(pPfo))
@@ -137,8 +126,8 @@ StatusCode AnalysisDataAlgorithm::Run()
 
         mcParticleMap.emplace(pPfo, pMCParticle);
 
-        const LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo = LArAnalysisParticleHelper::GetMcInformation(pMCParticle, minCoordinates, maxCoordinates,
-            m_mcContainmentFractionLowerBound);
+        LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo;
+        m_pMcInfoTool->Run(this, pMCParticle, pfoMcInfo);
 
 //        if (mcContainmentFraction < 0.95f || mcHitPurity < 0.95f || mcHitCompleteness < 0.95f || mcCollectionPlaneHitPurity < 0.95f ||
 //            mcCollectionPlaneHitCompleteness < 0.95f)
@@ -148,75 +137,34 @@ StatusCode AnalysisDataAlgorithm::Run()
 //        }
 
         // For each tracklike PFO, try to perform a 3D sliding linear fit and store it in a map.
-        LArAnalysisParticleHelper::TrackFitMap trackFitMap;
-        LArAnalysisParticleHelper::RecursivelyAppendTrackFitMap(this->GetPandora(), pPfo, trackFitMap, m_trackSlidingFitWindow);
-
-        // For each tracklike PFO, decide which hits we want to Birks-correct.
-        LArAnalysisParticleHelper::LArTrackHitEnergyMap trackHitEnergyMap;
-        this->RecursivelyAppendLArTrackHitEnergyMap(pPfo, trackHitEnergyMap, trackFitMap);
+        LArAnalysisParticleHelper::FittedTrackInfoMap fittedTrackInfoMap;
+        float excessCaloValue(0.f);
+        
+        m_pTrackHitEnergyTool->Run(this, pPfo, fittedTrackInfoMap, excessCaloValue,
+            [&](LArFittedTrackInfo::TrackHitValueVector &trackHitValueVector, float &excessCaloValue) -> bool
+            {
+                return m_pHitPurityTool->Run(this, trackHitValueVector, excessCaloValue);
+            });
 
         // For each PFO, get its main MC particle and store it in a map.
         RecursivelyAppendMCParticleMap(pPfo, mcParticleMap);
 
         if (m_produceBirksFitData)
-           this->ProduceBirksFitData(pPfo, trackFitMap, mcParticleMap, trackHitEnergyMap);
+           this->ProduceBirksFitData(pPfo, fittedTrackInfoMap, mcParticleMap);
 
         if (m_produceEnergyFromRangeData)
         {
-            this->RecursivelyProduceEnergyFromRangeData(pPfo, trackFitMap, mcParticleMap,
+            this->RecursivelyProduceEnergyFromRangeData(pPfo, fittedTrackInfoMap, mcParticleMap,
                                                         m_pEnergyFromRangeProtonDataNtuple, {PROTON});
 
-            this->RecursivelyProduceEnergyFromRangeData(pPfo, trackFitMap, mcParticleMap, m_pEnergyFromRangePionMuonDataNtuple, {PI_PLUS, PI_MINUS, MU_MINUS});
+            this->RecursivelyProduceEnergyFromRangeData(pPfo, fittedTrackInfoMap, mcParticleMap, m_pEnergyFromRangePionMuonDataNtuple, {PI_PLUS, PI_MINUS, MU_MINUS});
         }
 
         if (m_producePidData)
-            this->RecursivelyProducePidData(pPfo, trackFitMap, mcParticleMap, LArAnalysisParticleHelper::IsCosmicRay(pPfo));
+            this->RecursivelyProducePidData(pPfo, fittedTrackInfoMap, mcParticleMap, LArAnalysisParticleHelper::IsCosmicRay(pPfo));
     }
 
     return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void AnalysisDataAlgorithm::RecursivelyAppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
-                                                              LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap,
-                                                              const LArAnalysisParticleHelper::TrackFitMap &trackFitMap) const
-{
-    const auto findIter = trackFitMap.find(pPfo);
-
-    if (findIter != trackFitMap.end())
-        trackHitEnergyMap.emplace(pPfo, this->AppendLArTrackHitEnergyMap(pPfo, findIter->second));
-
-    for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
-        this->RecursivelyAppendLArTrackHitEnergyMap(pDaughterPfo, trackHitEnergyMap, trackFitMap);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-LArAnalysisParticleHelper::TrackHitValueVector AnalysisDataAlgorithm::AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
-    const ThreeDSlidingFitResult &trackFit) const
-{
-    // Get all hits and order them by projection along the track fit.
-    const CaloHitList collectionPlaneHits = LArAnalysisParticleHelper::GetHitsOfType(pPfo, TPC_VIEW_W, false);
-
-    const LArAnalysisParticleHelper::HitProjectionVector orderedHitProjections = LArAnalysisParticleHelper::OrderHitsByProjectionOnToTrackFit(
-                                                                                                             collectionPlaneHits, trackFit);
-
-    LArAnalysisParticleHelper::TrackHitValueVector trackHitEnergyVector;
-
-    for (const LArAnalysisParticleHelper::HitProjectionPair &projectionPair : orderedHitProjections)
-    {
-        const CaloHit *const pCaloHit = projectionPair.first;
-        const float coordinate        = projectionPair.second;
-        const float threeDDistance    = LArAnalysisParticleHelper::CaloHitToThreeDDistance(this->GetPandora(), pCaloHit, trackFit);
-
-        trackHitEnergyVector.emplace_back(pCaloHit, coordinate, threeDDistance, pCaloHit->GetInputEnergy());
-    }
-
-    float excessCharge(0.f);
-    m_pHitPurityTool->Run(this, trackHitEnergyVector, excessCharge);
-    // TODO excess charge
-    return trackHitEnergyVector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -247,9 +195,8 @@ void AnalysisDataAlgorithm::RecursivelyAppendMCParticleMap(const ParticleFlowObj
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AnalysisDataAlgorithm::ProduceBirksFitData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
-                                                   const MCParticleMap &mcParticleMap,
-                                                   const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap) const
+bool AnalysisDataAlgorithm::ProduceBirksFitData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
+                                                   const MCParticleMap &mcParticleMap) const
 {
     const auto findIter = mcParticleMap.find(pPfo);
 
@@ -272,7 +219,7 @@ bool AnalysisDataAlgorithm::ProduceBirksFitData(const ParticleFlowObject *const 
     float totalNoBirksAdcIntegral = 0.f;
     FloatVector birksAdcIntegrals, threeDDistances;
 
-    if (!this->GetBirksFitData(pPfo, trackFitMap, trackHitEnergyMap, totalNoBirksAdcIntegral, birksAdcIntegrals, threeDDistances))
+    if (!this->GetBirksFitData(pPfo, fittedTrackInfoMap, totalNoBirksAdcIntegral, birksAdcIntegrals, threeDDistances))
         return false;
 
     m_pBirksFitDataTree->Branch("TruePrimaryEnergy",       &truePrimaryEnergy);
@@ -287,43 +234,29 @@ bool AnalysisDataAlgorithm::ProduceBirksFitData(const ParticleFlowObject *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AnalysisDataAlgorithm::GetBirksFitData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
-                                               const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap,
+bool AnalysisDataAlgorithm::GetBirksFitData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
                                                float &totalNoBirksAdcIntegral, FloatVector &birksAdcIntegrals,
                                                FloatVector &threeDDistances) const
 {
-    const bool isShower = LArPfoHelper::IsShower(pPfo);
-
-    const auto fitFindIter       = trackFitMap.find(pPfo);
-    const auto hitEnergyFindIter = trackHitEnergyMap.find(pPfo);
-
-    const bool fitFound       = (fitFindIter != trackFitMap.end());
-    const bool hitEnergyFound = (hitEnergyFindIter != trackHitEnergyMap.end());
-
-    if (fitFound != hitEnergyFound)
-        std::cout << "AnalysisDataAlgorithm: fits should be found for tracks iff track hit energies are found" << std::endl;
-
-    if (isShower)
+    if (LArPfoHelper::IsShower(pPfo))
     {
         totalNoBirksAdcIntegral += this->AddUpShowerAdcs(pPfo);
         return true;
     }
-
-    if (!fitFound || !hitEnergyFound)
+    
+    const auto findIter = fittedTrackInfoMap.find(pPfo);
+    if (findIter == fittedTrackInfoMap.end())
     {
         std::cout << "AnalysisDataAlgorithm: Could not find fit for tracklike particle so ignoring this primary" << std::endl;
         return false;
     }
 
-    this->GetTrackAdcsAndDistances(hitEnergyFindIter->second, totalNoBirksAdcIntegral, birksAdcIntegrals, threeDDistances);
+    this->GetTrackAdcsAndDistances(findIter->second.HitChargeVector(), totalNoBirksAdcIntegral, birksAdcIntegrals, threeDDistances);
 
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
     {
-        if (!this->GetBirksFitData(pDaughterPfo, trackFitMap, trackHitEnergyMap, totalNoBirksAdcIntegral, birksAdcIntegrals,
-                                   threeDDistances))
-        {
+        if (!this->GetBirksFitData(pDaughterPfo, fittedTrackInfoMap, totalNoBirksAdcIntegral, birksAdcIntegrals, threeDDistances))
             return false;
-        }
     }
 
     return true;
@@ -343,7 +276,7 @@ float AnalysisDataAlgorithm::AddUpShowerAdcs(const ParticleFlowObject *const pPf
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void AnalysisDataAlgorithm::GetTrackAdcsAndDistances(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergies,
+void AnalysisDataAlgorithm::GetTrackAdcsAndDistances(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergies,
     float &totalNoBirksAdcIntegral, FloatVector &birksAdcIntegrals, FloatVector &threeDDistances) const
 {
     for (const LArTrackHitValue &trackHitEnergy : trackHitEnergies)
@@ -358,20 +291,20 @@ void AnalysisDataAlgorithm::GetTrackAdcsAndDistances(const LArAnalysisParticleHe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void AnalysisDataAlgorithm::RecursivelyProduceEnergyFromRangeData(const ParticleFlowObject *const pPfo,
-                                                                     const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
+                                                                     const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
                                                                      const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap,
                                                                      TNtuple *const pNtuple, const PdgCodeSet &pdgCodeSet) const
 {
-    const auto trackFitFindIter   = trackFitMap.find(pPfo);
+    const auto trackFitFindIter   = fittedTrackInfoMap.find(pPfo);
     const auto mcParticleFindIter = mcParticleMap.find(pPfo);
 
-    if ((trackFitFindIter != trackFitMap.end()) && (mcParticleFindIter != mcParticleMap.end()))
+    if ((trackFitFindIter != fittedTrackInfoMap.end()) && (mcParticleFindIter != mcParticleMap.end()))
     {
         const int pdgCode = mcParticleFindIter->second->GetParticleId();
 
         if (pdgCodeSet.find(pdgCode) != pdgCodeSet.end())
         {
-            const float range      = LArAnalysisParticleHelper::GetParticleRange(pPfo, trackFitFindIter->second);
+            const float range      = trackFitFindIter->second.Range();
             const float trueEnergy = this->GetTrueEnergy(mcParticleFindIter->second);
 
             if (range > 0.f && trueEnergy > 0.f)
@@ -380,7 +313,7 @@ void AnalysisDataAlgorithm::RecursivelyProduceEnergyFromRangeData(const Particle
     }
 
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
-        this->RecursivelyProduceEnergyFromRangeData(pDaughterPfo, trackFitMap, mcParticleMap, pNtuple, pdgCodeSet);
+        this->RecursivelyProduceEnergyFromRangeData(pDaughterPfo, fittedTrackInfoMap, mcParticleMap, pNtuple, pdgCodeSet);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -393,19 +326,19 @@ float AnalysisDataAlgorithm::GetTrueEnergy(const MCParticle *pMCParticle) const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void AnalysisDataAlgorithm::RecursivelyProducePidData(const ParticleFlowObject *const pPfo,
-                                                         const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
+                                                         const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
                                                          const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap, const bool isCosmicRay) const
 {
-    const auto trackFitFindIter   = trackFitMap.find(pPfo);
+    const auto trackFitFindIter   = fittedTrackInfoMap.find(pPfo);
     const auto mcParticleFindIter = mcParticleMap.find(pPfo);
 
-    if ((trackFitFindIter != trackFitMap.end()) && (mcParticleFindIter != mcParticleMap.end()))
+    if ((trackFitFindIter != fittedTrackInfoMap.end()) && (mcParticleFindIter != mcParticleMap.end()))
     {
         switch (mcParticleFindIter->second->GetParticleId())
         {
             case PROTON:
             {
-                float range      = LArAnalysisParticleHelper::GetParticleRange(pPfo, trackFitFindIter->second);
+                float range      = trackFitFindIter->second.Range();
                 float trueEnergy = this->GetTrueEnergy(mcParticleFindIter->second);
                 int   isCosmicRayInt = static_cast<int>(isCosmicRay);
 
@@ -424,7 +357,7 @@ void AnalysisDataAlgorithm::RecursivelyProducePidData(const ParticleFlowObject *
             case PI_PLUS:
             case MU_MINUS:
             {
-                float range      = LArAnalysisParticleHelper::GetParticleRange(pPfo, trackFitFindIter->second);
+                float range      = trackFitFindIter->second.Range();
                 float trueEnergy = this->GetTrueEnergy(mcParticleFindIter->second);
                 int   isCosmicRayInt = static_cast<int>(isCosmicRay);
 
@@ -444,34 +377,26 @@ void AnalysisDataAlgorithm::RecursivelyProducePidData(const ParticleFlowObject *
     }
 
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
-        this->RecursivelyProducePidData(pDaughterPfo, trackFitMap, mcParticleMap, false);
+        this->RecursivelyProducePidData(pDaughterPfo, fittedTrackInfoMap, mcParticleMap, false);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode AnalysisDataAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighMargins", m_fiducialCutHighMargins));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ProduceBirksFitData", m_produceBirksFitData));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ProduceEnergyFromRangeData",
                                                                            m_produceEnergyFromRangeData));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ProducePidData", m_producePidData));
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName",        m_pfoListName));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowXMargin", m_fiducialCutLowXMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighXMargin", m_fiducialCutHighXMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowYMargin", m_fiducialCutLowYMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighYMargin", m_fiducialCutHighYMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowZMargin", m_fiducialCutLowZMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighZMargin", m_fiducialCutHighZMargin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McContainmentFractionLowerBound", m_mcContainmentFractionLowerBound));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrackSlidingFitWindow", m_trackSlidingFitWindow));
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RootDataFileName", m_rootDataFileName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
 
+    // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
+    LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), m_fiducialCutLowMargins, m_fiducialCutHighMargins, m_minCoordinates,
+        m_maxCoordinates);
 
     m_pRootDataFile = new TFile(m_rootDataFileName.c_str(), "UPDATE");
 
@@ -486,12 +411,22 @@ StatusCode AnalysisDataAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
                                                                  "Range:TrueEnergy");
     }
 
-    AlgorithmTool *pAlgorithmTool(nullptr);
+    AlgorithmTool *pHitPurityAlgorithmTool(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "HitPurity", pHitPurityAlgorithmTool));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
-        "HitPurity", pAlgorithmTool));
+    if (!(m_pHitPurityTool = dynamic_cast<HitPurityTool *>(pHitPurityAlgorithmTool)))
+        throw STATUS_CODE_FAILURE;
+        
+    AlgorithmTool *pMcInfoAlgorithmTool(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "McInfo", pMcInfoAlgorithmTool));
 
-    if (!(m_pHitPurityTool = dynamic_cast<HitPurityTool *>(pAlgorithmTool)))
+    if (!(m_pMcInfoTool = dynamic_cast<McInfoTool *>(pMcInfoAlgorithmTool)))
+        throw STATUS_CODE_FAILURE;
+        
+    AlgorithmTool *pTrackHitEnergyAlgorithmTool(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "TrackHitEnergy", pTrackHitEnergyAlgorithmTool));
+
+    if (!(m_pTrackHitEnergyTool = dynamic_cast<TrackHitEnergyTool *>(pTrackHitEnergyAlgorithmTool)))
         throw STATUS_CODE_FAILURE;
 
     return STATUS_CODE_SUCCESS;

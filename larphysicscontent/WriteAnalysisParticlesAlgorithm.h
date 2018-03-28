@@ -12,6 +12,8 @@
 
 #include "larphysicscontent/LArAnalysisParticle.h"
 #include "larphysicscontent/LArAnalysisParticleHelper.h"
+#include "larphysicscontent/McInfoTool.h"
+
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 
 #include "TFile.h"
@@ -257,6 +259,26 @@
  */
 #define VECTOR_MEMBER_PUSH_DEFAULT(name, memberVariable, memberType, defaultValue, units, sizeMember) \
     m_treeParameters.memberVariable.push_back(defaultValue);
+    
+/**
+ *  @brief  Print a set of scalar members to stdout (uses variables `label`, `maxLabelWidth`) in local scope
+ */
+#define PRINT_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units)                                                  \
+    std::cout << label << name << ((strlen(name) < maxLabelWidth) ? std::string(maxLabelWidth - strlen(name), ' ') : std::string{}) \
+              << ": (" << #memberType << ") " << m_treeParameters.memberVariable << ' ' << units << '\n';
+        
+/**
+ *  @brief  Print a set of vector members to stdout (uses variables `label`, `maxLabelWidth` and `i` in local scope)
+ */
+#define PRINT_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember)                                       \
+    std::cout << label << name << ((strlen(name) < maxLabelWidth) ? std::string(maxLabelWidth - strlen(name), ' ') : std::string{})  \
+              << ": (" << #memberType << ") " << m_treeParameters.memberVariable[i] << ' ' << units << '\n';
+
+/**
+ *  @brief  Initialize a set of vector members
+ */
+#define INITIALIZE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) \
+    memberVariable(),
 
 /**
  *  @brief  Macro for pushing a new value to a tree member vector
@@ -522,18 +544,10 @@ private:
     bool                      m_verbose;                            ///< Whether to print some AnalysisParticle information to screen
     mutable TreeParameters    m_treeParameters;                     ///< The tree parameters
     std::string               m_mcParticleListName;                 ///< The name of the MC particle list
-    float                     m_fiducialCutLowXMargin;              ///< The low-x fiducial volume margin
-    float                     m_fiducialCutHighXMargin;             ///< The high-x fiducial volume margin
-    float                     m_fiducialCutLowYMargin;              ///< The low-y fiducial volume margin
-    float                     m_fiducialCutHighYMargin;             ///< The high-y fiducial volume margin
-    float                     m_fiducialCutLowZMargin;              ///< The low-z fiducial volume margin
-    float                     m_fiducialCutHighZMargin;             ///< The high-z fiducial volume margin
-    CartesianVector           m_minCoordinates;                     ///< The set of detector minimum coordinates
-    CartesianVector           m_maxCoordinates;                     ///< The set of detector maximum coordinates
-    float                     m_mcContainmentFractionLowerBound;    ///< The lower containment fraction bound for MC containment
     float                     m_fiducialHitFractionLowerBound;      ///< The lower fiducial hit fraction bound for containment
     float                     m_mcOnlyParticleContainmentCut;       ///< The lower containment fraction bound for including MC-only particles
     float                     m_mcOnlyParticleEnergyCut;            ///< The lower energy bound for including MC-only particles
+    McInfoTool *m_pMcInfoTool;                        ///< Address of the MC info tool
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -15,6 +15,7 @@
 
 #include "larphysicscontent/LArAnalysisParticle.h"
 #include "larphysicscontent/LArTrackHitValue.h"
+#include "larphysicscontent/LArFittedTrackInfo.h"
 
 #include "TNtuple.h"
 
@@ -33,11 +34,7 @@ namespace lar_physics_content
 class LArAnalysisParticleHelper
 {
 public:
-    using TrackHitValueVector  = std::vector<LArTrackHitValue>; ///< Alias for a vector of LArTrackHitValues
-    using LArTrackHitEnergyMap = std::unordered_map<const ParticleFlowObject *, TrackHitValueVector>;    ///< Alias for a map from PFOs to their track hit energies
-    using TrackFitMap          = std::unordered_map<const ParticleFlowObject *, ThreeDSlidingFitResult>; ///< Alias for map from PFOs to track fits.
-    using HitProjectionPair    = std::pair<const CaloHit *, float>; ///< Alias for a map from CaloHits to their projected track coordinate
-    using HitProjectionVector  = std::vector<HitProjectionPair>;    ///< Alias for a vector of hit projection pairs
+    using FittedTrackInfoMap = std::unordered_map<const ParticleFlowObject *, LArFittedTrackInfo>; ///< Alias for a map to LArFittedTrackInfo objects
 
     /**
      *  @brief  PfoMcInfo class
@@ -70,15 +67,6 @@ public:
     };
 
     /**
-     *  @brief  Get the particle type as a string
-     *
-     *  @param  type the type
-     *
-     *  @return the string type
-     */
-    static std::string TypeAsString(const LArAnalysisParticle::TYPE type);
-
-    /**
      *  @brief  Get the particle type tree as a string
      *
      *  @param  typeTree the typeTree
@@ -100,73 +88,8 @@ public:
      *  @param  minCoordinates the minimum fiducial coordinates (to populate)
      *  @param  maxCoordinates the maximum fiducial coordinates (to populate)
      */
-    static void GetFiducialCutParameters(const Pandora &pandoraInstance, const float fiducialCutLowXMargin, const float fiducialCutHighXMargin,
-        const float fiducialCutLowYMargin, const float fiducialCutHighYMargin, const float fiducialCutLowZMargin, const float fiducialCutHighZMargin,
+    static void GetFiducialCutParameters(const Pandora &pandoraInstance, const CartesianVector &fiducialCutLowMargins, const CartesianVector &fiducialCutHighMargins,
         CartesianVector &minCoordinates, CartesianVector &maxCoordinates);
-
-    /**
-     *  @brief  Recurse through the PFO hierarchy and append the track fit map
-     *
-     *  @param  pandoraInstance the instance of Pandora
-     *  @param  pPfo address of the current PFO
-     *  @param  trackFitMap the track fit map to append
-     *  @param  slidingFitWindow the sliding fit window size
-     */
-    static void RecursivelyAppendTrackFitMap(const Pandora &pandoraInstance, const ParticleFlowObject *const pPfo, TrackFitMap &trackFitMap,
-        const unsigned int slidingFitWindow);
-
-    /**
-     *  @brief  Perform a 3D sliding track fit for a given PFO
-     *
-     *  @param  pandoraInstance the instance of Pandora
-     *  @param  pPfo address of the PFO
-     *  @param  slidingFitWindow the sliding fit window size
-     *
-     *  @return the 3D track fit
-     */
-    static ThreeDSlidingFitResult PerformSlidingTrackFit(const Pandora &pandoraInstance, const ParticleFlowObject *const pPfo,
-        const unsigned int slidingFitWindow);
-
-    /**
-     *  @brief  Get the list of reco neutrinos
-     *
-     *  @param  algorithm the calling algorithm
-     *  @param  pfoListName the PFO list name
-     *
-     *  @return the list of reco neutrinos
-     */
-    static PfoList GetRecoNeutrinoList(const Algorithm &algorithm, const std::string &pfoListName);
-
-    /**
-     *  @brief  Get the 3D distance from a CaloHit
-     *
-     *  @param  pandoraInstance the instance of Pandora
-     *  @param  pCaloHit address of the CaloHit
-     *  @param  trackFit the 3D track fit to which the hit belongs
-     *
-     *  @return the 3D distance
-     */
-    static float CaloHitToThreeDDistance(const Pandora &pandoraInstance, const CaloHit *const pCaloHit, const ThreeDSlidingFitResult &trackFit);
-
-    /**
-     *  @brief  Get the 3D distance from a CaloHit
-     *
-     *  @param  pandoraInstance the instance of Pandora
-     *  @param  hitWidth the CaloHit's width
-     *  @param  fitDirection the direction of the fit at the CaloHit's position
-     *
-     *  @return the 3D distance
-     */
-    static float CaloHitToThreeDDistance(const Pandora &pandoraInstance, const float hitWidth, const CartesianVector &fitDirection);
-
-    /**
-     *  @brief  Turn a direction in polar and azimuthal angles
-     *
-     *  @param  direction the Cartesian direction
-     *
-     *  @return the polar and azimuthal angles
-     */
-    static std::tuple<float, float> GetPolarAnglesFromDirection(const CartesianVector &direction);
 
     /**
      *  @brief  Get all the hits of a given type from a PFO
@@ -214,26 +137,6 @@ public:
      *  @return whether the point is fiducial
      */
     static bool IsPointFiducial(const CartesianVector &point, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
-
-    /**
-     *  @brief  Get the range of a track-like PFO
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  trackFit the track fit for the PFO
-     *
-     *  @return the range
-     */
-    static float GetParticleRange(const ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &trackFit);
-
-    /**
-     *  @brief  Order a set of CaloHits by their projection onto a track fit and return the ordered projections
-     *
-     *  @param  caloHitList the list of CaloHits
-     *  @param  trackFit the track fit object
-     *
-     *  @return the ordered list of hit projections
-     */
-    static HitProjectionVector OrderHitsByProjectionOnToTrackFit(const CaloHitList &caloHitList, const ThreeDSlidingFitResult &trackFit);
 
     /**
      *  @brief  Write a TNtuple object to a file
@@ -290,86 +193,7 @@ public:
      */
     static bool IsPrimaryNeutrinoDaughter(const ParticleFlowObject *const pPfo);
 
-    /**
-     *  @brief  Get MC information for a given MC particle
-     *
-     *  @param  pMCParticle
-     *  @param  minCoordinates the minimum fiducial coordinates of the detector
-     *  @param  maxCoordinates the maximum fiducial coordinates of the detector
-     *
-     *  @return the mc information
-     */
-    static PfoMcInfo GetMcInformation(const MCParticle *const pMCParticle, const CartesianVector &minCoordinates,
-        const CartesianVector &maxCoordinates, const float mcContainmentFractionLowerBound);
-
 private:
-    /**
-     *  @brief  Sort reco neutrinos
-     *
-     *  @param  pLhs address of the LHS neutrino
-     *  @param  pRhs address of the RHS neutrino
-     *
-     *  @return whether LHS < RHS
-     */
-    static bool SortRecoNeutrinos(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs);
-
-    /**
-     *  @brief  Get a 3D distance from a cell
-     *
-     *  @param  hitWidth the hit width
-     *  @param  wirePitch the wire pitch
-     *  @param  fitDirection the fit direction at the hit
-     *
-     *  @return the 3D distance
-     */
-    static float CellToThreeDDistance(const float hitWidth, const float wirePitch, const CartesianVector &fitDirection);
-
-    /**
-     *  @brief  Recurse through the MC particle hierarchy and add up the escaped energy for the containment fraction calculation
-     *
-     *  @param  pCurrentMCParticle address of the current MC particle
-     *  @param  escapedEnergy the escaped energy (to populate)
-     *  @param  totalEnergy the total energy (to populate)
-     *  @param  minCoordinates the minimum fiducial volume coordinates
-     *  @param  maxCoordinates the maximum fiducial volume coordinates
-     */
-    static void RecursivelyAddEscapedEnergy(const MCParticle *const pCurrentMCParticle, float &escapedEnergy, float &totalEnergy,
-        const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates);
-
-    /**
-     *  @brief  Adjust the line equation mu values for a given detector face constraint
-     *
-     *  @param  planePoint a point on the detector face
-     *  @param  planeNormal the normal to the detector face
-     *  @param  vertexPosition the position of the MC vertex
-     *  @param  originalDisplacementVector the original MC vertex-to-endpoint displacement vector
-     *  @param  muMin the minimum mu value to be adjusted
-     *  @param  muMax the maximum mu value to be adjusted
-     *  @param  forceZeroContainment whether this face constraint tells us that the particle definitely has zero containment (to populate)
-     */
-    static void AdjustMusForContainmentFraction(const CartesianVector &planePoint, const CartesianVector &planeNormal,
-        const CartesianVector &vertexPosition, const CartesianVector &originalDisplacementVector, float &muMin, float &muMax,
-        bool &forceZeroContainment);
-
-    /**
-     *  @brief  Create a type tree for an MC particle
-     *
-     *  @param  pMCParticle address of the MC particle
-     *  @param  typeTree the type tree (to populate)
-     *
-     *  @return success
-     */
-    static bool CreateMcTypeTree(const MCParticle *const pMCParticle, LArAnalysisParticle::TypeTree &typeTree);
-
-    /**
-     *  @brief  Get the type of an MC particle
-     *
-     *  @param  pMCParticle address of the MC particle
-     *
-     *  @return the particle type
-     */
-    static LArAnalysisParticle::TYPE GetMcParticleType(const MCParticle *const pMCParticle);
-
     /**
      *  @brief  Get the particle type tree as a string (implementation)
      *

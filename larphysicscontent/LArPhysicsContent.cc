@@ -16,6 +16,8 @@
 #include "larphysicscontent/AnalysisAlgorithm.h"
 #include "larphysicscontent/AnalysisDataAlgorithm.h"
 #include "larphysicscontent/WriteAnalysisParticlesAlgorithm.h"
+#include "larphysicscontent/TrackHitEnergyTool.h"
+#include "larphysicscontent/McInfoTool.h"
 #include "larphysicscontent/HitPurityTool.h"
 
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
@@ -24,7 +26,9 @@
     d("LArAnalysisData",            AnalysisDataAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
-    d("LArHitPurity", HitPurityTool)
+    d("LArTrackHitEnergy", TrackHitEnergyTool)                                                                                  \
+    d("LArMcInfo",         McInfoTool)                                                                                          \
+    d("LArHitPurity",      HitPurityTool)
 
 #define FACTORY Factory
 

@@ -342,6 +342,15 @@ public:
      *  @brief  Print some information about the particle
      */
     void Print() const;
+    
+    /**
+     *  @brief  Get the particle type as a string
+     *
+     *  @param  type the type
+     *
+     *  @return the string type
+     */
+    static std::string TypeAsString(const TYPE type);
 
 private:
     TYPE                 m_type;                                               ///< The particle type
@@ -730,22 +739,22 @@ inline const MCParticle * LArAnalysisParticle::McMainMCParticle() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArAnalysisParticle::TypeTree::TypeTree(const TYPE type, TypeTree::List daughterTypes) noexcept :
-    m_type{type},
-    m_daughterTypes{std::move_if_noexcept(daughterTypes)}
+    m_type(type),
+    m_daughterTypes(std::move_if_noexcept(daughterTypes))
 {
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArAnalysisParticle::TypeTree::TypeTree() noexcept :
-    m_type{TYPE::UNKNOWN}
+    m_type(TYPE::UNKNOWN)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArAnalysisParticle::TypeTree::TypeTree(const TYPE type) noexcept :
-    m_type{type},
-    m_daughterTypes{}
+    m_type(type),
+    m_daughterTypes()
 {
 }
 

@@ -13,6 +13,8 @@
 #include "Objects/ParticleFlowObject.h"
 #include "Objects/MCParticle.h"
 
+#include "larphysicscontent/TrackHitEnergyTool.h"
+#include "larphysicscontent/McInfoTool.h"
 #include "larphysicscontent/HitPurityTool.h"
 #include "larphysicscontent/LArAnalysisParticleHelper.h"
 
@@ -51,14 +53,11 @@ private:
     using MCParticleMap = std::unordered_map<const ParticleFlowObject *, const MCParticle *>; ///< Alias for a map from PFOs to MC particles
     using PdgCodeSet    = std::unordered_set<int>;                                            ///< Alias for a set of PDG codes
 
-    float            m_fiducialCutLowXMargin;                 ///< The low-x fiducial cut margin
-    float            m_fiducialCutHighXMargin;                ///< The high-x fiducial cut margin
-    float            m_fiducialCutLowYMargin;                 ///< The low-y fiducial cut margin
-    float            m_fiducialCutHighYMargin;                ///< The high-y fiducial cut margin
-    float            m_fiducialCutLowZMargin;                 ///< The low-z fiducial cut margin
-    float            m_fiducialCutHighZMargin;                ///< The high-z fiducial cut margin
-    float            m_mcContainmentFractionLowerBound;       ///< The lower containment fraction bound for MC containment
-    unsigned int     m_trackSlidingFitWindow;                 ///< The sliding fit window for the 3D track fits
+    CartesianVector              m_fiducialCutLowMargins;                ///< The low fiducial margins
+    CartesianVector              m_fiducialCutHighMargins;               ///< The high fiducial cut margins
+    CartesianVector              m_minCoordinates;                       ///< The detector's minimum fiducial coordinates
+    CartesianVector              m_maxCoordinates;                       ///< The detector's maximum fiducial coordinates
+    
     bool             m_produceBirksFitData;                   ///< Whether to produce the Birks fit data
     bool             m_produceEnergyFromRangeData;            ///< Whether to produce energy-from-range data
     bool             m_producePidData;                        ///< Whether to produce proton PID data
@@ -67,33 +66,13 @@ private:
     std::string      m_caloHitListName;                       ///< The CaloHit list name
     std::string      m_pidDataProtonsTTreeName;               ///< The name of the TTree to use for the proton PID data
     std::string      m_pidDataMuonsPionsTTreeName;            ///< The name of the TTree to use for the pion/muon PID data
-
     TFile           *m_pRootDataFile;                         ///< Address of the fit data TFile object
     TTree           *m_pBirksFitDataTree;                     ///< Address of the Birks fit data TTree object
     TNtuple         *m_pEnergyFromRangeProtonDataNtuple;      ///< Address of the proton energy-from-range data TNtuple object
     TNtuple         *m_pEnergyFromRangePionMuonDataNtuple;    ///< Address of the pion/muon energy-from-range data TNtuple object
+    TrackHitEnergyTool *m_pTrackHitEnergyTool;                        ///< Address of the track hit energy tool
+    McInfoTool *m_pMcInfoTool;                        ///< Address of the MC info tool
     HitPurityTool   *m_pHitPurityTool;                        ///< Address of the hit purity tool
-
-    /**
-     *  @brief  Recurse through the PFO hierarchy and append the track hit energy map
-     *
-     *  @param  pPfo address of the current PFO
-     *  @param  trackHitEnergyMap the track hit energy map
-     *  @param  trackFitMap the track fit map
-     */
-    void RecursivelyAppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo, LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap,
-        const LArAnalysisParticleHelper::TrackFitMap &trackFitMap) const;
-
-    /**
-     *  @brief  Append the track hit energy map for a given track-like PFO
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  trackFit the track fit object for the PFO
-     *
-     *  @return the track hit energy vector for the PFO
-     */
-    LArAnalysisParticleHelper::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
-        const ThreeDSlidingFitResult &trackFit) const;
 
     /**
      *  @brief  Recurse through the PFO hierarchy and append the MC particle map
@@ -113,8 +92,8 @@ private:
      *
      *  @return success
      */
-    bool ProduceBirksFitData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
-        const MCParticleMap &mcParticleMap, const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap) const;
+    bool ProduceBirksFitData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
+        const MCParticleMap &mcParticleMap) const;
 
     /**
      *  @brief  Get the Birks fit data for a given PFO
@@ -128,9 +107,8 @@ private:
      *
      *  @return success
      */
-    bool GetBirksFitData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
-        const LArAnalysisParticleHelper::LArTrackHitEnergyMap &trackHitEnergyMap, float &totalNoBirksAdcIntegral, FloatVector &birksAdcIntegrals,
-        FloatVector &threeDDistances) const;
+    bool GetBirksFitData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
+        float &totalNoBirksAdcIntegral, FloatVector &birksAdcIntegrals, FloatVector &threeDDistances) const;
 
     /**
      *  @brief  Add up the shower ADCs for a PFO
@@ -149,7 +127,7 @@ private:
      *  @param  birksAdcIntegrals the vector of ADC integrals to be corrected for recombination (to be populated)
      *  @param  threeDDistances the vector of 3D distances over which the charges were deposited (to be populated)
      */
-    void GetTrackAdcsAndDistances(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergies, float &totalNoBirksAdcIntegral,
+    void GetTrackAdcsAndDistances(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergies, float &totalNoBirksAdcIntegral,
         FloatVector &birksAdcIntegrals, FloatVector &threeDDistances) const;
 
     /**
@@ -161,7 +139,7 @@ private:
      *  @param  pNtuple address of the TNtuple object
      *  @param  pdgCodeSet The set of PDG codes
      */
-    void RecursivelyProduceEnergyFromRangeData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
+    void RecursivelyProduceEnergyFromRangeData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
         const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap, TNtuple *const pNtuple, const PdgCodeSet &pdgCodeSet) const;
 
     /**
@@ -181,7 +159,7 @@ private:
      *  @param  mcParticleMap the MC particle map
      *  @param  isCosmicRay whether the particle is a cosmic ray
      */
-    void RecursivelyProducePidData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::TrackFitMap &trackFitMap,
+    void RecursivelyProducePidData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
         const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap, const bool isCosmicRay) const;
 };
 

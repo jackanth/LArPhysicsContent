@@ -29,7 +29,7 @@ HitPurityTool::HitPurityTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool HitPurityTool::Run(const Algorithm *const pAlgorithm, LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, float &excessCaloValue)
+bool HitPurityTool::Run(const Algorithm *const pAlgorithm, LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, float &excessCaloValue)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -49,7 +49,7 @@ bool HitPurityTool::Run(const Algorithm *const pAlgorithm, LArAnalysisParticleHe
     const float minProtectedCoordinate = lowerCoordinateBound + range * 0.05;
     const float maxProtectedCoordinate = upperCoordinateBound - range * 0.05;
 
-    LArAnalysisParticleHelper::TrackHitValueVector changedTrackHitEnergies;
+    LArFittedTrackInfo::TrackHitValueVector changedTrackHitEnergies;
     const std::size_t nHits(trackHitEnergyVector.size());
     bool somethingChanged = true;
 
@@ -97,7 +97,7 @@ bool HitPurityTool::Run(const Algorithm *const pAlgorithm, LArAnalysisParticleHe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FloatVector HitPurityTool::GetValueAverages(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector,
+FloatVector HitPurityTool::GetValueAverages(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
     const std::size_t nHits) const
 {
     FloatVector valueAverages(nHits, 0.f);
@@ -124,7 +124,7 @@ FloatVector HitPurityTool::GetValueAverages(const LArAnalysisParticleHelper::Tra
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool HitPurityTool::GetStatistics(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
+bool HitPurityTool::GetStatistics(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
     float &scaleFactor, float &mean, float &sigma) const
 {
     if (nHits < 3UL)
@@ -146,7 +146,7 @@ bool HitPurityTool::GetStatistics(const LArAnalysisParticleHelper::TrackHitValue
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void HitPurityTool::CalculateRanges(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
+void HitPurityTool::CalculateRanges(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
     float &coordinateRange, float &caloValueRange) const
 {
     float minCoordinate(std::numeric_limits<float>::max()), maxCoordinate(std::numeric_limits<float>::min());
@@ -176,7 +176,7 @@ void HitPurityTool::CalculateRanges(const LArAnalysisParticleHelper::TrackHitVal
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float HitPurityTool::CalculateMean(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
+float HitPurityTool::CalculateMean(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
     const float scaleFactor) const
 {
     float mean(0.f);
@@ -198,7 +198,7 @@ float HitPurityTool::CalculateMean(const LArAnalysisParticleHelper::TrackHitValu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float HitPurityTool::CalculateStandardDeviation(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
+float HitPurityTool::CalculateStandardDeviation(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
     const float scaleFactor, const float mean) const
 {
     float squaredSummedDeviation(0.f);
@@ -221,7 +221,7 @@ float HitPurityTool::CalculateStandardDeviation(const LArAnalysisParticleHelper:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FloatVector HitPurityTool::CalculateImpurityScores(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector,
+FloatVector HitPurityTool::CalculateImpurityScores(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
     const float scaleFactor, const std::size_t nHits, const float mean, const float sigma) const
 {
     FloatVector impurityScores(nHits, 0.f);
@@ -247,7 +247,7 @@ FloatVector HitPurityTool::CalculateImpurityScores(const LArAnalysisParticleHelp
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FloatVector HitPurityTool::GetSortedDistanceVector(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector,
+FloatVector HitPurityTool::GetSortedDistanceVector(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
     const LArTrackHitValue &currentTrackHitValue, const float scaleFactor, const std::size_t nHits) const
 {
     FloatVector distanceVector(nHits, 0.f);
@@ -267,8 +267,8 @@ FloatVector HitPurityTool::GetSortedDistanceVector(const LArAnalysisParticleHelp
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 //ATTN temporary
-void HitPurityTool::MakePlots(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector,
-    const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergiesChanged) const
+void HitPurityTool::MakePlots(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
+    const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergiesChanged) const
 {
     static int uniquePlotIdentifier(0);
 

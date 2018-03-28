@@ -12,6 +12,7 @@
 
 #include "larphysicscontent/LArTrackHitValue.h"
 #include "larphysicscontent/LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArFittedTrackInfo.h"
 
 using namespace pandora;
 
@@ -29,7 +30,7 @@ public:
      */
     HitPurityTool();
 
-    bool Run(const Algorithm *const pAlgorithm, LArAnalysisParticleHelper::TrackHitValueVector &trackHitValueVector, float &excessCaloValue);
+    bool Run(const Algorithm *const pAlgorithm, LArFittedTrackInfo::TrackHitValueVector &trackHitValueVector, float &excessCaloValue);
 
 private:
     using FloatMatrix = std::vector<FloatVector>; ///< Alias for a matrix of inter-datapoint distances
@@ -49,7 +50,7 @@ private:
      *
      *  @return the vector of averages
      */
-    FloatVector GetValueAverages(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits) const;
+    FloatVector GetValueAverages(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits) const;
 
     /**
      *  @brief  Get the calo value/coordinate scale factor, inter-datapoint distance mean and standard deviation
@@ -62,7 +63,7 @@ private:
      *
      *  @return success
      */
-    bool GetStatistics(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits, float &scaleFactor,
+    bool GetStatistics(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits, float &scaleFactor,
         float &mean, float &sigma) const;
 
     /**
@@ -73,7 +74,7 @@ private:
      *  @param  coordinateRange the coordinate range (to populate)
      *  @param  caloValueRange the calo value range (to populate)
      */
-    void CalculateRanges(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
+    void CalculateRanges(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
         float &coordinateRange, float &caloValueRange) const;
 
     /**
@@ -85,7 +86,7 @@ private:
      *
      *  @return the mean
      */
-    float CalculateMean(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits, const float scaleFactor) const;
+    float CalculateMean(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits, const float scaleFactor) const;
 
     /**
      *  @brief  Get the inter-datapoint distance standard deviation
@@ -97,7 +98,7 @@ private:
      *
      *  @return the standard deviation
      */
-    float CalculateStandardDeviation(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
+    float CalculateStandardDeviation(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
         const float scaleFactor, const float mean) const;
 
     /**
@@ -111,7 +112,7 @@ private:
      *
      *  @return the impurity scores
      */
-    FloatVector CalculateImpurityScores(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const float scaleFactor,
+    FloatVector CalculateImpurityScores(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const float scaleFactor,
         const std::size_t nHits, const float mean, const float sigma) const;
 
     /**
@@ -124,11 +125,11 @@ private:
      *
      *  @return the distance vector
      */
-    FloatVector GetSortedDistanceVector(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector,
+    FloatVector GetSortedDistanceVector(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
         const LArTrackHitValue &currentTrackHitValue, const float scaleFactor, const std::size_t nHits) const;
 
     // ATTN temporary
-    void MakePlots(const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergyVector, const LArAnalysisParticleHelper::TrackHitValueVector &trackHitEnergiesChanged) const;
+    void MakePlots(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergiesChanged) const;
 };
 
 } // namespace lar_physics_content
