@@ -10,16 +10,17 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larphysicscontent/LArObjects/LArAnalysisParticle.h"
-#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
 #include "larphysicscontent/LArAnalysis/McInfoTool.h"
+#include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
+#include "larphysicscontent/LArObjects/LArAnalysisParticle.h"
 
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 
 #include "TFile.h"
-#include "TTree.h"
 #include "TString.h"
+#include "TTree.h"
 
+// clang-format off
 /**
  *  @brief  Macro for performing operations on the tree member scalars: (variable name, member variable, type, default value, units)
  *
@@ -211,80 +212,75 @@
     d("cr_mc_IsPionOrMuon",                                  m_cr_mc_IsPionOrMuon,                                  RBoolVector,      false, "",        m_cr_Number) \
     d("cr_mc_IsCosmicRay",                                   m_cr_mc_IsCosmicRay,                                   RBoolVector,      false, "",        m_cr_Number) \
     d("cr_mc_PdgCode",                                       m_cr_mc_PdgCode,                                       RIntVector,       0,     "",        m_cr_Number)
+// clang-format on
 
 /**
  *  @brief  Declare a set of scalar members
  */
-#define DECLARE_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units) \
-    memberType memberVariable;
+#define DECLARE_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units) memberType memberVariable;
 
 /**
  *  @brief  Declare a set of vector members
  */
-#define DECLARE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) \
-    memberType memberVariable;
+#define DECLARE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) memberType memberVariable;
 
 /**
  *  @brief  Initialize a set of scalar members
  */
-#define INITIALIZE_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units) \
-    memberVariable(defaultValue),
+#define INITIALIZE_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units) memberVariable(defaultValue),
 
 /**
  *  @brief  Initialize a set of vector members
  */
-#define INITIALIZE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) \
-    memberVariable(),
+#define INITIALIZE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) memberVariable(),
 
 /**
  *  @brief  Set a set of scalar member TTree branches
  */
-#define SET_SCALAR_MEMBER_BRANCH(name, memberVariable, memberType, defaultValue, units) \
+#define SET_SCALAR_MEMBER_BRANCH(name, memberVariable, memberType, defaultValue, units)                                                    \
     m_pOutputTree->Branch(name, &m_treeParameters.memberVariable);
 
 /**
  *  @brief  Set a set of vector member TTree branches
  */
-#define SET_VECTOR_MEMBER_BRANCH(name, memberVariable, memberType, defaultValue, units, sizeMember) \
+#define SET_VECTOR_MEMBER_BRANCH(name, memberVariable, memberType, defaultValue, units, sizeMember)                                        \
     m_pOutputTree->Branch(name, &m_treeParameters.memberVariable);
 
 /**
  *  @brief  Check the sizes of a set of vector members
  */
-#define CHECK_VECTOR_MEMBER_SIZE(name, memberVariable, memberType, defaultValue, units, sizeMember) \
+#define CHECK_VECTOR_MEMBER_SIZE(name, memberVariable, memberType, defaultValue, units, sizeMember)                                        \
     this->CheckSize(name, m_treeParameters.memberVariable, m_treeParameters.sizeMember);
 
 /**
  *  @brief  Push the default values to a set of vector members
  */
-#define VECTOR_MEMBER_PUSH_DEFAULT(name, memberVariable, memberType, defaultValue, units, sizeMember) \
+#define VECTOR_MEMBER_PUSH_DEFAULT(name, memberVariable, memberType, defaultValue, units, sizeMember)                                      \
     m_treeParameters.memberVariable.push_back(defaultValue);
 
 /**
  *  @brief  Print a set of scalar members to stdout (uses variables `label`, `maxLabelWidth`) in local scope
  */
-#define PRINT_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units)                                                  \
-    std::cout << label << name << ((strlen(name) < maxLabelWidth) ? std::string(maxLabelWidth - strlen(name), ' ') : std::string{}) \
+#define PRINT_SCALAR_MEMBER(name, memberVariable, memberType, defaultValue, units)                                                         \
+    std::cout << label << name << ((strlen(name) < maxLabelWidth) ? std::string(maxLabelWidth - strlen(name), ' ') : std::string{})        \
               << ": (" << #memberType << ") " << m_treeParameters.memberVariable << ' ' << units << '\n';
 
 /**
  *  @brief  Print a set of vector members to stdout (uses variables `label`, `maxLabelWidth` and `i` in local scope)
  */
-#define PRINT_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember)                                       \
-    std::cout << label << name << ((strlen(name) < maxLabelWidth) ? std::string(maxLabelWidth - strlen(name), ' ') : std::string{})  \
+#define PRINT_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember)                                             \
+    std::cout << label << name << ((strlen(name) < maxLabelWidth) ? std::string(maxLabelWidth - strlen(name), ' ') : std::string{})        \
               << ": (" << #memberType << ") " << m_treeParameters.memberVariable[i] << ' ' << units << '\n';
 
 /**
  *  @brief  Initialize a set of vector members
  */
-#define INITIALIZE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) \
-    memberVariable(),
+#define INITIALIZE_VECTOR_MEMBER(name, memberVariable, memberType, defaultValue, units, sizeMember) memberVariable(),
 
 /**
  *  @brief  Macro for pushing a new value to a tree member vector
  */
-#define PUSH_TREE_RECORD(treeMember, value) \
-    m_treeParameters.treeMember.push_back(value)
+#define PUSH_TREE_RECORD(treeMember, value) m_treeParameters.treeMember.push_back(value)
 
 using namespace pandora;
 using namespace lar_content;
@@ -298,12 +294,12 @@ namespace lar_physics_content
 class TreeParameters
 {
 public:
-    using RFloatVector    = std::vector<Float_t>;   ///< Alias for a vector of ROOT floats
-    using RIntVector      = std::vector<Int_t>;     ///< Alias for a vector of ROOT ints
-    using RBoolVector     = std::vector<Bool_t>;    ///< Alias for a vector of ROOT bools
-    using RUnsignedVector = std::vector<UInt_t>;    ///< Alias for a vector of ROOT unsigned ints
-    using RUInt64Vector   = std::vector<ULong64_t>; ///< Alias for a vector of ROOT unsigned 64-bit ints
-    using RTextVector     = std::vector<TString>;   ///< Alias for a vector of ROOT strings
+    using RFloatVector = std::vector<Float_t>;    ///< Alias for a vector of ROOT floats
+    using RIntVector = std::vector<Int_t>;        ///< Alias for a vector of ROOT ints
+    using RBoolVector = std::vector<Bool_t>;      ///< Alias for a vector of ROOT bools
+    using RUnsignedVector = std::vector<UInt_t>;  ///< Alias for a vector of ROOT unsigned ints
+    using RUInt64Vector = std::vector<ULong64_t>; ///< Alias for a vector of ROOT unsigned 64-bit ints
+    using RTextVector = std::vector<TString>;     ///< Alias for a vector of ROOT strings
 
     /**
      *  @brief  Default constructor
@@ -316,7 +312,7 @@ public:
     TREE_VECTOR_MEMBERS_CR(DECLARE_VECTOR_MEMBER)
     TREE_VECTOR_MEMBERS_CR_MC(DECLARE_VECTOR_MEMBER)
 
-    bool  m_dummy; ///< A dummy variable for the preprocessor trick.
+    bool m_dummy; ///< A dummy variable for the preprocessor trick.
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -344,7 +340,8 @@ protected:
 
 private:
     using AnalysisParticleList = std::list<const LArAnalysisParticle *>; ///< Alias for a list of AnalysisParticles
-    using MCPrimaryMap = std::unordered_multimap<const MCParticle *, const LArAnalysisParticle *>; ///< Alias for a map from MC primaries to AnalysisParticles
+    using MCPrimaryMap = std::unordered_multimap<const MCParticle *,
+                                                 const LArAnalysisParticle *>; ///< Alias for a map from MC primaries to AnalysisParticles
 
     /**
      *  @brief  Get the map from the MC primaries to their analysis particles
@@ -365,7 +362,7 @@ private:
      *  @return success
      */
     bool ProcessAnalysisParticle(const LArAnalysisParticle *const pAnalysisParticle, const MCPrimaryMap &mainMcParticleMap,
-        const MCParticleList *const pMCParticleList) const;
+                                 const MCParticleList *const pMCParticleList) const;
 
     /**
      *  @brief  Record MC information for all the unreconstructed particles
@@ -408,7 +405,7 @@ private:
      *  @param  numberOfRecoShowers the number of reco showers (to populate)
      */
     void CountRecoTracksAndShowers(const LArAnalysisParticle &currentAnalysisParticle, unsigned int &numberOfRecoTracks,
-        unsigned int &numberOfRecoShowers) const;
+                                   unsigned int &numberOfRecoShowers) const;
 
     /**
      *  @brief  Populate the tree parameters with neutrino MC information
@@ -416,7 +413,8 @@ private:
      *  @param  pfoMcInfo the PFO MC info object
      *  @param  pMCParticleList address of the MC particle list
      */
-    void PopulateNeutrinoMcParameters(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const MCParticleList *const pMCParticleList) const;
+    void PopulateNeutrinoMcParameters(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo,
+                                      const MCParticleList *const pMCParticleList) const;
 
     /**
      *  @brief  Caculate the neutrino MC visible energy and momentum
@@ -425,7 +423,8 @@ private:
      *  @param  visibleEnergy the visible energy (to populate)
      *  @param  visibleMomentum the visible momentum (to populate)
      */
-    void CalculateNeutrinoMcVisibleMomentum(const MCParticleList *const pMCParticleList, float &visibleEnergy, CartesianVector &visibleMomentum) const;
+    void CalculateNeutrinoMcVisibleMomentum(const MCParticleList *const pMCParticleList, float &visibleEnergy,
+                                            CartesianVector &visibleMomentum) const;
 
     /**
      *  @brief  Get all the MC primary neutrino daughters
@@ -535,19 +534,19 @@ private:
      */
     void InitializeTree();
 
-    std::string               m_pfoListName;                        ///< The neutrino PFO list name
-    std::string               m_outputFile;                         ///< The output file path
-    std::string               m_treeName;                           ///< The name of the TTree
-    std::string               m_treeTitle;                          ///< The title of the TTree
-    TFile                    *m_pOutputTFile;                       ///< The ROOT TFile associated with the tree
-    TTree                    *m_pOutputTree;                        ///< The ROOT TTree to which to write the data
-    bool                      m_verbose;                            ///< Whether to print some AnalysisParticle information to screen
-    mutable TreeParameters    m_treeParameters;                     ///< The tree parameters
-    std::string               m_mcParticleListName;                 ///< The name of the MC particle list
-    float                     m_fiducialHitFractionLowerBound;      ///< The lower fiducial hit fraction bound for containment
-    float                     m_mcOnlyParticleContainmentCut;       ///< The lower containment fraction bound for including MC-only particles
-    float                     m_mcOnlyParticleEnergyCut;            ///< The lower energy bound for including MC-only particles
-    McInfoTool *m_pMcInfoTool;                        ///< Address of the MC info tool
+    std::string m_pfoListName;               ///< The neutrino PFO list name
+    std::string m_outputFile;                ///< The output file path
+    std::string m_treeName;                  ///< The name of the TTree
+    std::string m_treeTitle;                 ///< The title of the TTree
+    TFile *m_pOutputTFile;                   ///< The ROOT TFile associated with the tree
+    TTree *m_pOutputTree;                    ///< The ROOT TTree to which to write the data
+    bool m_verbose;                          ///< Whether to print some AnalysisParticle information to screen
+    mutable TreeParameters m_treeParameters; ///< The tree parameters
+    std::string m_mcParticleListName;        ///< The name of the MC particle list
+    float m_fiducialHitFractionLowerBound;   ///< The lower fiducial hit fraction bound for containment
+    float m_mcOnlyParticleContainmentCut;    ///< The lower containment fraction bound for including MC-only particles
+    float m_mcOnlyParticleEnergyCut;         ///< The lower energy bound for including MC-only particles
+    McInfoTool *m_pMcInfoTool;               ///< Address of the MC info tool
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -555,11 +554,11 @@ private:
 
 template <typename T>
 inline void WriteAnalysisParticlesAlgorithm::CheckSize(const std::string &variableName, const std::vector<T> &vector,
-    const std::size_t desiredSize) const
+                                                       const std::size_t desiredSize) const
 {
     if (vector.size() != desiredSize)
     {
-        std::cout << "WriteAnalysisParticlesAlgorithm: tree member variable '" <<  variableName << "' was of the wrong size" << std::endl;
+        std::cout << "WriteAnalysisParticlesAlgorithm: tree member variable '" << variableName << "' was of the wrong size" << std::endl;
         throw STATUS_CODE_FAILURE;
     }
 }

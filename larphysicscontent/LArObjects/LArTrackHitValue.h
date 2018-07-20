@@ -16,7 +16,6 @@ using namespace pandora;
 
 namespace lar_physics_content
 {
-
 /**
  *  @brief LArTrackHitValue class
  */
@@ -38,7 +37,7 @@ public:
      *
      *  @return address of the CaloHit
      */
-    const CaloHit * GetCaloHit() const noexcept;
+    const CaloHit *GetCaloHit() const noexcept;
 
     /**
      *  @brief  Get the coordinate
@@ -69,27 +68,23 @@ public:
     void CaloValue(const float caloValue) noexcept;
 
 private:
-    const CaloHit   *m_pCaloHit;          ///< Pointer to the corresponding CaloHit
-    float            m_coordinate;        ///< The coordinate along the track fit (cm)
-    float            m_threeDDistance;    ///< The 3D distance this hit corresponds to (cm)
-    float            m_caloValue;         ///< The hit's calorimetric quantity, e.g. energy or integrated ADC
+    const CaloHit *m_pCaloHit; ///< Pointer to the corresponding CaloHit
+    float m_coordinate;        ///< The coordinate along the track fit (cm)
+    float m_threeDDistance;    ///< The 3D distance this hit corresponds to (cm)
+    float m_caloValue;         ///< The hit's calorimetric quantity, e.g. energy or integrated ADC
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArTrackHitValue::LArTrackHitValue(const CaloHit *const pCaloHit, const float coordinate, const float threeDDistance,
-    const float caloValue) noexcept :
-    m_pCaloHit(pCaloHit),
-    m_coordinate(coordinate),
-    m_threeDDistance(threeDDistance),
-    m_caloValue(caloValue)
+inline LArTrackHitValue::LArTrackHitValue(const CaloHit *const pCaloHit, const float coordinate, const float threeDDistance, const float caloValue) noexcept
+    : m_pCaloHit(pCaloHit), m_coordinate(coordinate), m_threeDDistance(threeDDistance), m_caloValue(caloValue)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const CaloHit * LArTrackHitValue::GetCaloHit() const noexcept
+inline const CaloHit *LArTrackHitValue::GetCaloHit() const noexcept
 {
     return m_pCaloHit;
 }

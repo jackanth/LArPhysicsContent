@@ -18,20 +18,20 @@ using namespace lar_content;
 namespace lar_physics_content
 {
 
-WriteAnalysisParticlesAlgorithm::WriteAnalysisParticlesAlgorithm() :
-    m_pfoListName(),
-    m_outputFile(),
-    m_treeName("PandoraTree"),
-    m_treeTitle("PandoraTree"),
-    m_pOutputTFile(nullptr),
-    m_pOutputTree(nullptr),
-    m_verbose(false),
-    m_treeParameters(),
-    m_mcParticleListName(),
-    m_fiducialHitFractionLowerBound(0.9f),
-    m_mcOnlyParticleContainmentCut(0.f),
-    m_mcOnlyParticleEnergyCut(0.f),
-    m_pMcInfoTool(nullptr)
+WriteAnalysisParticlesAlgorithm::WriteAnalysisParticlesAlgorithm()
+    : m_pfoListName(),
+      m_outputFile(),
+      m_treeName("PandoraTree"),
+      m_treeTitle("PandoraTree"),
+      m_pOutputTFile(nullptr),
+      m_pOutputTree(nullptr),
+      m_verbose(false),
+      m_treeParameters(),
+      m_mcParticleListName(),
+      m_fiducialHitFractionLowerBound(0.9f),
+      m_mcOnlyParticleContainmentCut(0.f),
+      m_mcOnlyParticleEnergyCut(0.f),
+      m_pMcInfoTool(nullptr)
 {
 }
 
@@ -75,7 +75,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::Run()
     // Construct a multimap from MCParticles to AnalysisParticles and use this to fill the is-split boolean later.
     const MCPrimaryMap mainMcParticleMap = this->GetMainMcParticleMap(*pPfoList);
 
-    for (const ParticleFlowObject * const pPfo : *pPfoList)
+    for (const ParticleFlowObject *const pPfo : *pPfoList)
     {
         if (const LArAnalysisParticle *const pAnalysisParticle = dynamic_cast<const LArAnalysisParticle *>(pPfo))
             this->ProcessAnalysisParticle(pAnalysisParticle, mainMcParticleMap, pMCParticleList);
@@ -101,7 +101,7 @@ WriteAnalysisParticlesAlgorithm::MCPrimaryMap WriteAnalysisParticlesAlgorithm::G
     MCPrimaryMap mainMcParticleMap;
 
     // Find all the analysis particles with associated MC particles and add them to the map.
-    for (const ParticleFlowObject * const pPfo : pfoList)
+    for (const ParticleFlowObject *const pPfo : pfoList)
     {
         if (const LArAnalysisParticle *const pAnalysisParticle = dynamic_cast<const LArAnalysisParticle *const>(pPfo))
         {
@@ -116,7 +116,7 @@ WriteAnalysisParticlesAlgorithm::MCPrimaryMap WriteAnalysisParticlesAlgorithm::G
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool WriteAnalysisParticlesAlgorithm::ProcessAnalysisParticle(const LArAnalysisParticle *const pAnalysisParticle,
-    const MCPrimaryMap &mainMcParticleMap, const MCParticleList *const pMCParticleList) const
+                                                              const MCPrimaryMap &mainMcParticleMap, const MCParticleList *const pMCParticleList) const
 {
     if (LArAnalysisParticleHelper::IsNeutrino(pAnalysisParticle))
     {
@@ -154,8 +154,7 @@ bool WriteAnalysisParticlesAlgorithm::ProcessAnalysisParticle(const LArAnalysisP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::RecordUnreconstructedParticles(const MCParticleList *const pMCParticleList,
-    const MCPrimaryMap &mainMcParticleMap) const
+void WriteAnalysisParticlesAlgorithm::RecordUnreconstructedParticles(const MCParticleList *const pMCParticleList, const MCPrimaryMap &mainMcParticleMap) const
 {
     for (const MCParticle *const pMCPrimary : this->GetAllMcPrimaries(pMCParticleList))
     {
@@ -190,7 +189,9 @@ void WriteAnalysisParticlesAlgorithm::RecordUnreconstructedParticle(const MCPart
         // We should only have up to one neutrino.
         if (m_treeParameters.m_nu_HasMcInfo)
         {
-            std::cout << "WriteAnalysisParticlesAlgorithm: found neutrino that was not covered by MC particles but neutrino MC properties already exist" << std::endl;
+            std::cout << "WriteAnalysisParticlesAlgorithm: found neutrino that was not covered by MC particles but neutrino MC properties "
+                         "already exist"
+                      << std::endl;
             return;
         }
 
@@ -241,45 +242,45 @@ MCParticleSet WriteAnalysisParticlesAlgorithm::GetAllMcPrimaries(const MCParticl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalysisParticle &neutrinoAnalysisParticle,
-    const MCParticleList *const pMCParticleList) const
+                                                                 const MCParticleList *const pMCParticleList) const
 {
     // m_nu_WasReconstructed is dealt with by the calling method.
 
-    m_treeParameters.m_nu_IsVertexFiducial                            = neutrinoAnalysisParticle.IsVertexFiducial();
-    m_treeParameters.m_nu_IsContained                                 = (neutrinoAnalysisParticle.FiducialHitFraction() >= m_fiducialHitFractionLowerBound);
-    m_treeParameters.m_nu_FiducialHitFraction                         = neutrinoAnalysisParticle.FiducialHitFraction();
-    m_treeParameters.m_nu_HasMcInfo                                   = neutrinoAnalysisParticle.HasMcInfo();
-    m_treeParameters.m_nu_VisibleEnergy                               = neutrinoAnalysisParticle.KineticEnergy();
-    m_treeParameters.m_nu_VisibleEnergyFracFromRange                  = neutrinoAnalysisParticle.KineticEnergyFromRangeFraction();
-    m_treeParameters.m_nu_VisibleEnergyFracFromCorrectedTrackCharge   = neutrinoAnalysisParticle.KineticEnergyFromCorrectedTrackChargeFraction();
+    m_treeParameters.m_nu_IsVertexFiducial = neutrinoAnalysisParticle.IsVertexFiducial();
+    m_treeParameters.m_nu_IsContained = (neutrinoAnalysisParticle.FiducialHitFraction() >= m_fiducialHitFractionLowerBound);
+    m_treeParameters.m_nu_FiducialHitFraction = neutrinoAnalysisParticle.FiducialHitFraction();
+    m_treeParameters.m_nu_HasMcInfo = neutrinoAnalysisParticle.HasMcInfo();
+    m_treeParameters.m_nu_VisibleEnergy = neutrinoAnalysisParticle.KineticEnergy();
+    m_treeParameters.m_nu_VisibleEnergyFracFromRange = neutrinoAnalysisParticle.KineticEnergyFromRangeFraction();
+    m_treeParameters.m_nu_VisibleEnergyFracFromCorrectedTrackCharge = neutrinoAnalysisParticle.KineticEnergyFromCorrectedTrackChargeFraction();
     m_treeParameters.m_nu_VisibleEnergyFracFromUncorrectedTrackCharge = neutrinoAnalysisParticle.KineticEnergyFromUncorrectedTrackChargeFraction();
-    m_treeParameters.m_nu_VisibleEnergyFracFromShowerCharge           = neutrinoAnalysisParticle.KineticEnergyFromShowerChargeFraction();
-    m_treeParameters.m_nu_VertexX                                     = neutrinoAnalysisParticle.VertexPosition().GetX();
-    m_treeParameters.m_nu_VertexY                                     = neutrinoAnalysisParticle.VertexPosition().GetY();
-    m_treeParameters.m_nu_VertexZ                                     = neutrinoAnalysisParticle.VertexPosition().GetZ();
-    m_treeParameters.m_nu_DirectionCosineX                            = neutrinoAnalysisParticle.DirectionCosines().GetX();
-    m_treeParameters.m_nu_DirectionCosineY                            = neutrinoAnalysisParticle.DirectionCosines().GetY();
-    m_treeParameters.m_nu_DirectionCosineZ                            = neutrinoAnalysisParticle.DirectionCosines().GetZ();
-    m_treeParameters.m_nu_Momentum                                    = neutrinoAnalysisParticle.AnalysisMomentum().GetMagnitude();
-    m_treeParameters.m_nu_MomentumX                                   = neutrinoAnalysisParticle.AnalysisMomentum().GetX();
-    m_treeParameters.m_nu_MomentumY                                   = neutrinoAnalysisParticle.AnalysisMomentum().GetY();
-    m_treeParameters.m_nu_MomentumZ                                   = neutrinoAnalysisParticle.AnalysisMomentum().GetZ();
-    m_treeParameters.m_nu_TypeTree                                    = LArAnalysisParticleHelper::TypeTreeAsString(neutrinoAnalysisParticle.GetTypeTree());
-    m_treeParameters.m_nu_NumberOf3dHits                              = neutrinoAnalysisParticle.NumberOf3dHits();
-    m_treeParameters.m_nu_NumberOfCollectionPlaneHits                 = neutrinoAnalysisParticle.NumberOfCollectionPlaneHits();
-    m_treeParameters.m_nu_NumberOfRecoParticles                       = neutrinoAnalysisParticle.NumberOfDownstreamParticles();
+    m_treeParameters.m_nu_VisibleEnergyFracFromShowerCharge = neutrinoAnalysisParticle.KineticEnergyFromShowerChargeFraction();
+    m_treeParameters.m_nu_VertexX = neutrinoAnalysisParticle.VertexPosition().GetX();
+    m_treeParameters.m_nu_VertexY = neutrinoAnalysisParticle.VertexPosition().GetY();
+    m_treeParameters.m_nu_VertexZ = neutrinoAnalysisParticle.VertexPosition().GetZ();
+    m_treeParameters.m_nu_DirectionCosineX = neutrinoAnalysisParticle.DirectionCosines().GetX();
+    m_treeParameters.m_nu_DirectionCosineY = neutrinoAnalysisParticle.DirectionCosines().GetY();
+    m_treeParameters.m_nu_DirectionCosineZ = neutrinoAnalysisParticle.DirectionCosines().GetZ();
+    m_treeParameters.m_nu_Momentum = neutrinoAnalysisParticle.AnalysisMomentum().GetMagnitude();
+    m_treeParameters.m_nu_MomentumX = neutrinoAnalysisParticle.AnalysisMomentum().GetX();
+    m_treeParameters.m_nu_MomentumY = neutrinoAnalysisParticle.AnalysisMomentum().GetY();
+    m_treeParameters.m_nu_MomentumZ = neutrinoAnalysisParticle.AnalysisMomentum().GetZ();
+    m_treeParameters.m_nu_TypeTree = LArAnalysisParticleHelper::TypeTreeAsString(neutrinoAnalysisParticle.GetTypeTree());
+    m_treeParameters.m_nu_NumberOf3dHits = neutrinoAnalysisParticle.NumberOf3dHits();
+    m_treeParameters.m_nu_NumberOfCollectionPlaneHits = neutrinoAnalysisParticle.NumberOfCollectionPlaneHits();
+    m_treeParameters.m_nu_NumberOfRecoParticles = neutrinoAnalysisParticle.NumberOfDownstreamParticles();
 
     // Recurse through the analysis particle hierarchy, counting the numbers of tracks and showers.
     unsigned int numberOfRecoTracks(0UL), numberOfRecoShowers(0UL);
     this->CountRecoTracksAndShowers(neutrinoAnalysisParticle, numberOfRecoTracks, numberOfRecoShowers);
 
-    m_treeParameters.m_nu_NumberOfRecoTracks  = numberOfRecoTracks;
+    m_treeParameters.m_nu_NumberOfRecoTracks = numberOfRecoTracks;
     m_treeParameters.m_nu_NumberOfRecoShowers = numberOfRecoShowers;
 
     // Use the 'momentum' to get the transverse and longitudinal visible energy components.
     const CartesianVector zAxis(0.f, 0.f, 1.f);
     m_treeParameters.m_nu_VisibleLongitudinalEnergy = neutrinoAnalysisParticle.AnalysisMomentum().GetDotProduct(zAxis);
-    m_treeParameters.m_nu_VisibleTransverseEnergy   = neutrinoAnalysisParticle.AnalysisMomentum().GetCrossProduct(zAxis).GetMagnitude();
+    m_treeParameters.m_nu_VisibleTransverseEnergy = neutrinoAnalysisParticle.AnalysisMomentum().GetCrossProduct(zAxis).GetMagnitude();
 
     // Populate the MC parameters if the info exists - if not, they can be left at default values.
     if (neutrinoAnalysisParticle.HasMcInfo() && neutrinoAnalysisParticle.McMainMCParticle())
@@ -293,7 +294,7 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void WriteAnalysisParticlesAlgorithm::CountRecoTracksAndShowers(const LArAnalysisParticle &currentAnalysisParticle,
-    unsigned int &numberOfRecoTracks, unsigned int &numberOfRecoShowers) const
+                                                                unsigned int &numberOfRecoTracks, unsigned int &numberOfRecoShowers) const
 {
     for (const ParticleFlowObject *const pDaughterPfo : currentAnalysisParticle.GetDaughterPfoList())
     {
@@ -314,7 +315,7 @@ void WriteAnalysisParticlesAlgorithm::CountRecoTracksAndShowers(const LArAnalysi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo,
-    const MCParticleList *const pMCParticleList) const
+                                                                   const MCParticleList *const pMCParticleList) const
 {
     if (pfoMcInfo.m_pMCParticle)
         m_treeParameters.m_nu_mc_McParticleUid = reinterpret_cast<std::uint64_t>(pfoMcInfo.m_pMCParticle->GetUid());
@@ -322,22 +323,22 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const LArAnal
     else // it can stay at its default value
         std::cout << "WriteAnalysisParticlesAlgorithm: could not populate MC particle UID" << std::endl;
 
-    m_treeParameters.m_nu_mc_Energy              = pfoMcInfo.m_mcEnergy;
-    m_treeParameters.m_nu_mc_VertexX             = pfoMcInfo.m_mcVertexPosition.GetX();
-    m_treeParameters.m_nu_mc_VertexY             = pfoMcInfo.m_mcVertexPosition.GetY();
-    m_treeParameters.m_nu_mc_VertexZ             = pfoMcInfo.m_mcVertexPosition.GetZ();
-    m_treeParameters.m_nu_mc_DirectionCosineX    = pfoMcInfo.m_mcDirectionCosines.GetX();
-    m_treeParameters.m_nu_mc_DirectionCosineY    = pfoMcInfo.m_mcDirectionCosines.GetY();
-    m_treeParameters.m_nu_mc_DirectionCosineZ    = pfoMcInfo.m_mcDirectionCosines.GetZ();
-    m_treeParameters.m_nu_mc_Momentum            = pfoMcInfo.m_mcMomentum.GetMagnitude();
-    m_treeParameters.m_nu_mc_MomentumX           = pfoMcInfo.m_mcMomentum.GetX();
-    m_treeParameters.m_nu_mc_MomentumY           = pfoMcInfo.m_mcMomentum.GetY();
-    m_treeParameters.m_nu_mc_MomentumZ           = pfoMcInfo.m_mcMomentum.GetZ();
-    m_treeParameters.m_nu_mc_IsVertexFiducial    = pfoMcInfo.m_mcIsVertexFiducial;
-    m_treeParameters.m_nu_mc_IsContained         = pfoMcInfo.m_mcIsContained;
+    m_treeParameters.m_nu_mc_Energy = pfoMcInfo.m_mcEnergy;
+    m_treeParameters.m_nu_mc_VertexX = pfoMcInfo.m_mcVertexPosition.GetX();
+    m_treeParameters.m_nu_mc_VertexY = pfoMcInfo.m_mcVertexPosition.GetY();
+    m_treeParameters.m_nu_mc_VertexZ = pfoMcInfo.m_mcVertexPosition.GetZ();
+    m_treeParameters.m_nu_mc_DirectionCosineX = pfoMcInfo.m_mcDirectionCosines.GetX();
+    m_treeParameters.m_nu_mc_DirectionCosineY = pfoMcInfo.m_mcDirectionCosines.GetY();
+    m_treeParameters.m_nu_mc_DirectionCosineZ = pfoMcInfo.m_mcDirectionCosines.GetZ();
+    m_treeParameters.m_nu_mc_Momentum = pfoMcInfo.m_mcMomentum.GetMagnitude();
+    m_treeParameters.m_nu_mc_MomentumX = pfoMcInfo.m_mcMomentum.GetX();
+    m_treeParameters.m_nu_mc_MomentumY = pfoMcInfo.m_mcMomentum.GetY();
+    m_treeParameters.m_nu_mc_MomentumZ = pfoMcInfo.m_mcMomentum.GetZ();
+    m_treeParameters.m_nu_mc_IsVertexFiducial = pfoMcInfo.m_mcIsVertexFiducial;
+    m_treeParameters.m_nu_mc_IsContained = pfoMcInfo.m_mcIsContained;
     m_treeParameters.m_nu_mc_ContainmentFraction = pfoMcInfo.m_mcContainmentFraction;
-    m_treeParameters.m_nu_mc_TypeTree            = LArAnalysisParticleHelper::TypeTreeAsString(pfoMcInfo.m_mcTypeTree);
-    m_treeParameters.m_nu_mc_PdgCode             = pfoMcInfo.m_mcPdgCode;
+    m_treeParameters.m_nu_mc_TypeTree = LArAnalysisParticleHelper::TypeTreeAsString(pfoMcInfo.m_mcTypeTree);
+    m_treeParameters.m_nu_mc_PdgCode = pfoMcInfo.m_mcPdgCode;
 
     if (!pMCParticleList || pMCParticleList->empty())
     {
@@ -355,13 +356,13 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const LArAnal
     // To align with the non-MC definition, we define the longitudinal/transverse components with respect to the z-direction.
     const CartesianVector zDirectionVector(0.f, 0.f, 1.f);
 
-    m_treeParameters.m_nu_mc_LongitudinalEnergy        = pfoMcInfo.m_mcMomentum.GetDotProduct(zDirectionVector);
-    m_treeParameters.m_nu_mc_TransverseEnergy          = pfoMcInfo.m_mcMomentum.GetCrossProduct(zDirectionVector).GetMagnitude();
-    m_treeParameters.m_nu_mc_VisibleEnergy             = visibleEnergy;
+    m_treeParameters.m_nu_mc_LongitudinalEnergy = pfoMcInfo.m_mcMomentum.GetDotProduct(zDirectionVector);
+    m_treeParameters.m_nu_mc_TransverseEnergy = pfoMcInfo.m_mcMomentum.GetCrossProduct(zDirectionVector).GetMagnitude();
+    m_treeParameters.m_nu_mc_VisibleEnergy = visibleEnergy;
     m_treeParameters.m_nu_mc_VisibleLongitudinalEnergy = visibleMomentum.GetDotProduct(zDirectionVector);
-    m_treeParameters.m_nu_mc_VisibleTransverseEnergy   = visibleMomentum.GetCrossProduct(zDirectionVector).GetMagnitude();
-    m_treeParameters.m_nu_mc_InteractionType           = LArInteractionTypeHelper::ToString(interactionType);
-    m_treeParameters.m_nu_mc_IsChargedCurrent          = this->IsChargedCurrent(interactionType);
+    m_treeParameters.m_nu_mc_VisibleTransverseEnergy = visibleMomentum.GetCrossProduct(zDirectionVector).GetMagnitude();
+    m_treeParameters.m_nu_mc_InteractionType = LArInteractionTypeHelper::ToString(interactionType);
+    m_treeParameters.m_nu_mc_IsChargedCurrent = this->IsChargedCurrent(interactionType);
 
     float visibleEnergyFraction(0.f);
 
@@ -374,10 +375,10 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const LArAnal
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void WriteAnalysisParticlesAlgorithm::CalculateNeutrinoMcVisibleMomentum(const MCParticleList *const pMCParticleList, float &visibleEnergy,
-    CartesianVector &visibleMomentum) const
+                                                                         CartesianVector &visibleMomentum) const
 {
     visibleMomentum = CartesianVector(0.f, 0.f, 0.f);
-    visibleEnergy   = 0.f;
+    visibleEnergy = 0.f;
 
     // Sum over the visible primary daughters of the MC neutrino.
     for (const MCParticle *const pMCPrimary : this->GetAllMcPrimaryDaughters(pMCParticleList))
@@ -445,39 +446,39 @@ LArInteractionTypeHelper::InteractionType WriteAnalysisParticlesAlgorithm::GetIn
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysisParticle &primaryAnalysisParticle,
-    const MCPrimaryMap &coveredMCPrimaries) const
+void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterRecord(const LArAnalysisParticle &primaryAnalysisParticle, const MCPrimaryMap &coveredMCPrimaries) const
 {
     // m_primary_Number is dealt with by the calling method.
 
-    PUSH_TREE_RECORD(m_primary_WasReconstructed,                            true);
-    PUSH_TREE_RECORD(m_primary_IsVertexFiducial,                            primaryAnalysisParticle.IsVertexFiducial());
-    PUSH_TREE_RECORD(m_primary_IsContained,                                (primaryAnalysisParticle.FiducialHitFraction() >= m_fiducialHitFractionLowerBound));
-    PUSH_TREE_RECORD(m_primary_FiducialHitFraction,                         primaryAnalysisParticle.FiducialHitFraction());
-    PUSH_TREE_RECORD(m_primary_HasMcInfo,                                   primaryAnalysisParticle.HasMcInfo());
-    PUSH_TREE_RECORD(m_primary_KineticEnergy,                               primaryAnalysisParticle.KineticEnergy());
-    PUSH_TREE_RECORD(m_primary_KineticEnergyFracFromRange,                  primaryAnalysisParticle.KineticEnergyFromRangeFraction());
-    PUSH_TREE_RECORD(m_primary_KineticEnergyFracFromCorrectedTrackCharge,   primaryAnalysisParticle.KineticEnergyFromCorrectedTrackChargeFraction());
+    PUSH_TREE_RECORD(m_primary_WasReconstructed, true);
+    PUSH_TREE_RECORD(m_primary_IsVertexFiducial, primaryAnalysisParticle.IsVertexFiducial());
+    PUSH_TREE_RECORD(m_primary_IsContained, (primaryAnalysisParticle.FiducialHitFraction() >= m_fiducialHitFractionLowerBound));
+    PUSH_TREE_RECORD(m_primary_FiducialHitFraction, primaryAnalysisParticle.FiducialHitFraction());
+    PUSH_TREE_RECORD(m_primary_HasMcInfo, primaryAnalysisParticle.HasMcInfo());
+    PUSH_TREE_RECORD(m_primary_KineticEnergy, primaryAnalysisParticle.KineticEnergy());
+    PUSH_TREE_RECORD(m_primary_KineticEnergyFracFromRange, primaryAnalysisParticle.KineticEnergyFromRangeFraction());
+    PUSH_TREE_RECORD(m_primary_KineticEnergyFracFromCorrectedTrackCharge, primaryAnalysisParticle.KineticEnergyFromCorrectedTrackChargeFraction());
     PUSH_TREE_RECORD(m_primary_KineticEnergyFracFromUncorrectedTrackCharge, primaryAnalysisParticle.KineticEnergyFromUncorrectedTrackChargeFraction());
-    PUSH_TREE_RECORD(m_primary_KineticEnergyFracFromShowerCharge,           primaryAnalysisParticle.KineticEnergyFromShowerChargeFraction());
-    PUSH_TREE_RECORD(m_primary_VertexX,                                     primaryAnalysisParticle.VertexPosition().GetX());
-    PUSH_TREE_RECORD(m_primary_VertexY,                                     primaryAnalysisParticle.VertexPosition().GetY());
-    PUSH_TREE_RECORD(m_primary_VertexZ,                                     primaryAnalysisParticle.VertexPosition().GetZ());
-    PUSH_TREE_RECORD(m_primary_DirectionCosineX,                            primaryAnalysisParticle.DirectionCosines().GetX());
-    PUSH_TREE_RECORD(m_primary_DirectionCosineY,                            primaryAnalysisParticle.DirectionCosines().GetY());
-    PUSH_TREE_RECORD(m_primary_DirectionCosineZ,                            primaryAnalysisParticle.DirectionCosines().GetZ());
-    PUSH_TREE_RECORD(m_primary_Momentum,                                    primaryAnalysisParticle.AnalysisMomentum().GetMagnitude());
-    PUSH_TREE_RECORD(m_primary_MomentumX,                                   primaryAnalysisParticle.AnalysisMomentum().GetX());
-    PUSH_TREE_RECORD(m_primary_MomentumY,                                   primaryAnalysisParticle.AnalysisMomentum().GetY());
-    PUSH_TREE_RECORD(m_primary_MomentumZ,                                   primaryAnalysisParticle.AnalysisMomentum().GetZ());
-    PUSH_TREE_RECORD(m_primary_TypeTree,                                    LArAnalysisParticleHelper::TypeTreeAsString(primaryAnalysisParticle.GetTypeTree()));
-    PUSH_TREE_RECORD(m_primary_IsShower,                                    primaryAnalysisParticle.IsShower());
-    PUSH_TREE_RECORD(m_primary_IsTrack,                                    !primaryAnalysisParticle.IsShower());
-    PUSH_TREE_RECORD(m_primary_IsProton,                                   (primaryAnalysisParticle.Type() == LArAnalysisParticle::TYPE::PROTON));
-    PUSH_TREE_RECORD(m_primary_IsPionOrMuon,                               (primaryAnalysisParticle.Type() == LArAnalysisParticle::TYPE::PION_MUON) || (primaryAnalysisParticle.Type() == LArAnalysisParticle::TYPE::COSMIC_RAY));
-    PUSH_TREE_RECORD(m_primary_NumberOf3dHits,                              primaryAnalysisParticle.NumberOf3dHits());
-    PUSH_TREE_RECORD(m_primary_NumberOfCollectionPlaneHits,                 primaryAnalysisParticle.NumberOfCollectionPlaneHits());
-    PUSH_TREE_RECORD(m_primary_NumberOfDownstreamParticles,                 primaryAnalysisParticle.NumberOfDownstreamParticles());
+    PUSH_TREE_RECORD(m_primary_KineticEnergyFracFromShowerCharge, primaryAnalysisParticle.KineticEnergyFromShowerChargeFraction());
+    PUSH_TREE_RECORD(m_primary_VertexX, primaryAnalysisParticle.VertexPosition().GetX());
+    PUSH_TREE_RECORD(m_primary_VertexY, primaryAnalysisParticle.VertexPosition().GetY());
+    PUSH_TREE_RECORD(m_primary_VertexZ, primaryAnalysisParticle.VertexPosition().GetZ());
+    PUSH_TREE_RECORD(m_primary_DirectionCosineX, primaryAnalysisParticle.DirectionCosines().GetX());
+    PUSH_TREE_RECORD(m_primary_DirectionCosineY, primaryAnalysisParticle.DirectionCosines().GetY());
+    PUSH_TREE_RECORD(m_primary_DirectionCosineZ, primaryAnalysisParticle.DirectionCosines().GetZ());
+    PUSH_TREE_RECORD(m_primary_Momentum, primaryAnalysisParticle.AnalysisMomentum().GetMagnitude());
+    PUSH_TREE_RECORD(m_primary_MomentumX, primaryAnalysisParticle.AnalysisMomentum().GetX());
+    PUSH_TREE_RECORD(m_primary_MomentumY, primaryAnalysisParticle.AnalysisMomentum().GetY());
+    PUSH_TREE_RECORD(m_primary_MomentumZ, primaryAnalysisParticle.AnalysisMomentum().GetZ());
+    PUSH_TREE_RECORD(m_primary_TypeTree, LArAnalysisParticleHelper::TypeTreeAsString(primaryAnalysisParticle.GetTypeTree()));
+    PUSH_TREE_RECORD(m_primary_IsShower, primaryAnalysisParticle.IsShower());
+    PUSH_TREE_RECORD(m_primary_IsTrack, !primaryAnalysisParticle.IsShower());
+    PUSH_TREE_RECORD(m_primary_IsProton, (primaryAnalysisParticle.Type() == LArAnalysisParticle::TYPE::PROTON));
+    PUSH_TREE_RECORD(m_primary_IsPionOrMuon, (primaryAnalysisParticle.Type() == LArAnalysisParticle::TYPE::PION_MUON) ||
+                                                 (primaryAnalysisParticle.Type() == LArAnalysisParticle::TYPE::COSMIC_RAY));
+    PUSH_TREE_RECORD(m_primary_NumberOf3dHits, primaryAnalysisParticle.NumberOf3dHits());
+    PUSH_TREE_RECORD(m_primary_NumberOfCollectionPlaneHits, primaryAnalysisParticle.NumberOfCollectionPlaneHits());
+    PUSH_TREE_RECORD(m_primary_NumberOfDownstreamParticles, primaryAnalysisParticle.NumberOfDownstreamParticles());
 
     // Add the MC record if the info is there, otherwise populate a blank record.
     if (primaryAnalysisParticle.HasMcInfo() && primaryAnalysisParticle.McMainMCParticle())
@@ -507,29 +508,29 @@ void WriteAnalysisParticlesAlgorithm::AddPrimaryDaughterMcRecord(const LArAnalys
     }
 
     PUSH_TREE_RECORD(m_primary_mc_IsParticleSplitByReco, particleSplitByReco);
-    PUSH_TREE_RECORD(m_primary_mc_Energy,                pfoMcInfo.m_mcEnergy);
-    PUSH_TREE_RECORD(m_primary_mc_KineticEnergy,         pfoMcInfo.m_mcKineticEnergy);
-    PUSH_TREE_RECORD(m_primary_mc_Mass,                  pfoMcInfo.m_mcMass);
-    PUSH_TREE_RECORD(m_primary_mc_VertexX,               pfoMcInfo.m_mcVertexPosition.GetX());
-    PUSH_TREE_RECORD(m_primary_mc_VertexY,               pfoMcInfo.m_mcVertexPosition.GetY());
-    PUSH_TREE_RECORD(m_primary_mc_VertexZ,               pfoMcInfo.m_mcVertexPosition.GetZ());
-    PUSH_TREE_RECORD(m_primary_mc_DirectionCosineX,      pfoMcInfo.m_mcDirectionCosines.GetX());
-    PUSH_TREE_RECORD(m_primary_mc_DirectionCosineY,      pfoMcInfo.m_mcDirectionCosines.GetY());
-    PUSH_TREE_RECORD(m_primary_mc_DirectionCosineZ,      pfoMcInfo.m_mcDirectionCosines.GetZ());
-    PUSH_TREE_RECORD(m_primary_mc_Momentum,              pfoMcInfo.m_mcMomentum.GetMagnitude());
-    PUSH_TREE_RECORD(m_primary_mc_MomentumX,             pfoMcInfo.m_mcMomentum.GetX());
-    PUSH_TREE_RECORD(m_primary_mc_MomentumY,             pfoMcInfo.m_mcMomentum.GetY());
-    PUSH_TREE_RECORD(m_primary_mc_MomentumZ,             pfoMcInfo.m_mcMomentum.GetZ());
-    PUSH_TREE_RECORD(m_primary_mc_IsVertexFiducial,      pfoMcInfo.m_mcIsVertexFiducial);
-    PUSH_TREE_RECORD(m_primary_mc_IsContained,           pfoMcInfo.m_mcIsContained);
-    PUSH_TREE_RECORD(m_primary_mc_ContainmentFraction,   pfoMcInfo.m_mcContainmentFraction);
-    PUSH_TREE_RECORD(m_primary_mc_TypeTree,              LArAnalysisParticleHelper::TypeTreeAsString(pfoMcInfo.m_mcTypeTree));
-    PUSH_TREE_RECORD(m_primary_mc_IsShower,              pfoMcInfo.m_mcIsShower);
-    PUSH_TREE_RECORD(m_primary_mc_IsTrack,              !pfoMcInfo.m_mcIsShower);
-    PUSH_TREE_RECORD(m_primary_mc_IsProton,              pfoMcInfo.m_mcIsProton);
-    PUSH_TREE_RECORD(m_primary_mc_IsPionOrMuon,          pfoMcInfo.m_mcIsPionOrMuon);
-    PUSH_TREE_RECORD(m_primary_mc_IsCosmicRay,           pfoMcInfo.m_mcIsCosmicRay);
-    PUSH_TREE_RECORD(m_primary_mc_PdgCode,               pfoMcInfo.m_mcPdgCode);
+    PUSH_TREE_RECORD(m_primary_mc_Energy, pfoMcInfo.m_mcEnergy);
+    PUSH_TREE_RECORD(m_primary_mc_KineticEnergy, pfoMcInfo.m_mcKineticEnergy);
+    PUSH_TREE_RECORD(m_primary_mc_Mass, pfoMcInfo.m_mcMass);
+    PUSH_TREE_RECORD(m_primary_mc_VertexX, pfoMcInfo.m_mcVertexPosition.GetX());
+    PUSH_TREE_RECORD(m_primary_mc_VertexY, pfoMcInfo.m_mcVertexPosition.GetY());
+    PUSH_TREE_RECORD(m_primary_mc_VertexZ, pfoMcInfo.m_mcVertexPosition.GetZ());
+    PUSH_TREE_RECORD(m_primary_mc_DirectionCosineX, pfoMcInfo.m_mcDirectionCosines.GetX());
+    PUSH_TREE_RECORD(m_primary_mc_DirectionCosineY, pfoMcInfo.m_mcDirectionCosines.GetY());
+    PUSH_TREE_RECORD(m_primary_mc_DirectionCosineZ, pfoMcInfo.m_mcDirectionCosines.GetZ());
+    PUSH_TREE_RECORD(m_primary_mc_Momentum, pfoMcInfo.m_mcMomentum.GetMagnitude());
+    PUSH_TREE_RECORD(m_primary_mc_MomentumX, pfoMcInfo.m_mcMomentum.GetX());
+    PUSH_TREE_RECORD(m_primary_mc_MomentumY, pfoMcInfo.m_mcMomentum.GetY());
+    PUSH_TREE_RECORD(m_primary_mc_MomentumZ, pfoMcInfo.m_mcMomentum.GetZ());
+    PUSH_TREE_RECORD(m_primary_mc_IsVertexFiducial, pfoMcInfo.m_mcIsVertexFiducial);
+    PUSH_TREE_RECORD(m_primary_mc_IsContained, pfoMcInfo.m_mcIsContained);
+    PUSH_TREE_RECORD(m_primary_mc_ContainmentFraction, pfoMcInfo.m_mcContainmentFraction);
+    PUSH_TREE_RECORD(m_primary_mc_TypeTree, LArAnalysisParticleHelper::TypeTreeAsString(pfoMcInfo.m_mcTypeTree));
+    PUSH_TREE_RECORD(m_primary_mc_IsShower, pfoMcInfo.m_mcIsShower);
+    PUSH_TREE_RECORD(m_primary_mc_IsTrack, !pfoMcInfo.m_mcIsShower);
+    PUSH_TREE_RECORD(m_primary_mc_IsProton, pfoMcInfo.m_mcIsProton);
+    PUSH_TREE_RECORD(m_primary_mc_IsPionOrMuon, pfoMcInfo.m_mcIsPionOrMuon);
+    PUSH_TREE_RECORD(m_primary_mc_IsCosmicRay, pfoMcInfo.m_mcIsCosmicRay);
+    PUSH_TREE_RECORD(m_primary_mc_PdgCode, pfoMcInfo.m_mcPdgCode);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -551,35 +552,34 @@ void WriteAnalysisParticlesAlgorithm::AddMcOnlyPrimaryDaughterRecord(const LArAn
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisParticle &cosmicRayAnalysisParticle,
-    const MCPrimaryMap &coveredMCPrimaries) const
+void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisParticle &cosmicRayAnalysisParticle, const MCPrimaryMap &coveredMCPrimaries) const
 {
     // m_cr_Number is dealt with by the calling method.
 
-    PUSH_TREE_RECORD(m_cr_WasReconstructed,                            true);
-    PUSH_TREE_RECORD(m_cr_IsVertexFiducial,                            cosmicRayAnalysisParticle.IsVertexFiducial());
-    PUSH_TREE_RECORD(m_cr_IsContained,                                (cosmicRayAnalysisParticle.FiducialHitFraction() >= m_fiducialHitFractionLowerBound));
-    PUSH_TREE_RECORD(m_cr_FiducialHitFraction,                         cosmicRayAnalysisParticle.FiducialHitFraction());
-    PUSH_TREE_RECORD(m_cr_HasMcInfo,                                   cosmicRayAnalysisParticle.HasMcInfo());
-    PUSH_TREE_RECORD(m_cr_KineticEnergy,                               cosmicRayAnalysisParticle.KineticEnergy());
-    PUSH_TREE_RECORD(m_cr_KineticEnergyFracFromRange,                  cosmicRayAnalysisParticle.KineticEnergyFromRangeFraction());
-    PUSH_TREE_RECORD(m_cr_KineticEnergyFracFromCorrectedTrackCharge,   cosmicRayAnalysisParticle.KineticEnergyFromCorrectedTrackChargeFraction());
+    PUSH_TREE_RECORD(m_cr_WasReconstructed, true);
+    PUSH_TREE_RECORD(m_cr_IsVertexFiducial, cosmicRayAnalysisParticle.IsVertexFiducial());
+    PUSH_TREE_RECORD(m_cr_IsContained, (cosmicRayAnalysisParticle.FiducialHitFraction() >= m_fiducialHitFractionLowerBound));
+    PUSH_TREE_RECORD(m_cr_FiducialHitFraction, cosmicRayAnalysisParticle.FiducialHitFraction());
+    PUSH_TREE_RECORD(m_cr_HasMcInfo, cosmicRayAnalysisParticle.HasMcInfo());
+    PUSH_TREE_RECORD(m_cr_KineticEnergy, cosmicRayAnalysisParticle.KineticEnergy());
+    PUSH_TREE_RECORD(m_cr_KineticEnergyFracFromRange, cosmicRayAnalysisParticle.KineticEnergyFromRangeFraction());
+    PUSH_TREE_RECORD(m_cr_KineticEnergyFracFromCorrectedTrackCharge, cosmicRayAnalysisParticle.KineticEnergyFromCorrectedTrackChargeFraction());
     PUSH_TREE_RECORD(m_cr_KineticEnergyFracFromUncorrectedTrackCharge, cosmicRayAnalysisParticle.KineticEnergyFromUncorrectedTrackChargeFraction());
-    PUSH_TREE_RECORD(m_cr_KineticEnergyFracFromShowerCharge,           cosmicRayAnalysisParticle.KineticEnergyFromShowerChargeFraction());
-    PUSH_TREE_RECORD(m_cr_VertexX,                                     cosmicRayAnalysisParticle.VertexPosition().GetX());
-    PUSH_TREE_RECORD(m_cr_VertexY,                                     cosmicRayAnalysisParticle.VertexPosition().GetY());
-    PUSH_TREE_RECORD(m_cr_VertexZ,                                     cosmicRayAnalysisParticle.VertexPosition().GetZ());
-    PUSH_TREE_RECORD(m_cr_DirectionCosineX,                            cosmicRayAnalysisParticle.DirectionCosines().GetX());
-    PUSH_TREE_RECORD(m_cr_DirectionCosineY,                            cosmicRayAnalysisParticle.DirectionCosines().GetY());
-    PUSH_TREE_RECORD(m_cr_DirectionCosineZ,                            cosmicRayAnalysisParticle.DirectionCosines().GetZ());
-    PUSH_TREE_RECORD(m_cr_Momentum,                                    cosmicRayAnalysisParticle.AnalysisMomentum().GetMagnitude());
-    PUSH_TREE_RECORD(m_cr_MomentumX,                                   cosmicRayAnalysisParticle.AnalysisMomentum().GetX());
-    PUSH_TREE_RECORD(m_cr_MomentumY,                                   cosmicRayAnalysisParticle.AnalysisMomentum().GetY());
-    PUSH_TREE_RECORD(m_cr_MomentumZ,                                   cosmicRayAnalysisParticle.AnalysisMomentum().GetZ());
-    PUSH_TREE_RECORD(m_cr_TypeTree,                                    LArAnalysisParticleHelper::TypeTreeAsString(cosmicRayAnalysisParticle.GetTypeTree()));
-    PUSH_TREE_RECORD(m_cr_NumberOf3dHits,                              cosmicRayAnalysisParticle.NumberOf3dHits());
-    PUSH_TREE_RECORD(m_cr_NumberOfCollectionPlaneHits,                 cosmicRayAnalysisParticle.NumberOfCollectionPlaneHits());
-    PUSH_TREE_RECORD(m_cr_NumberOfDownstreamParticles,                 cosmicRayAnalysisParticle.NumberOfDownstreamParticles());
+    PUSH_TREE_RECORD(m_cr_KineticEnergyFracFromShowerCharge, cosmicRayAnalysisParticle.KineticEnergyFromShowerChargeFraction());
+    PUSH_TREE_RECORD(m_cr_VertexX, cosmicRayAnalysisParticle.VertexPosition().GetX());
+    PUSH_TREE_RECORD(m_cr_VertexY, cosmicRayAnalysisParticle.VertexPosition().GetY());
+    PUSH_TREE_RECORD(m_cr_VertexZ, cosmicRayAnalysisParticle.VertexPosition().GetZ());
+    PUSH_TREE_RECORD(m_cr_DirectionCosineX, cosmicRayAnalysisParticle.DirectionCosines().GetX());
+    PUSH_TREE_RECORD(m_cr_DirectionCosineY, cosmicRayAnalysisParticle.DirectionCosines().GetY());
+    PUSH_TREE_RECORD(m_cr_DirectionCosineZ, cosmicRayAnalysisParticle.DirectionCosines().GetZ());
+    PUSH_TREE_RECORD(m_cr_Momentum, cosmicRayAnalysisParticle.AnalysisMomentum().GetMagnitude());
+    PUSH_TREE_RECORD(m_cr_MomentumX, cosmicRayAnalysisParticle.AnalysisMomentum().GetX());
+    PUSH_TREE_RECORD(m_cr_MomentumY, cosmicRayAnalysisParticle.AnalysisMomentum().GetY());
+    PUSH_TREE_RECORD(m_cr_MomentumZ, cosmicRayAnalysisParticle.AnalysisMomentum().GetZ());
+    PUSH_TREE_RECORD(m_cr_TypeTree, LArAnalysisParticleHelper::TypeTreeAsString(cosmicRayAnalysisParticle.GetTypeTree()));
+    PUSH_TREE_RECORD(m_cr_NumberOf3dHits, cosmicRayAnalysisParticle.NumberOf3dHits());
+    PUSH_TREE_RECORD(m_cr_NumberOfCollectionPlaneHits, cosmicRayAnalysisParticle.NumberOfCollectionPlaneHits());
+    PUSH_TREE_RECORD(m_cr_NumberOfDownstreamParticles, cosmicRayAnalysisParticle.NumberOfDownstreamParticles());
 
     // Add the MC record if the info is there, otherwise populate a blank record.
     if (cosmicRayAnalysisParticle.HasMcInfo())
@@ -597,8 +597,7 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayRecord(const LArAnalysisPartic
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::AddCosmicRayMcRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo,
-    const bool particleSplitByReco) const
+void WriteAnalysisParticlesAlgorithm::AddCosmicRayMcRecord(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const bool particleSplitByReco) const
 {
     if (pfoMcInfo.m_pMCParticle)
         PUSH_TREE_RECORD(m_cr_mc_McParticleUid, reinterpret_cast<std::uint64_t>(pfoMcInfo.m_pMCParticle->GetUid()));
@@ -609,30 +608,30 @@ void WriteAnalysisParticlesAlgorithm::AddCosmicRayMcRecord(const LArAnalysisPart
         PUSH_TREE_RECORD(m_cr_mc_McParticleUid, 0ULL);
     }
 
-    PUSH_TREE_RECORD(m_cr_mc_IsParticleSplitByReco,          particleSplitByReco);
-    PUSH_TREE_RECORD(m_cr_mc_Energy,                         pfoMcInfo.m_mcEnergy);
-    PUSH_TREE_RECORD(m_cr_mc_KineticEnergy,                  pfoMcInfo.m_mcKineticEnergy);
-    PUSH_TREE_RECORD(m_cr_mc_Mass,                           pfoMcInfo.m_mcMass);
-    PUSH_TREE_RECORD(m_cr_mc_VertexX,                        pfoMcInfo.m_mcVertexPosition.GetX());
-    PUSH_TREE_RECORD(m_cr_mc_VertexY,                        pfoMcInfo.m_mcVertexPosition.GetY());
-    PUSH_TREE_RECORD(m_cr_mc_VertexZ,                        pfoMcInfo.m_mcVertexPosition.GetZ());
-    PUSH_TREE_RECORD(m_cr_mc_DirectionCosineX,               pfoMcInfo.m_mcDirectionCosines.GetX());
-    PUSH_TREE_RECORD(m_cr_mc_DirectionCosineY,               pfoMcInfo.m_mcDirectionCosines.GetY());
-    PUSH_TREE_RECORD(m_cr_mc_DirectionCosineZ,               pfoMcInfo.m_mcDirectionCosines.GetZ());
-    PUSH_TREE_RECORD(m_cr_mc_Momentum,                       pfoMcInfo.m_mcMomentum.GetMagnitude());
-    PUSH_TREE_RECORD(m_cr_mc_MomentumX,                      pfoMcInfo.m_mcMomentum.GetX());
-    PUSH_TREE_RECORD(m_cr_mc_MomentumY,                      pfoMcInfo.m_mcMomentum.GetY());
-    PUSH_TREE_RECORD(m_cr_mc_MomentumZ,                      pfoMcInfo.m_mcMomentum.GetZ());
-    PUSH_TREE_RECORD(m_cr_mc_IsVertexFiducial,               pfoMcInfo.m_mcIsVertexFiducial);
-    PUSH_TREE_RECORD(m_cr_mc_IsContained,                    pfoMcInfo.m_mcIsContained);
-    PUSH_TREE_RECORD(m_cr_mc_ContainmentFraction,            pfoMcInfo.m_mcContainmentFraction);
-    PUSH_TREE_RECORD(m_cr_mc_TypeTree,                       LArAnalysisParticleHelper::TypeTreeAsString(pfoMcInfo.m_mcTypeTree));
-    PUSH_TREE_RECORD(m_cr_mc_IsShower,                       pfoMcInfo.m_mcIsShower);
-    PUSH_TREE_RECORD(m_cr_mc_IsTrack,                       !pfoMcInfo.m_mcIsShower);
-    PUSH_TREE_RECORD(m_cr_mc_IsProton,                       pfoMcInfo.m_mcIsProton);
-    PUSH_TREE_RECORD(m_cr_mc_IsPionOrMuon,                   pfoMcInfo.m_mcIsPionOrMuon);
-    PUSH_TREE_RECORD(m_cr_mc_IsCosmicRay,                    pfoMcInfo.m_mcIsCosmicRay);
-    PUSH_TREE_RECORD(m_cr_mc_PdgCode,                        pfoMcInfo.m_mcPdgCode);
+    PUSH_TREE_RECORD(m_cr_mc_IsParticleSplitByReco, particleSplitByReco);
+    PUSH_TREE_RECORD(m_cr_mc_Energy, pfoMcInfo.m_mcEnergy);
+    PUSH_TREE_RECORD(m_cr_mc_KineticEnergy, pfoMcInfo.m_mcKineticEnergy);
+    PUSH_TREE_RECORD(m_cr_mc_Mass, pfoMcInfo.m_mcMass);
+    PUSH_TREE_RECORD(m_cr_mc_VertexX, pfoMcInfo.m_mcVertexPosition.GetX());
+    PUSH_TREE_RECORD(m_cr_mc_VertexY, pfoMcInfo.m_mcVertexPosition.GetY());
+    PUSH_TREE_RECORD(m_cr_mc_VertexZ, pfoMcInfo.m_mcVertexPosition.GetZ());
+    PUSH_TREE_RECORD(m_cr_mc_DirectionCosineX, pfoMcInfo.m_mcDirectionCosines.GetX());
+    PUSH_TREE_RECORD(m_cr_mc_DirectionCosineY, pfoMcInfo.m_mcDirectionCosines.GetY());
+    PUSH_TREE_RECORD(m_cr_mc_DirectionCosineZ, pfoMcInfo.m_mcDirectionCosines.GetZ());
+    PUSH_TREE_RECORD(m_cr_mc_Momentum, pfoMcInfo.m_mcMomentum.GetMagnitude());
+    PUSH_TREE_RECORD(m_cr_mc_MomentumX, pfoMcInfo.m_mcMomentum.GetX());
+    PUSH_TREE_RECORD(m_cr_mc_MomentumY, pfoMcInfo.m_mcMomentum.GetY());
+    PUSH_TREE_RECORD(m_cr_mc_MomentumZ, pfoMcInfo.m_mcMomentum.GetZ());
+    PUSH_TREE_RECORD(m_cr_mc_IsVertexFiducial, pfoMcInfo.m_mcIsVertexFiducial);
+    PUSH_TREE_RECORD(m_cr_mc_IsContained, pfoMcInfo.m_mcIsContained);
+    PUSH_TREE_RECORD(m_cr_mc_ContainmentFraction, pfoMcInfo.m_mcContainmentFraction);
+    PUSH_TREE_RECORD(m_cr_mc_TypeTree, LArAnalysisParticleHelper::TypeTreeAsString(pfoMcInfo.m_mcTypeTree));
+    PUSH_TREE_RECORD(m_cr_mc_IsShower, pfoMcInfo.m_mcIsShower);
+    PUSH_TREE_RECORD(m_cr_mc_IsTrack, !pfoMcInfo.m_mcIsShower);
+    PUSH_TREE_RECORD(m_cr_mc_IsProton, pfoMcInfo.m_mcIsProton);
+    PUSH_TREE_RECORD(m_cr_mc_IsPionOrMuon, pfoMcInfo.m_mcIsPionOrMuon);
+    PUSH_TREE_RECORD(m_cr_mc_IsCosmicRay, pfoMcInfo.m_mcIsCosmicRay);
+    PUSH_TREE_RECORD(m_cr_mc_PdgCode, pfoMcInfo.m_mcPdgCode);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -756,7 +755,8 @@ bool WriteAnalysisParticlesAlgorithm::IsChargedCurrent(const LArInteractionTypeH
         case LArInteractionTypeHelper::CCCOH:
             return true;
 
-        default: break;
+        default:
+            break;
     };
 
     return false;
@@ -768,14 +768,18 @@ bool WriteAnalysisParticlesAlgorithm::IsChargedCurrent(const LArInteractionTypeH
 StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_outputFile));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TreeName", m_treeName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TreeTitle", m_treeTitle));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Verbose", m_verbose));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialHitFractionLowerBound", m_fiducialHitFractionLowerBound));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McOnlyParticleContainmentCut", m_mcOnlyParticleContainmentCut));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McOnlyParticleEnergyCut", m_mcOnlyParticleEnergyCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "FiducialHitFractionLowerBound", m_fiducialHitFractionLowerBound));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "McOnlyParticleContainmentCut", m_mcOnlyParticleContainmentCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "McOnlyParticleEnergyCut", m_mcOnlyParticleEnergyCut));
 
     AlgorithmTool *pMcInfoAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "McInfo", pMcInfoAlgorithmTool));
@@ -792,7 +796,7 @@ StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 void WriteAnalysisParticlesAlgorithm::InitializeTree()
 {
     m_pOutputTFile = new TFile(m_outputFile.c_str(), "UPDATE");
-    m_pOutputTree  = new TTree(m_treeName.c_str(), m_treeTitle.c_str());
+    m_pOutputTree = new TTree(m_treeName.c_str(), m_treeTitle.c_str());
 
     TREE_SCALAR_MEMBERS(SET_SCALAR_MEMBER_BRANCH)
     TREE_VECTOR_MEMBERS_PRIMARY(SET_VECTOR_MEMBER_BRANCH)
@@ -804,13 +808,10 @@ void WriteAnalysisParticlesAlgorithm::InitializeTree()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TreeParameters::TreeParameters() noexcept :
-    TREE_SCALAR_MEMBERS(INITIALIZE_SCALAR_MEMBER)
-    TREE_VECTOR_MEMBERS_PRIMARY(INITIALIZE_VECTOR_MEMBER)
-    TREE_VECTOR_MEMBERS_PRIMARY_MC(INITIALIZE_VECTOR_MEMBER)
-    TREE_VECTOR_MEMBERS_CR(INITIALIZE_VECTOR_MEMBER)
-    TREE_VECTOR_MEMBERS_CR_MC(INITIALIZE_VECTOR_MEMBER)
-    m_dummy(false)
+TreeParameters::TreeParameters() noexcept
+    : TREE_SCALAR_MEMBERS(INITIALIZE_SCALAR_MEMBER) TREE_VECTOR_MEMBERS_PRIMARY(INITIALIZE_VECTOR_MEMBER)
+          TREE_VECTOR_MEMBERS_PRIMARY_MC(INITIALIZE_VECTOR_MEMBER) TREE_VECTOR_MEMBERS_CR(INITIALIZE_VECTOR_MEMBER)
+              TREE_VECTOR_MEMBERS_CR_MC(INITIALIZE_VECTOR_MEMBER) m_dummy(false)
 {
 }
 

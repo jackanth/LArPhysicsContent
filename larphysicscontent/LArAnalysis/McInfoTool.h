@@ -16,7 +16,6 @@ using namespace pandora;
 
 namespace lar_physics_content
 {
-
 /**
  *  @brief  McInfoTool class
  */
@@ -33,11 +32,11 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    CartesianVector    m_fiducialCutLowMargins;              ///< The low fiducial margins
-    CartesianVector    m_fiducialCutHighMargins;             ///< The high fiducial cut margins
-    CartesianVector              m_minCoordinates;                       ///< The detector's minimum fiducial coordinates
-    CartesianVector              m_maxCoordinates;                       ///< The detector's maximum fiducial coordinates
-    float              m_mcContainmentFractionLowerBound;    ///< The lower containment fraction bound for MC containment
+    CartesianVector m_fiducialCutLowMargins;  ///< The low fiducial margins
+    CartesianVector m_fiducialCutHighMargins; ///< The high fiducial cut margins
+    CartesianVector m_minCoordinates;         ///< The detector's minimum fiducial coordinates
+    CartesianVector m_maxCoordinates;         ///< The detector's maximum fiducial coordinates
+    float m_mcContainmentFractionLowerBound;  ///< The lower containment fraction bound for MC containment
 
     /**
      *  @brief  Get MC information for a given MC particle
@@ -50,7 +49,7 @@ private:
      */
     LArAnalysisParticleHelper::PfoMcInfo GetMcInformation(const MCParticle *const pMCParticle) const;
 
-      /**
+    /**
      *  @brief  Recurse through the MC particle hierarchy and add up the escaped energy for the containment fraction calculation
      *
      *  @param  pCurrentMCParticle address of the current MC particle
@@ -73,8 +72,8 @@ private:
      *  @param  forceZeroContainment whether this face constraint tells us that the particle definitely has zero containment (to populate)
      */
     void AdjustMusForContainmentFraction(const CartesianVector &planePoint, const CartesianVector &planeNormal,
-        const CartesianVector &vertexPosition, const CartesianVector &originalDisplacementVector, float &muMin, float &muMax,
-        bool &forceZeroContainment) const;
+                                         const CartesianVector &vertexPosition, const CartesianVector &originalDisplacementVector,
+                                         float &muMin, float &muMax, bool &forceZeroContainment) const;
 
     /**
      *  @brief  Create a type tree for an MC particle

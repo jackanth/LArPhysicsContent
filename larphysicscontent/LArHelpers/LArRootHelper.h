@@ -12,7 +12,6 @@
 
 namespace lar_physics_content
 {
-
 /**
  *  @brief LArRootHelper class.
  */
@@ -36,7 +35,7 @@ public:
      *
      *  @return address of the loaded TNtuple object
      */
-    static TNtuple * LoadNTupleFromFile(const std::string &filePath, const std::string &nTupleName);
+    static TNtuple *LoadNTupleFromFile(const std::string &filePath, const std::string &nTupleName);
 };
 
 } // namespace lar_physics_content

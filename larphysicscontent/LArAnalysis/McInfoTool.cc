@@ -16,13 +16,12 @@ using namespace pandora;
 
 namespace lar_physics_content
 {
-
-McInfoTool::McInfoTool() :
-    m_fiducialCutLowMargins(10.f, 20.f, 10.f),
-    m_fiducialCutHighMargins(10.f, 20.f, 10.f),
-    m_minCoordinates(0.f, 0.f, 0.f),
-    m_maxCoordinates(0.f, 0.f, 0.f),
-    m_mcContainmentFractionLowerBound(0.9f)
+McInfoTool::McInfoTool()
+    : m_fiducialCutLowMargins(10.f, 20.f, 10.f),
+      m_fiducialCutHighMargins(10.f, 20.f, 10.f),
+      m_minCoordinates(0.f, 0.f, 0.f),
+      m_maxCoordinates(0.f, 0.f, 0.f),
+      m_mcContainmentFractionLowerBound(0.9f)
 {
 }
 
@@ -31,7 +30,7 @@ McInfoTool::McInfoTool() :
 bool McInfoTool::Run(const Algorithm *const pAlgorithm, const MCParticle *const pMCParticle, LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     pfoMcInfo = this->GetMcInformation(pMCParticle);
     return true;
@@ -51,15 +50,15 @@ LArAnalysisParticleHelper::PfoMcInfo McInfoTool::GetMcInformation(const MCPartic
     pfoMcInfo.m_pMCParticle = pMCParticle;
     this->CreateMcTypeTree(pMCParticle, pfoMcInfo.m_mcTypeTree);
 
-    pfoMcInfo.m_mcEnergy         = pMCParticle->GetEnergy();
-    pfoMcInfo.m_mcKineticEnergy  = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
-    pfoMcInfo.m_mcMass           = PdgTable::GetParticleMass(pMCParticle->GetParticleId());
-    pfoMcInfo.m_mcType           = pfoMcInfo.m_mcTypeTree.Type();
+    pfoMcInfo.m_mcEnergy = pMCParticle->GetEnergy();
+    pfoMcInfo.m_mcKineticEnergy = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+    pfoMcInfo.m_mcMass = PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+    pfoMcInfo.m_mcType = pfoMcInfo.m_mcTypeTree.Type();
     pfoMcInfo.m_mcVertexPosition = pMCParticle->GetVertex();
-    pfoMcInfo.m_mcMomentum       = pMCParticle->GetMomentum();
+    pfoMcInfo.m_mcMomentum = pMCParticle->GetMomentum();
 
     if (pfoMcInfo.m_mcMomentum.GetMagnitude() < std::numeric_limits<float>::epsilon())
-            std::cout << "LArAnalysisParticleHelper: could not get direction from MC momentum as it was too small" << std::endl;
+        std::cout << "LArAnalysisParticleHelper: could not get direction from MC momentum as it was too small" << std::endl;
     else
         pfoMcInfo.m_mcDirectionCosines = pfoMcInfo.m_mcMomentum.GetUnitVector();
 
@@ -74,19 +73,18 @@ LArAnalysisParticleHelper::PfoMcInfo McInfoTool::GetMcInformation(const MCPartic
     else
         pfoMcInfo.m_mcContainmentFraction = 0.f;
 
-    pfoMcInfo.m_mcIsContained  = (pfoMcInfo.m_mcContainmentFraction >= m_mcContainmentFractionLowerBound);
-    pfoMcInfo.m_mcIsShower     = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::SHOWER);
-    pfoMcInfo.m_mcIsProton     = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PROTON);
+    pfoMcInfo.m_mcIsContained = (pfoMcInfo.m_mcContainmentFraction >= m_mcContainmentFractionLowerBound);
+    pfoMcInfo.m_mcIsShower = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::SHOWER);
+    pfoMcInfo.m_mcIsProton = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PROTON);
     pfoMcInfo.m_mcIsPionOrMuon = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PION_MUON);
-    pfoMcInfo.m_mcIsCosmicRay  = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::COSMIC_RAY);
+    pfoMcInfo.m_mcIsCosmicRay = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::COSMIC_RAY);
 
     return pfoMcInfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void McInfoTool::RecursivelyAddEscapedEnergy(const MCParticle *const pCurrentMCParticle, float &escapedEnergy,
-    float &totalEnergy) const
+void McInfoTool::RecursivelyAddEscapedEnergy(const MCParticle *const pCurrentMCParticle, float &escapedEnergy, float &totalEnergy) const
 {
     bool allEnergyContained(true);
 
@@ -109,23 +107,23 @@ void McInfoTool::RecursivelyAddEscapedEnergy(const MCParticle *const pCurrentMCP
             float muMin(0.f), muMax(1.f);
             bool forceZeroContainment(false);
 
-            this->AdjustMusForContainmentFraction(CartesianVector(m_minCoordinates.GetX(), 0.f, 0.f),
-                CartesianVector(-1.f, 0.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+            this->AdjustMusForContainmentFraction(CartesianVector(m_minCoordinates.GetX(), 0.f, 0.f), CartesianVector(-1.f, 0.f, 0.f),
+                                                  pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
 
-            this->AdjustMusForContainmentFraction(CartesianVector(m_maxCoordinates.GetX(), 0.f, 0.f),
-                CartesianVector(1.f, 0.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+            this->AdjustMusForContainmentFraction(CartesianVector(m_maxCoordinates.GetX(), 0.f, 0.f), CartesianVector(1.f, 0.f, 0.f),
+                                                  pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
 
-            this->AdjustMusForContainmentFraction(CartesianVector(0.f, m_minCoordinates.GetY(), 0.f),
-                CartesianVector(0.f, -1.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+            this->AdjustMusForContainmentFraction(CartesianVector(0.f, m_minCoordinates.GetY(), 0.f), CartesianVector(0.f, -1.f, 0.f),
+                                                  pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
 
-            this->AdjustMusForContainmentFraction(CartesianVector(0.f, m_maxCoordinates.GetY(), 0.f),
-                CartesianVector(0.f, 1.f, 0.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+            this->AdjustMusForContainmentFraction(CartesianVector(0.f, m_maxCoordinates.GetY(), 0.f), CartesianVector(0.f, 1.f, 0.f),
+                                                  pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
 
-            this->AdjustMusForContainmentFraction(CartesianVector(0.f, 0.f, m_minCoordinates.GetZ()),
-                CartesianVector(0.f, 0.f, -1.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+            this->AdjustMusForContainmentFraction(CartesianVector(0.f, 0.f, m_minCoordinates.GetZ()), CartesianVector(0.f, 0.f, -1.f),
+                                                  pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
 
-            this->AdjustMusForContainmentFraction(CartesianVector(0.f, 0.f, m_maxCoordinates.GetZ()),
-                CartesianVector(0.f, 0.f, 1.f), pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
+            this->AdjustMusForContainmentFraction(CartesianVector(0.f, 0.f, m_maxCoordinates.GetZ()), CartesianVector(0.f, 0.f, 1.f),
+                                                  pCurrentMCParticle->GetVertex(), displacementVector, muMin, muMax, forceZeroContainment);
 
             if (forceZeroContainment)
             {
@@ -147,7 +145,8 @@ void McInfoTool::RecursivelyAddEscapedEnergy(const MCParticle *const pCurrentMCP
             totalEnergy += mcParticleEnergy;
         }
 
-        default: break;
+        default:
+            break;
     }
 
     if (allEnergyContained)
@@ -160,8 +159,8 @@ void McInfoTool::RecursivelyAddEscapedEnergy(const MCParticle *const pCurrentMCP
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void McInfoTool::AdjustMusForContainmentFraction(const CartesianVector &planePoint, const CartesianVector &planeNormal,
-    const CartesianVector &vertexPosition, const CartesianVector &originalDisplacementVector, float &muMin, float &muMax,
-    bool &forceZeroContainment) const
+                                                 const CartesianVector &vertexPosition, const CartesianVector &originalDisplacementVector,
+                                                 float &muMin, float &muMax, bool &forceZeroContainment) const
 {
     const float projectedDisplacement = originalDisplacementVector.GetDotProduct(planeNormal);
 
@@ -231,16 +230,20 @@ LArAnalysisParticle::TYPE McInfoTool::GetMcParticleType(const MCParticle *const 
 
     switch (pMCParticle->GetParticleId())
     {
-        case PROTON:   return LArAnalysisParticle::TYPE::PROTON;
+        case PROTON:
+            return LArAnalysisParticle::TYPE::PROTON;
         case MU_MINUS:
         case MU_PLUS:
         case PI_MINUS:
-        case PI_PLUS:  return LArAnalysisParticle::TYPE::PION_MUON;
+        case PI_PLUS:
+            return LArAnalysisParticle::TYPE::PION_MUON;
         case PHOTON:
         case E_MINUS:
-        case E_PLUS:   return LArAnalysisParticle::TYPE::SHOWER;
+        case E_PLUS:
+            return LArAnalysisParticle::TYPE::SHOWER;
         case NEUTRON:
-        default: break;
+        default:
+            break;
     }
 
     return LArAnalysisParticle::TYPE::UNKNOWN;
@@ -250,12 +253,15 @@ LArAnalysisParticle::TYPE McInfoTool::GetMcParticleType(const MCParticle *const 
 
 StatusCode McInfoTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighMargins", m_fiducialCutHighMargins));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "McContainmentFractionLowerBound",
-        m_mcContainmentFractionLowerBound));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "FiducialCutHighMargins", m_fiducialCutHighMargins));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "McContainmentFractionLowerBound", m_mcContainmentFractionLowerBound));
 
-    LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), m_fiducialCutLowMargins, m_fiducialCutHighMargins, m_minCoordinates, m_maxCoordinates);
+    LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), m_fiducialCutLowMargins, m_fiducialCutHighMargins,
+                                                        m_minCoordinates, m_maxCoordinates);
     return STATUS_CODE_SUCCESS;
 }
 

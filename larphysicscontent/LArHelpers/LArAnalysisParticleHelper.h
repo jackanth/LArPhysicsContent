@@ -8,14 +8,14 @@
 #ifndef LAR_ANALYSIS_PARTICLE_HELPER_H
 #define LAR_ANALYSIS_PARTICLE_HELPER_H 1
 
-#include "Pandora/Pandora.h"
 #include "Objects/ParticleFlowObject.h"
+#include "Pandora/Pandora.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include "larphysicscontent/LArObjects/LArAnalysisParticle.h"
-#include "larphysicscontent/LArObjects/LArTrackHitValue.h"
 #include "larphysicscontent/LArObjects/LArFittedTrackInfo.h"
+#include "larphysicscontent/LArObjects/LArTrackHitValue.h"
 
 #include <tuple>
 #include <unordered_map>
@@ -25,7 +25,6 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
-
 /**
  *  @brief LArAnalysisParticleHelper class.
  */
@@ -45,23 +44,23 @@ public:
          */
         PfoMcInfo() noexcept;
 
-        const MCParticle             *m_pMCParticle;
-        float                         m_mcEnergy;
-        float                         m_mcKineticEnergy;
-        float                         m_mcMass;
+        const MCParticle *m_pMCParticle;
+        float m_mcEnergy;
+        float m_mcKineticEnergy;
+        float m_mcMass;
         LArAnalysisParticle::TypeTree m_mcTypeTree;
-        LArAnalysisParticle::TYPE     m_mcType;
-        CartesianVector               m_mcVertexPosition;
-        CartesianVector               m_mcMomentum;
-        CartesianVector               m_mcDirectionCosines;
-        int                           m_mcPdgCode;
-        float                         m_mcContainmentFraction;
-        bool                          m_mcIsShower;
-        bool                          m_mcIsVertexFiducial;
-        bool                          m_mcIsContained;
-        bool                          m_mcIsProton;
-        bool                          m_mcIsCosmicRay;
-        bool                          m_mcIsPionOrMuon;
+        LArAnalysisParticle::TYPE m_mcType;
+        CartesianVector m_mcVertexPosition;
+        CartesianVector m_mcMomentum;
+        CartesianVector m_mcDirectionCosines;
+        int m_mcPdgCode;
+        float m_mcContainmentFraction;
+        bool m_mcIsShower;
+        bool m_mcIsVertexFiducial;
+        bool m_mcIsContained;
+        bool m_mcIsProton;
+        bool m_mcIsCosmicRay;
+        bool m_mcIsPionOrMuon;
     };
 
     /**
@@ -86,8 +85,8 @@ public:
      *  @param  minCoordinates the minimum fiducial coordinates (to populate)
      *  @param  maxCoordinates the maximum fiducial coordinates (to populate)
      */
-    static void GetFiducialCutParameters(const Pandora &pandoraInstance, const CartesianVector &fiducialCutLowMargins, const CartesianVector &fiducialCutHighMargins,
-        CartesianVector &minCoordinates, CartesianVector &maxCoordinates);
+    static void GetFiducialCutParameters(const Pandora &pandoraInstance, const CartesianVector &fiducialCutLowMargins,
+                                         const CartesianVector &fiducialCutHighMargins, CartesianVector &minCoordinates, CartesianVector &maxCoordinates);
 
     /**
      *  @brief  Get all the hits of a given type from a PFO
@@ -111,7 +110,7 @@ public:
      *  @return the direction
      */
     static CartesianVector GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position,
-        const bool pointTowardsMiddle);
+                                                        const bool pointTowardsMiddle);
 
     /**
      *  @brief  Get the fraction of a PFO's hits that lie in the fiducial region of the detector
@@ -123,7 +122,7 @@ public:
      *  @return the fraction of fiducial hits
      */
     static float GetFractionOfFiducialHits(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
-        const CartesianVector &maxCoordinates);
+                                           const CartesianVector &maxCoordinates);
 
     /**
      *  @brief  Find out whether a given point lies in the fiducial region of the detector
@@ -187,24 +186,24 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArAnalysisParticleHelper::PfoMcInfo::PfoMcInfo() noexcept :
-    m_pMCParticle(nullptr),
-    m_mcEnergy(0.f),
-    m_mcKineticEnergy(0.f),
-    m_mcMass(0.f),
-    m_mcTypeTree(),
-    m_mcType(LArAnalysisParticle::TYPE::UNKNOWN),
-    m_mcVertexPosition(0.f, 0.f, 0.f),
-    m_mcMomentum(0.f, 0.f, 0.f),
-    m_mcDirectionCosines(0.f, 0.f, 0.f),
-    m_mcPdgCode(0),
-    m_mcContainmentFraction(0.f),
-    m_mcIsShower(false),
-    m_mcIsVertexFiducial(false),
-    m_mcIsContained(false),
-    m_mcIsProton(false),
-    m_mcIsCosmicRay(false),
-    m_mcIsPionOrMuon(false)
+inline LArAnalysisParticleHelper::PfoMcInfo::PfoMcInfo() noexcept
+    : m_pMCParticle(nullptr),
+      m_mcEnergy(0.f),
+      m_mcKineticEnergy(0.f),
+      m_mcMass(0.f),
+      m_mcTypeTree(),
+      m_mcType(LArAnalysisParticle::TYPE::UNKNOWN),
+      m_mcVertexPosition(0.f, 0.f, 0.f),
+      m_mcMomentum(0.f, 0.f, 0.f),
+      m_mcDirectionCosines(0.f, 0.f, 0.f),
+      m_mcPdgCode(0),
+      m_mcContainmentFraction(0.f),
+      m_mcIsShower(false),
+      m_mcIsVertexFiducial(false),
+      m_mcIsContained(false),
+      m_mcIsProton(false),
+      m_mcIsCosmicRay(false),
+      m_mcIsPionOrMuon(false)
 {
 }
 

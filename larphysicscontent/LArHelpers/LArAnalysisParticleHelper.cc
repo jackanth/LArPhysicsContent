@@ -8,17 +8,17 @@
 
 #include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "Pandora/PdgTable.h"
-#include "Managers/GeometryManager.h"
-#include "Geometry/LArTPC.h"
 #include "Api/PandoraContentApi.h"
-#include "PandoraMonitoringApi.h"
+#include "Geometry/LArTPC.h"
 #include "Helpers/MCParticleHelper.h"
+#include "Managers/GeometryManager.h"
+#include "Pandora/PdgTable.h"
+#include "PandoraMonitoringApi.h"
 
 using namespace pandora;
 using namespace lar_content;
@@ -26,7 +26,8 @@ using namespace lar_content;
 namespace lar_physics_content
 {
 void LArAnalysisParticleHelper::GetFiducialCutParameters(const Pandora &pandoraInstance, const CartesianVector &fiducialCutLowMargins,
-    const CartesianVector &fiducialCutHighMargins, CartesianVector &minCoordinates, CartesianVector &maxCoordinates)
+                                                         const CartesianVector &fiducialCutHighMargins, CartesianVector &minCoordinates,
+                                                         CartesianVector &maxCoordinates)
 {
     const LArTPCMap &larTPCMap(pandoraInstance.GetGeometry()->GetLArTPCMap());
 
@@ -73,8 +74,8 @@ CaloHitList LArAnalysisParticleHelper::GetHitsOfType(const ParticleFlowObject *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position,
-    const bool pointTowardsMiddle)
+CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit,
+                                                                        const CartesianVector &position, const bool pointTowardsMiddle)
 {
     const CartesianVector &minPosition = trackFit.GetGlobalMinLayerPosition();
     const CartesianVector &maxPosition = trackFit.GetGlobalMaxLayerPosition();
@@ -118,7 +119,6 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
             // If closer to the maximum coordinate, we want the fit direction and the min-to-max vector to be more anti-aligned.
             if (minToMaxVector.GetDotProduct(fitDirection) > 0.f)
                 fitDirection *= -1.f;
-
         }
 
         else
@@ -141,7 +141,7 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
-    const CartesianVector &maxCoordinates)
+                                                           const CartesianVector &maxCoordinates)
 {
     PfoList downstreamPfos;
     LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
@@ -162,8 +162,7 @@ float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const ParticleFlowObj
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArAnalysisParticleHelper::IsPointFiducial(const CartesianVector &point, const CartesianVector &minCoordinates,
-    const CartesianVector &maxCoordinates)
+bool LArAnalysisParticleHelper::IsPointFiducial(const CartesianVector &point, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates)
 {
     const float xPosition = point.GetX();
     const float yPosition = point.GetY();
@@ -270,8 +269,7 @@ bool LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(const ParticleFlowObje
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::string LArAnalysisParticleHelper::TypeTreeAsStringImpl(const LArAnalysisParticle::TypeTree &typeTree,
-    const bool printTrailingDelimiter)
+std::string LArAnalysisParticleHelper::TypeTreeAsStringImpl(const LArAnalysisParticle::TypeTree &typeTree, const bool printTrailingDelimiter)
 {
     const std::string delimiter = " - ";
     std::string typeTreeString = LArAnalysisParticle::TypeAsString(typeTree.Type());

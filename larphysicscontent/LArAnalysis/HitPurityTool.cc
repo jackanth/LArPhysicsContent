@@ -11,19 +11,15 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "../../root/Common.h" // ATTN temporary
-#include "TNtuple.h"           // ATTN temporary
 #include "TCanvas.h"           // ATTN temporary
+#include "TNtuple.h"           // ATTN temporary
 
 using namespace pandora;
 
 namespace lar_physics_content
 {
-
-HitPurityTool::HitPurityTool() :
-    m_maxImpurityScore(1.f),
-    m_valueAverageSearchRadius(20UL),
-    m_nearestNeighbourNumber(5UL),
-    m_makePlots(false)
+HitPurityTool::HitPurityTool()
+    : m_maxImpurityScore(1.f), m_valueAverageSearchRadius(20UL), m_nearestNeighbourNumber(5UL), m_makePlots(false)
 {
 }
 
@@ -32,16 +28,13 @@ HitPurityTool::HitPurityTool() :
 bool HitPurityTool::Run(const Algorithm *const pAlgorithm, LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, float &excessCaloValue)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     if (trackHitEnergyVector.size() < 2UL)
         return true;
 
     std::sort(trackHitEnergyVector.begin(), trackHitEnergyVector.end(),
-        [](const LArTrackHitValue &lhs, const LArTrackHitValue &rhs)
-        {
-            return lhs.Coordinate() < rhs.Coordinate();
-        });
+              [](const LArTrackHitValue &lhs, const LArTrackHitValue &rhs) { return lhs.Coordinate() < rhs.Coordinate(); });
 
     const float lowerCoordinateBound = trackHitEnergyVector.front().Coordinate();
     const float upperCoordinateBound = trackHitEnergyVector.back().Coordinate();
@@ -67,8 +60,7 @@ bool HitPurityTool::Run(const Algorithm *const pAlgorithm, LArFittedTrackInfo::T
 
         for (std::size_t i = 0UL; i < nHits; ++i)
         {
-            if ((trackHitEnergyVector[i].Coordinate() < minProtectedCoordinate) ||
-                (trackHitEnergyVector[i].Coordinate() > maxProtectedCoordinate))
+            if ((trackHitEnergyVector[i].Coordinate() < minProtectedCoordinate) || (trackHitEnergyVector[i].Coordinate() > maxProtectedCoordinate))
             {
                 continue;
             }
@@ -97,8 +89,7 @@ bool HitPurityTool::Run(const Algorithm *const pAlgorithm, LArFittedTrackInfo::T
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FloatVector HitPurityTool::GetValueAverages(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
-    const std::size_t nHits) const
+FloatVector HitPurityTool::GetValueAverages(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits) const
 {
     FloatVector valueAverages(nHits, 0.f);
 
@@ -125,7 +116,7 @@ FloatVector HitPurityTool::GetValueAverages(const LArFittedTrackInfo::TrackHitVa
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool HitPurityTool::GetStatistics(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
-    float &scaleFactor, float &mean, float &sigma) const
+                                  float &scaleFactor, float &mean, float &sigma) const
 {
     if (nHits < 3UL)
         return false;
@@ -138,7 +129,7 @@ bool HitPurityTool::GetStatistics(const LArFittedTrackInfo::TrackHitValueVector 
 
     scaleFactor = coordinateRange / caloValueRange;
 
-    mean  = this->CalculateMean(trackHitEnergyVector, nHits, scaleFactor);
+    mean = this->CalculateMean(trackHitEnergyVector, nHits, scaleFactor);
     sigma = this->CalculateStandardDeviation(trackHitEnergyVector, nHits, scaleFactor, mean);
 
     return true;
@@ -147,7 +138,7 @@ bool HitPurityTool::GetStatistics(const LArFittedTrackInfo::TrackHitValueVector 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void HitPurityTool::CalculateRanges(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
-    float &coordinateRange, float &caloValueRange) const
+                                    float &coordinateRange, float &caloValueRange) const
 {
     float minCoordinate(std::numeric_limits<float>::max()), maxCoordinate(std::numeric_limits<float>::min());
     float minCaloValue(std::numeric_limits<float>::max()), maxCaloValue(std::numeric_limits<float>::min());
@@ -155,7 +146,7 @@ void HitPurityTool::CalculateRanges(const LArFittedTrackInfo::TrackHitValueVecto
     for (std::size_t i = 0UL; i < nHits; ++i)
     {
         const float coordinate = trackHitEnergyVector[i].Coordinate();
-        const float caloValue  = trackHitEnergyVector[i].CaloValue();
+        const float caloValue = trackHitEnergyVector[i].CaloValue();
 
         if (coordinate < minCoordinate)
             minCoordinate = coordinate;
@@ -171,13 +162,12 @@ void HitPurityTool::CalculateRanges(const LArFittedTrackInfo::TrackHitValueVecto
     }
 
     coordinateRange = maxCoordinate - minCoordinate;
-    caloValueRange  = maxCaloValue - minCaloValue;
+    caloValueRange = maxCaloValue - minCaloValue;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float HitPurityTool::CalculateMean(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
-    const float scaleFactor) const
+float HitPurityTool::CalculateMean(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits, const float scaleFactor) const
 {
     float mean(0.f);
     std::size_t numberOfDistances(0UL);
@@ -198,8 +188,8 @@ float HitPurityTool::CalculateMean(const LArFittedTrackInfo::TrackHitValueVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float HitPurityTool::CalculateStandardDeviation(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
-    const float scaleFactor, const float mean) const
+float HitPurityTool::CalculateStandardDeviation(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
+                                                const std::size_t nHits, const float scaleFactor, const float mean) const
 {
     float squaredSummedDeviation(0.f);
     std::size_t numDistances(0UL);
@@ -222,7 +212,7 @@ float HitPurityTool::CalculateStandardDeviation(const LArFittedTrackInfo::TrackH
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 FloatVector HitPurityTool::CalculateImpurityScores(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
-    const float scaleFactor, const std::size_t nHits, const float mean, const float sigma) const
+                                                   const float scaleFactor, const std::size_t nHits, const float mean, const float sigma) const
 {
     FloatVector impurityScores(nHits, 0.f);
 
@@ -248,7 +238,7 @@ FloatVector HitPurityTool::CalculateImpurityScores(const LArFittedTrackInfo::Tra
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 FloatVector HitPurityTool::GetSortedDistanceVector(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
-    const LArTrackHitValue &currentTrackHitValue, const float scaleFactor, const std::size_t nHits) const
+                                                   const LArTrackHitValue &currentTrackHitValue, const float scaleFactor, const std::size_t nHits) const
 {
     FloatVector distanceVector(nHits, 0.f);
 
@@ -266,13 +256,13 @@ FloatVector HitPurityTool::GetSortedDistanceVector(const LArFittedTrackInfo::Tra
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-//ATTN temporary
+// ATTN temporary
 void HitPurityTool::MakePlots(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
-    const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergiesChanged) const
+                              const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergiesChanged) const
 {
     static int uniquePlotIdentifier(0);
 
-    TNtuple *const pNtuple        = new TNtuple("TrackHitsUncorrected", "TrackHitsUncorrected", "Coordinate:CaloValue");
+    TNtuple *const pNtuple = new TNtuple("TrackHitsUncorrected", "TrackHitsUncorrected", "Coordinate:CaloValue");
     TNtuple *const pNtupleChanged = new TNtuple("TrackHitsCorrected", "TrackHitsCorrected", "Coordinate:CaloValue");
 
     float minCoordinate = std::numeric_limits<float>::max();
@@ -286,7 +276,7 @@ void HitPurityTool::MakePlots(const LArFittedTrackInfo::TrackHitValueVector &tra
         if (trackHitEnergy.Coordinate() < minCoordinate)
             minCoordinate = trackHitEnergy.Coordinate();
 
-         if (trackHitEnergy.Coordinate() > maxCoordinate)
+        if (trackHitEnergy.Coordinate() > maxCoordinate)
             maxCoordinate = trackHitEnergy.Coordinate();
 
         if (trackHitEnergy.CaloValue() < minCaloValue)
@@ -303,7 +293,7 @@ void HitPurityTool::MakePlots(const LArFittedTrackInfo::TrackHitValueVector &tra
         if (trackHitEnergy.Coordinate() < minCoordinate)
             minCoordinate = trackHitEnergy.Coordinate();
 
-         if (trackHitEnergy.Coordinate() > maxCoordinate)
+        if (trackHitEnergy.Coordinate() > maxCoordinate)
             maxCoordinate = trackHitEnergy.Coordinate();
 
         if (trackHitEnergy.CaloValue() < minCaloValue)
@@ -318,26 +308,24 @@ void HitPurityTool::MakePlots(const LArFittedTrackInfo::TrackHitValueVector &tra
     TCanvas *pCanvas = nullptr;
 
     {
-        auto plotSettings        = g_defaultPlotSettings2D;
-        plotSettings.plotType   = SCATTER;
+        auto plotSettings = g_defaultPlotSettings2D;
+        plotSettings.plotType = SCATTER;
         plotSettings.pointColor = kRed;
         plotSettings.xMin = minCoordinate;
         plotSettings.xMax = maxCoordinate;
         plotSettings.yMin = 0.f;
         plotSettings.yMax = maxCaloValue;
-        strcpy(plotSettings.title,  "Selection of hits to Birks-correct");
+        strcpy(plotSettings.title, "Selection of hits to Birks-correct");
         strcpy(plotSettings.xTitle, "Projected 3D track coordinate (cm)");
         strcpy(plotSettings.yTitle, "#frac{dQ}{dx} (ADC/cm)");
 
-        pCanvas = PlotNtuple2D(pNtuple, "Coordinate", "CaloValue", std::to_string(uniquePlotIdentifier++).c_str(),
-                               plotSettings);
+        pCanvas = PlotNtuple2D(pNtuple, "Coordinate", "CaloValue", std::to_string(uniquePlotIdentifier++).c_str(), plotSettings);
 
-        plotSettings.plotType   = SAME;
-        plotSettings.newCanvas  = false;
+        plotSettings.plotType = SAME;
+        plotSettings.newCanvas = false;
         plotSettings.pointColor = kBlue;
 
-        PlotNtuple2D(pNtupleChanged, "Coordinate", "CaloValue", std::to_string(uniquePlotIdentifier++).c_str(),
-                     plotSettings);
+        PlotNtuple2D(pNtupleChanged, "Coordinate", "CaloValue", std::to_string(uniquePlotIdentifier++).c_str(), plotSettings);
     }
 
     PandoraMonitoringApi::Pause(this->GetPandora());
@@ -350,9 +338,12 @@ void HitPurityTool::MakePlots(const LArFittedTrackInfo::TrackHitValueVector &tra
 
 StatusCode HitPurityTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxImpurityScore", m_maxImpurityScore));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ValueAverageSearchRadius", m_valueAverageSearchRadius));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NearestNeighbourNumber", m_nearestNeighbourNumber));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "MaxImpurityScore", m_maxImpurityScore));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "ValueAverageSearchRadius", m_valueAverageSearchRadius));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "NearestNeighbourNumber", m_nearestNeighbourNumber));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MakePlots", m_makePlots));
 
     return STATUS_CODE_SUCCESS;

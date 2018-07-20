@@ -12,28 +12,27 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 using namespace pandora;
 
 namespace lar_physics_content
 {
 
-TrackHitEnergyTool::TrackHitEnergyTool() :
-    m_trackSlidingFitWindow(25U)
+TrackHitEnergyTool::TrackHitEnergyTool() : m_trackSlidingFitWindow(25U)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TrackHitEnergyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo,
-    LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, float &excessCharge,
-    const HitPurityToolCallback &hitPurityToolCallback)
+                             LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, float &excessCharge,
+                             const HitPurityToolCallback &hitPurityToolCallback)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     this->RecursivelyAppendMap(pPfo, excessCharge, hitPurityToolCallback, fittedTrackInfoMap);
     return true;
@@ -41,15 +40,16 @@ bool TrackHitEnergyTool::Run(const Algorithm *const pAlgorithm, const ParticleFl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackHitEnergyTool::RecursivelyAppendMap(const ParticleFlowObject *const pPfo, float &excessCharge,
-    HitPurityToolCallback hitPurityToolCallback, LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const
+void TrackHitEnergyTool::RecursivelyAppendMap(const ParticleFlowObject *const pPfo, float &excessCharge, HitPurityToolCallback hitPurityToolCallback,
+                                              LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const
 {
     if (LArPfoHelper::IsTrack(pPfo))
     {
         try
         {
             const ThreeDSlidingFitResult fitResult = this->PerformSlidingTrackFit(pPfo);
-            const LArFittedTrackInfo::TrackHitValueVector hitChargeVector = this->AppendLArTrackHitEnergyMap(pPfo, fitResult, excessCharge, hitPurityToolCallback);
+            const LArFittedTrackInfo::TrackHitValueVector hitChargeVector =
+                this->AppendLArTrackHitEnergyMap(pPfo, fitResult, excessCharge, hitPurityToolCallback);
             const float range = this->GetParticleRange(pPfo, fitResult);
 
             fittedTrackInfoMap.emplace(pPfo, LArFittedTrackInfo(pPfo, hitChargeVector, fitResult, range));
@@ -103,7 +103,8 @@ ThreeDSlidingFitResult TrackHitEnergyTool::PerformSlidingTrackFit(const Particle
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArFittedTrackInfo::TrackHitValueVector TrackHitEnergyTool::AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
-    const ThreeDSlidingFitResult &trackFit, float &excessCharge, HitPurityToolCallback hitPurityToolCallback) const
+                                                                                       const ThreeDSlidingFitResult &trackFit, float &excessCharge,
+                                                                                       HitPurityToolCallback hitPurityToolCallback) const
 {
     // Get all hits and order them by projection along the track fit.
     const CaloHitList collectionPlaneHits = LArAnalysisParticleHelper::GetHitsOfType(pPfo, TPC_VIEW_W, false);
@@ -114,9 +115,9 @@ LArFittedTrackInfo::TrackHitValueVector TrackHitEnergyTool::AppendLArTrackHitEne
     for (const HitProjectionPair &projectionPair : orderedHitProjections)
     {
         const CaloHit *const pCaloHit = projectionPair.first;
-        const float coordinate        = projectionPair.second;
+        const float coordinate = projectionPair.second;
 
-        const float threeDDistance    = this->CaloHitToThreeDDistance(pCaloHit, trackFit);
+        const float threeDDistance = this->CaloHitToThreeDDistance(pCaloHit, trackFit);
         trackHitChargeVector.emplace_back(pCaloHit, coordinate, threeDDistance, pCaloHit->GetInputEnergy());
     }
 
@@ -159,7 +160,7 @@ float TrackHitEnergyTool::CellToThreeDDistance(const float hitWidth, const float
 
 std::pair<float, float> TrackHitEnergyTool::GetPolarAnglesFromDirection(const CartesianVector &direction) const
 {
-    const float polarAngle     = std::acos(std::fabs(direction.GetY()));
+    const float polarAngle = std::acos(std::fabs(direction.GetY()));
     const float azimuthalAngle = std::asin(std::fabs(direction.GetX() / std::sin(polarAngle)));
 
     return {polarAngle, azimuthalAngle};
@@ -220,7 +221,7 @@ float TrackHitEnergyTool::GetParticleRange(const ParticleFlowObject *const pPfo,
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TrackHitEnergyTool::HitProjectionVector TrackHitEnergyTool::OrderHitsByProjectionOnToTrackFit(const CaloHitList &caloHitList,
-    const ThreeDSlidingFitResult &trackFit) const
+                                                                                              const ThreeDSlidingFitResult &trackFit) const
 {
     HitProjectionVector orderedHitProjectionVector;
 
@@ -228,10 +229,7 @@ TrackHitEnergyTool::HitProjectionVector TrackHitEnergyTool::OrderHitsByProjectio
         orderedHitProjectionVector.emplace_back(pCaloHit, trackFit.GetLongitudinalDisplacement(pCaloHit->GetPositionVector()));
 
     std::sort(orderedHitProjectionVector.begin(), orderedHitProjectionVector.end(),
-        [](const HitProjectionPair &lhs, const HitProjectionPair &rhs)
-        {
-            return lhs.second < rhs.second;
-        });
+              [](const HitProjectionPair &lhs, const HitProjectionPair &rhs) { return lhs.second < rhs.second; });
 
     return orderedHitProjectionVector;
 }
@@ -240,7 +238,8 @@ TrackHitEnergyTool::HitProjectionVector TrackHitEnergyTool::OrderHitsByProjectio
 
 StatusCode TrackHitEnergyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrackSlidingFitWindow", m_trackSlidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                    XmlHelper::ReadValue(xmlHandle, "TrackSlidingFitWindow", m_trackSlidingFitWindow));
     return STATUS_CODE_SUCCESS;
 }
 

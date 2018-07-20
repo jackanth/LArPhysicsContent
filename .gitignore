@@ -3,3 +3,4 @@
 /lib/
 /*.cmake
 /include/
+/.vscode

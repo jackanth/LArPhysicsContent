@@ -14,7 +14,6 @@
 
 namespace lar_physics_content
 {
-
 void LArRootHelper::WriteNTuple(TNtuple *const pNtuple, const std::string &fileName, const bool verboseMode)
 {
     if (verboseMode)
@@ -29,7 +28,7 @@ void LArRootHelper::WriteNTuple(TNtuple *const pNtuple, const std::string &fileN
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TNtuple * LArRootHelper::LoadNTupleFromFile(const std::string &filePath, const std::string &nTupleName)
+TNtuple *LArRootHelper::LoadNTupleFromFile(const std::string &filePath, const std::string &nTupleName)
 {
     TFile *pFile = new TFile(filePath.c_str(), "READ");
 

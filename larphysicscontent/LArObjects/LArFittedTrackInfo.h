@@ -17,14 +17,13 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
-
 /**
  *  @brief LArFittedTrackInfo class
  */
 class LArFittedTrackInfo
 {
-    public:
-    using TrackHitValueVector  = std::vector<LArTrackHitValue>; ///< Alias for a vector of LArTrackHitValues
+public:
+    using TrackHitValueVector = std::vector<LArTrackHitValue>; ///< Alias for a vector of LArTrackHitValues
     /**
      *  @brief  Constructor
      *
@@ -40,21 +39,21 @@ class LArFittedTrackInfo
      *
      *  @return the PFO address
      */
-    const ParticleFlowObject * Pfo() const noexcept;
+    const ParticleFlowObject *Pfo() const noexcept;
 
     /**
      *  @brief  Get the hit charge vector
      *
      *  @return the hit charge vector
      */
-    const TrackHitValueVector & HitChargeVector() const noexcept;
+    const TrackHitValueVector &HitChargeVector() const noexcept;
 
     /**
      *  @brief  Get the 3D fit
      *
      *  @return the 3D fit
      */
-    const ThreeDSlidingFitResult & Fit() const noexcept;
+    const ThreeDSlidingFitResult &Fit() const noexcept;
 
     /**
      *  @brief  Get the range
@@ -64,41 +63,38 @@ class LArFittedTrackInfo
     float Range() const noexcept;
 
 private:
-    const ParticleFlowObject    *m_pPfo;               ///< Address of the corresponding PFO
-    TrackHitValueVector          m_hitChargeVector;    ///< The sorted vector of hit charges
-    ThreeDSlidingFitResult       m_fit;                ///< The fit result
-    float                        m_range;              ///< The range
+    const ParticleFlowObject *m_pPfo;      ///< Address of the corresponding PFO
+    TrackHitValueVector m_hitChargeVector; ///< The sorted vector of hit charges
+    ThreeDSlidingFitResult m_fit;          ///< The fit result
+    float m_range;                         ///< The range
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArFittedTrackInfo::LArFittedTrackInfo(const ParticleFlowObject *const pPfo, TrackHitValueVector hitChargeVector, ThreeDSlidingFitResult fit,
-    const float range) noexcept :
-    m_pPfo(pPfo),
-    m_hitChargeVector(std::move_if_noexcept(hitChargeVector)),
-    m_fit(std::move_if_noexcept(fit)),
-    m_range(range)
+inline LArFittedTrackInfo::LArFittedTrackInfo(const ParticleFlowObject *const pPfo, TrackHitValueVector hitChargeVector,
+                                              ThreeDSlidingFitResult fit, const float range) noexcept
+    : m_pPfo(pPfo), m_hitChargeVector(std::move_if_noexcept(hitChargeVector)), m_fit(std::move_if_noexcept(fit)), m_range(range)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const ParticleFlowObject * LArFittedTrackInfo::Pfo() const noexcept
+inline const ParticleFlowObject *LArFittedTrackInfo::Pfo() const noexcept
 {
     return m_pPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const LArFittedTrackInfo::TrackHitValueVector & LArFittedTrackInfo::HitChargeVector() const noexcept
+inline const LArFittedTrackInfo::TrackHitValueVector &LArFittedTrackInfo::HitChargeVector() const noexcept
 {
     return m_hitChargeVector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const ThreeDSlidingFitResult & LArFittedTrackInfo::Fit() const noexcept
+inline const ThreeDSlidingFitResult &LArFittedTrackInfo::Fit() const noexcept
 {
     return m_fit;
 }

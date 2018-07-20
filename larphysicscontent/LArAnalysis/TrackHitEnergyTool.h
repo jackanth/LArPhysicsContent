@@ -10,8 +10,8 @@
 
 #include "Pandora/AlgorithmTool.h"
 
-#include "larphysicscontent/LArObjects/LArTrackHitValue.h"
 #include "larphysicscontent/LArObjects/LArFittedTrackInfo.h"
+#include "larphysicscontent/LArObjects/LArTrackHitValue.h"
 
 #include "larphysicscontent/LArHelpers/LArAnalysisParticleHelper.h"
 
@@ -36,13 +36,13 @@ public:
     TrackHitEnergyTool();
 
     bool Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
-        float &excessCharge, const HitPurityToolCallback &hitPurityToolCallback);
+             float &excessCharge, const HitPurityToolCallback &hitPurityToolCallback);
 
 private:
-    using HitProjectionPair   = std::pair<const CaloHit *, float>; ///< Alias for a map from CaloHits to their projected track coordinate
-    using HitProjectionVector = std::vector<HitProjectionPair>;    ///< Alias for a vector of hit projection pairs
+    using HitProjectionPair = std::pair<const CaloHit *, float>; ///< Alias for a map from CaloHits to their projected track coordinate
+    using HitProjectionVector = std::vector<HitProjectionPair>;  ///< Alias for a vector of hit projection pairs
 
-    unsigned    m_trackSlidingFitWindow;    ///< The track sliding fit window to use.
+    unsigned m_trackSlidingFitWindow; ///< The track sliding fit window to use.
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -55,7 +55,7 @@ private:
      *  @param  slidingFitWindow the sliding fit window size
      */
     void RecursivelyAppendMap(const ParticleFlowObject *const pPfo, float &excessCharge, HitPurityToolCallback hitPurityToolCallback,
-        LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
+                              LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
 
     /**
      *  @brief  Perform a 3D sliding track fit for a given PFO
@@ -76,8 +76,8 @@ private:
      *
      *  @return the vector of track hit energies
      */
-    LArFittedTrackInfo::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
-        const ThreeDSlidingFitResult &trackFit, float &excessCharge, HitPurityToolCallback hitPurityToolCallback) const;
+    LArFittedTrackInfo::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &trackFit,
+                                                                       float &excessCharge, HitPurityToolCallback hitPurityToolCallback) const;
 
     /**
      *  @brief  Get a 3D distance from a cell
@@ -110,7 +110,7 @@ private:
      */
     std::pair<float, float> GetPolarAnglesFromDirection(const CartesianVector &direction) const;
 
-        /**
+    /**
      *  @brief  Get the range of a track-like PFO
      *
      *  @param  pPfo address of the PFO
@@ -129,7 +129,6 @@ private:
      *  @return the ordered list of hit projections
      */
     HitProjectionVector OrderHitsByProjectionOnToTrackFit(const CaloHitList &caloHitList, const ThreeDSlidingFitResult &trackFit) const;
-
 };
 
 } // namespace lar_physics_content

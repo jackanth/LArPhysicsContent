@@ -6,9 +6,12 @@
  *  $Log: $
  */
 #ifndef LAR_PHYSICS_CONTENT_H
-#define LAR_PHYSICS_CONTENT_H 1
+#define LAR_PHYSICS_CONTENT_H
 
-namespace pandora { class Pandora; }
+namespace pandora
+{
+class Pandora;
+}
 
 /**
  *  @brief  LArPhysicsContent class
