@@ -25,32 +25,32 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
-AnalysisAlgorithm::AnalysisAlgorithm()
-    : m_fiducialCutLowMargins(10.f, 20.f, 10.f),
-      m_fiducialCutHighMargins(10.f, 20.f, 10.f),
-      m_minCoordinates(0.f, 0.f, 0.f),
-      m_maxCoordinates(0.f, 0.f, 0.f),
-      m_birksSelectionMaxdEdX(500.f),
-      m_mcParticleListName(),
-      m_parametersFile(),
-      m_birksFitNtupleName("BirksFit"),
-      m_protonEnergyFromRangeNtupleName("EnergyFromRangeProtons"),
-      m_pionMuonEnergyFromRangeNtupleName("EnergyFromRangePionsMuons"),
-      m_caloHitListName(),
-      m_tmvaWeights(),
-      m_addMcInformation(true),
-      m_birksFitAlpha(0.f),
-      m_birksFitBeta(0.f),
-      m_birksFitPole(0.f),
-      m_protonEnergyFromRangeDataVector(),
-      m_pionMuonEnergyFromRangeDataVector(),
-      m_pTrackHitEnergyTool(nullptr),
-      m_pMcInfoTool(nullptr),
-      m_pHitPurityTool(nullptr),
-      m_pTmvaReader(nullptr),
-      m_tmvaTrackLength(0.f),
-      m_tmvaAvgEnergyDeposition(0.f),
-      m_uniquePlotIdentifier(0)
+AnalysisAlgorithm::AnalysisAlgorithm() :
+    m_fiducialCutLowMargins(10.f, 20.f, 10.f),
+    m_fiducialCutHighMargins(10.f, 20.f, 10.f),
+    m_minCoordinates(0.f, 0.f, 0.f),
+    m_maxCoordinates(0.f, 0.f, 0.f),
+    m_birksSelectionMaxdEdX(500.f),
+    m_mcParticleListName(),
+    m_parametersFile(),
+    m_birksFitNtupleName("BirksFit"),
+    m_protonEnergyFromRangeNtupleName("EnergyFromRangeProtons"),
+    m_pionMuonEnergyFromRangeNtupleName("EnergyFromRangePionsMuons"),
+    m_caloHitListName(),
+    m_tmvaWeights(),
+    m_addMcInformation(true),
+    m_birksFitAlpha(0.f),
+    m_birksFitBeta(0.f),
+    m_birksFitPole(0.f),
+    m_protonEnergyFromRangeDataVector(),
+    m_pionMuonEnergyFromRangeDataVector(),
+    m_pTrackHitEnergyTool(nullptr),
+    m_pMcInfoTool(nullptr),
+    m_pHitPurityTool(nullptr),
+    m_pTmvaReader(nullptr),
+    m_tmvaTrackLength(0.f),
+    m_tmvaAvgEnergyDeposition(0.f),
+    m_uniquePlotIdentifier(0)
 {
 }
 
@@ -174,8 +174,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
                     pAnalysisPrimary->KineticEnergy() * pAnalysisPrimary->KineticEnergyFromCorrectedTrackChargeFraction();
                 energySourcedFromTrackCharge +=
                     pAnalysisPrimary->KineticEnergy() * pAnalysisPrimary->KineticEnergyFromUncorrectedTrackChargeFraction();
-                energySourcedFromShowerCharge +=
-                    pAnalysisPrimary->KineticEnergy() * pAnalysisPrimary->KineticEnergyFromShowerChargeFraction();
+                energySourcedFromShowerCharge += pAnalysisPrimary->KineticEnergy() * pAnalysisPrimary->KineticEnergyFromShowerChargeFraction();
                 primaryTypeTrees.push_back(pAnalysisPrimary->GetTypeTree());
             }
 
@@ -193,8 +192,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         if (analysisEnergy > std::numeric_limits<float>::epsilon())
         {
             analysisParticleParameters.m_kineticEnergyFromRangeFraction = energySourcedFromRange / analysisEnergy;
-            analysisParticleParameters.m_kineticEnergyFromCorrectedTrackChargeFraction =
-                energySourcedFromCorrectedTrackCharge / analysisEnergy;
+            analysisParticleParameters.m_kineticEnergyFromCorrectedTrackChargeFraction = energySourcedFromCorrectedTrackCharge / analysisEnergy;
             analysisParticleParameters.m_kineticEnergyFromUncorrectedTrackChargeFraction = energySourcedFromTrackCharge / analysisEnergy;
             analysisParticleParameters.m_kineticEnergyFromShowerChargeFraction = energySourcedFromShowerCharge / analysisEnergy;
         }
@@ -215,9 +213,9 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         float excessCaloValue(0.f);
 
         m_pTrackHitEnergyTool->Run(this, pInputPfo, fittedTrackInfoMap, excessCaloValue,
-                                   [&](LArFittedTrackInfo::TrackHitValueVector &trackHitValueVector, float &excessCaloValue) -> bool {
-                                       return m_pHitPurityTool->Run(this, trackHitValueVector, excessCaloValue);
-                                   });
+            [&](LArFittedTrackInfo::TrackHitValueVector &trackHitValueVector, float &excessCaloValue) -> bool {
+                return m_pHitPurityTool->Run(this, trackHitValueVector, excessCaloValue);
+            });
         ;
 
         // Derive a type for all PFOs.
@@ -235,7 +233,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
             energySourcedFromCorrectedTrackCharge(0.f);
 
         this->EstimateParticleEnergy(pInputPfo, particleTypeMap, fittedTrackInfoMap, particleEnergy, energySourcedFromRange,
-                                     energySourcedFromShowerCharge, energySourcedFromTrackCharge, energySourcedFromCorrectedTrackCharge);
+            energySourcedFromShowerCharge, energySourcedFromTrackCharge, energySourcedFromCorrectedTrackCharge);
 
         const LArAnalysisParticle::TypeTree typeTree = this->CreateTypeTree(pInputPfo, particleTypeMap);
 
@@ -257,8 +255,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         if (particleEnergy > std::numeric_limits<float>::epsilon())
         {
             analysisParticleParameters.m_kineticEnergyFromRangeFraction = energySourcedFromRange / particleEnergy;
-            analysisParticleParameters.m_kineticEnergyFromCorrectedTrackChargeFraction =
-                energySourcedFromCorrectedTrackCharge / particleEnergy;
+            analysisParticleParameters.m_kineticEnergyFromCorrectedTrackChargeFraction = energySourcedFromCorrectedTrackCharge / particleEnergy;
             analysisParticleParameters.m_kineticEnergyFromUncorrectedTrackChargeFraction = energySourcedFromTrackCharge / particleEnergy;
             analysisParticleParameters.m_kineticEnergyFromShowerChargeFraction = energySourcedFromShowerCharge / particleEnergy;
         }
@@ -275,8 +272,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     // Build AnalysisParticle.
     LArAnalysisParticleFactory analysisParticleFactory;
 
-    PANDORA_THROW_RESULT_IF(
-        STATUS_CODE_SUCCESS, !=,
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
         PandoraContentApi::ParticleFlowObject::Create(*this, analysisParticleParameters, pOutputPfo, analysisParticleFactory));
 
     const LArAnalysisParticle *const pLArAnalysisParticle = dynamic_cast<const LArAnalysisParticle *>(pOutputPfo);
@@ -309,7 +305,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void AnalysisAlgorithm::RecursivelyAppendParticleTypeMap(const ParticleFlowObject *const pPfo, LArAnalysisParticle::PfoTypeMap &pfoTypeMap,
-                                                         const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const
+    const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const
 {
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
     {
@@ -320,9 +316,8 @@ void AnalysisAlgorithm::RecursivelyAppendParticleTypeMap(const ParticleFlowObjec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArAnalysisParticle::TYPE
-AnalysisAlgorithm::EstimateParticleType(const ParticleFlowObject *const pPfo,
-                                        const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const
+LArAnalysisParticle::TYPE AnalysisAlgorithm::EstimateParticleType(
+    const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const
 {
     if (LArPfoHelper::IsShower(pPfo))
         return LArAnalysisParticle::TYPE::SHOWER;
@@ -355,9 +350,8 @@ AnalysisAlgorithm::EstimateParticleType(const ParticleFlowObject *const pPfo,
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const pPfo, const LArAnalysisParticle::PfoTypeMap &typeMap,
-                                               const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
-                                               float &particleEnergy, float &energySourcedFromRange, float &energySourcedFromShowerCharge,
-                                               float &energySourcedFromTrackCharge, float &energySourcedFromCorrectedTrackCharge) const
+    const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, float &particleEnergy, float &energySourcedFromRange,
+    float &energySourcedFromShowerCharge, float &energySourcedFromTrackCharge, float &energySourcedFromCorrectedTrackCharge) const
 {
     const LArAnalysisParticle::TYPE particleType = typeMap.at(pPfo);
 
@@ -401,8 +395,7 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
         {
             if (fitFound)
             {
-                const float energyFromCharge =
-                    this->EstimateTrackEnergyFromCharge(fitFindIter->second.HitChargeVector()); // incl recombination correction
+                const float energyFromCharge = this->EstimateTrackEnergyFromCharge(fitFindIter->second.HitChargeVector()); // incl recombination correction
                 particleEnergy += energyFromCharge;
                 energySourcedFromCorrectedTrackCharge += energyFromCharge;
             }
@@ -425,7 +418,7 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
     {
         this->EstimateParticleEnergy(pDaughterPfo, typeMap, fittedTrackInfoMap, particleEnergy, energySourcedFromRange,
-                                     energySourcedFromShowerCharge, energySourcedFromTrackCharge, energySourcedFromCorrectedTrackCharge);
+            energySourcedFromShowerCharge, energySourcedFromTrackCharge, energySourcedFromCorrectedTrackCharge);
     }
 }
 
@@ -484,8 +477,7 @@ float AnalysisAlgorithm::EstimateTrackEnergyFromCharge(const LArFittedTrackInfo:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float AnalysisAlgorithm::EstimateTrackEnergyFromRange(const LArFittedTrackInfo &fittedTrackInfo,
-                                                      const LArAnalysisParticle::TYPE particleType) const
+float AnalysisAlgorithm::EstimateTrackEnergyFromRange(const LArFittedTrackInfo &fittedTrackInfo, const LArAnalysisParticle::TYPE particleType) const
 {
     const float trackRange = fittedTrackInfo.Range();
     float trackEnergy = 0.f;
@@ -498,9 +490,8 @@ float AnalysisAlgorithm::EstimateTrackEnergyFromRange(const LArFittedTrackInfo &
         {
             bool foundEnergy = false;
 
-            for (const EnergyFromRangeData &energyFromRangeData : (particleType == LArAnalysisParticle::TYPE::PROTON)
-                                                                      ? m_protonEnergyFromRangeDataVector
-                                                                      : m_pionMuonEnergyFromRangeDataVector)
+            for (const EnergyFromRangeData &energyFromRangeData :
+                (particleType == LArAnalysisParticle::TYPE::PROTON) ? m_protonEnergyFromRangeDataVector : m_pionMuonEnergyFromRangeDataVector)
             {
                 if ((trackRange >= energyFromRangeData.m_rangeMin) && (trackRange < energyFromRangeData.m_rangeMax))
                 {
@@ -528,8 +519,7 @@ float AnalysisAlgorithm::EstimateTrackEnergyFromRange(const LArFittedTrackInfo &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArAnalysisParticle::TypeTree AnalysisAlgorithm::CreateTypeTree(const ParticleFlowObject *const pPfo,
-                                                                const LArAnalysisParticle::PfoTypeMap &typeMap) const
+LArAnalysisParticle::TypeTree AnalysisAlgorithm::CreateTypeTree(const ParticleFlowObject *const pPfo, const LArAnalysisParticle::PfoTypeMap &typeMap) const
 {
     LArAnalysisParticle::TypeTree::List daughterTypeTrees;
 
@@ -542,8 +532,7 @@ LArAnalysisParticle::TypeTree AnalysisAlgorithm::CreateTypeTree(const ParticleFl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject *const pPfo,
-                                                        const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
-                                                        const Vertex *const pVertex, const bool isCosmicRay) const
+    const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, const Vertex *const pVertex, const bool isCosmicRay) const
 {
     const auto findIter = fittedTrackInfoMap.find(pPfo);
 
@@ -575,8 +564,7 @@ CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo,
-                                         const bool isNeutrino) const
+bool AnalysisAlgorithm::GetMcInformation(const ParticleFlowObject *const pPfo, LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const bool isNeutrino) const
 {
     const MCParticle *pMcMainMCParticle(nullptr);
 
@@ -639,27 +627,25 @@ void AnalysisAlgorithm::CountNumberOfDownstreamParticles(const ParticleFlowObjec
 
 StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "FiducialCutHighMargins", m_fiducialCutHighMargins));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParametersFile", m_parametersFile));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "BirksFitNtupleName", m_birksFitNtupleName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "ProtonEnergyFromRangeNtupleName", m_protonEnergyFromRangeNtupleName));
     PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighMargins", m_fiducialCutHighMargins));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParametersFile", m_parametersFile));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BirksFitNtupleName", m_birksFitNtupleName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ProtonEnergyFromRangeNtupleName", m_protonEnergyFromRangeNtupleName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "PionMuonEnergyFromRangeNtupleName", m_pionMuonEnergyFromRangeNtupleName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "BirksSelectionMaxdEdX", m_birksSelectionMaxdEdX));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "AddMcInformation", m_addMcInformation));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BirksSelectionMaxdEdX", m_birksSelectionMaxdEdX));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AddMcInformation", m_addMcInformation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TmvaWeights", m_tmvaWeights));
 
@@ -715,8 +701,7 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     //--------------------------------------------------------------------------------------------------------------------------------------
 
-    TNtuple *const pEnergyFromRangeNtuplePionMuon =
-        LArRootHelper::LoadNTupleFromFile(m_parametersFile, m_pionMuonEnergyFromRangeNtupleName);
+    TNtuple *const pEnergyFromRangeNtuplePionMuon = LArRootHelper::LoadNTupleFromFile(m_parametersFile, m_pionMuonEnergyFromRangeNtupleName);
 
     if (!pEnergyFromRangeNtuplePionMuon)
     {
@@ -745,12 +730,11 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     m_pTmvaReader->BookMVA("BDT", m_tmvaWeights.c_str());
 
     // Use the detector geometry and the margins to get the maximum and minimum fiducial volume coordinates.
-    LArAnalysisParticleHelper::GetFiducialCutParameters(this->GetPandora(), m_fiducialCutLowMargins, m_fiducialCutHighMargins,
-                                                        m_minCoordinates, m_maxCoordinates);
+    LArAnalysisParticleHelper::GetFiducialCutParameters(
+        this->GetPandora(), m_fiducialCutLowMargins, m_fiducialCutHighMargins, m_minCoordinates, m_maxCoordinates);
 
     AlgorithmTool *pHitPurityAlgorithmTool(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                             XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "HitPurity", pHitPurityAlgorithmTool));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "HitPurity", pHitPurityAlgorithmTool));
 
     if (!(m_pHitPurityTool = dynamic_cast<HitPurityTool *>(pHitPurityAlgorithmTool)))
         throw STATUS_CODE_FAILURE;
@@ -762,8 +746,7 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         throw STATUS_CODE_FAILURE;
 
     AlgorithmTool *pTrackHitEnergyAlgorithmTool(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                             XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "TrackHitEnergy", pTrackHitEnergyAlgorithmTool));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "TrackHitEnergy", pTrackHitEnergyAlgorithmTool));
 
     if (!(m_pTrackHitEnergyTool = dynamic_cast<TrackHitEnergyTool *>(pTrackHitEnergyAlgorithmTool)))
         throw STATUS_CODE_FAILURE;

@@ -341,7 +341,7 @@ protected:
 private:
     using AnalysisParticleList = std::list<const LArAnalysisParticle *>; ///< Alias for a list of AnalysisParticles
     using MCPrimaryMap = std::unordered_multimap<const MCParticle *,
-                                                 const LArAnalysisParticle *>; ///< Alias for a map from MC primaries to AnalysisParticles
+        const LArAnalysisParticle *>; ///< Alias for a map from MC primaries to AnalysisParticles
 
     /**
      *  @brief  Get the map from the MC primaries to their analysis particles
@@ -362,7 +362,7 @@ private:
      *  @return success
      */
     bool ProcessAnalysisParticle(const LArAnalysisParticle *const pAnalysisParticle, const MCPrimaryMap &mainMcParticleMap,
-                                 const MCParticleList *const pMCParticleList) const;
+        const MCParticleList *const pMCParticleList) const;
 
     /**
      *  @brief  Record MC information for all the unreconstructed particles
@@ -404,8 +404,8 @@ private:
      *  @param  numberOfRecoTracks the number of reco tracks (to populate)
      *  @param  numberOfRecoShowers the number of reco showers (to populate)
      */
-    void CountRecoTracksAndShowers(const LArAnalysisParticle &currentAnalysisParticle, unsigned int &numberOfRecoTracks,
-                                   unsigned int &numberOfRecoShowers) const;
+    void CountRecoTracksAndShowers(
+        const LArAnalysisParticle &currentAnalysisParticle, unsigned int &numberOfRecoTracks, unsigned int &numberOfRecoShowers) const;
 
     /**
      *  @brief  Populate the tree parameters with neutrino MC information
@@ -413,8 +413,7 @@ private:
      *  @param  pfoMcInfo the PFO MC info object
      *  @param  pMCParticleList address of the MC particle list
      */
-    void PopulateNeutrinoMcParameters(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo,
-                                      const MCParticleList *const pMCParticleList) const;
+    void PopulateNeutrinoMcParameters(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const MCParticleList *const pMCParticleList) const;
 
     /**
      *  @brief  Caculate the neutrino MC visible energy and momentum
@@ -423,8 +422,7 @@ private:
      *  @param  visibleEnergy the visible energy (to populate)
      *  @param  visibleMomentum the visible momentum (to populate)
      */
-    void CalculateNeutrinoMcVisibleMomentum(const MCParticleList *const pMCParticleList, float &visibleEnergy,
-                                            CartesianVector &visibleMomentum) const;
+    void CalculateNeutrinoMcVisibleMomentum(const MCParticleList *const pMCParticleList, float &visibleEnergy, CartesianVector &visibleMomentum) const;
 
     /**
      *  @brief  Get all the MC primary neutrino daughters
@@ -553,8 +551,7 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline void WriteAnalysisParticlesAlgorithm::CheckSize(const std::string &variableName, const std::vector<T> &vector,
-                                                       const std::size_t desiredSize) const
+inline void WriteAnalysisParticlesAlgorithm::CheckSize(const std::string &variableName, const std::vector<T> &vector, const std::size_t desiredSize) const
 {
     if (vector.size() != desiredSize)
     {

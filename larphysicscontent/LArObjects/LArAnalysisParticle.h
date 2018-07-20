@@ -739,8 +739,9 @@ inline const MCParticle *LArAnalysisParticle::McMainMCParticle() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArAnalysisParticle::TypeTree::TypeTree(const TYPE type, TypeTree::List daughterTypes) noexcept
-    : m_type(type), m_daughterTypes(std::move_if_noexcept(daughterTypes))
+inline LArAnalysisParticle::TypeTree::TypeTree(const TYPE type, TypeTree::List daughterTypes) noexcept :
+    m_type(type),
+    m_daughterTypes(std::move_if_noexcept(daughterTypes))
 {
 }
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -77,8 +77,11 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArTrackHitValue::LArTrackHitValue(const CaloHit *const pCaloHit, const float coordinate, const float threeDDistance, const float caloValue) noexcept
-    : m_pCaloHit(pCaloHit), m_coordinate(coordinate), m_threeDDistance(threeDDistance), m_caloValue(caloValue)
+inline LArTrackHitValue::LArTrackHitValue(const CaloHit *const pCaloHit, const float coordinate, const float threeDDistance, const float caloValue) noexcept :
+    m_pCaloHit(pCaloHit),
+    m_coordinate(coordinate),
+    m_threeDDistance(threeDDistance),
+    m_caloValue(caloValue)
 {
 }
 

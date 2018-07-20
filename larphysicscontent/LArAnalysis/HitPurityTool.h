@@ -64,7 +64,7 @@ private:
      *  @return success
      */
     bool GetStatistics(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits, float &scaleFactor,
-                       float &mean, float &sigma) const;
+        float &mean, float &sigma) const;
 
     /**
      *  @brief  Get the calo value/coordinate ranges
@@ -75,7 +75,7 @@ private:
      *  @param  caloValueRange the calo value range (to populate)
      */
     void CalculateRanges(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
-                         float &coordinateRange, float &caloValueRange) const;
+        float &coordinateRange, float &caloValueRange) const;
 
     /**
      *  @brief  Get the inter-datapoint distance mean
@@ -99,7 +99,7 @@ private:
      *  @return the standard deviation
      */
     float CalculateStandardDeviation(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
-                                     const float scaleFactor, const float mean) const;
+        const float scaleFactor, const float mean) const;
 
     /**
      *  @brief  Calculate the impurity scores
@@ -113,7 +113,7 @@ private:
      *  @return the impurity scores
      */
     FloatVector CalculateImpurityScores(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const float scaleFactor,
-                                        const std::size_t nHits, const float mean, const float sigma) const;
+        const std::size_t nHits, const float mean, const float sigma) const;
 
     /**
      *  @brief  Get the vector of inter-datapoint distances, sorted smallest-to-largest
@@ -126,11 +126,11 @@ private:
      *  @return the distance vector
      */
     FloatVector GetSortedDistanceVector(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
-                                        const LArTrackHitValue &currentTrackHitValue, const float scaleFactor, const std::size_t nHits) const;
+        const LArTrackHitValue &currentTrackHitValue, const float scaleFactor, const std::size_t nHits) const;
 
     // ATTN temporary
     void MakePlots(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
-                   const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergiesChanged) const;
+        const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergiesChanged) const;
 };
 
 } // namespace lar_physics_content

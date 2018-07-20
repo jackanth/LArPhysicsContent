@@ -18,8 +18,11 @@ using namespace pandora;
 
 namespace lar_physics_content
 {
-HitPurityTool::HitPurityTool()
-    : m_maxImpurityScore(1.f), m_valueAverageSearchRadius(20UL), m_nearestNeighbourNumber(5UL), m_makePlots(false)
+HitPurityTool::HitPurityTool() :
+    m_maxImpurityScore(1.f),
+    m_valueAverageSearchRadius(20UL),
+    m_nearestNeighbourNumber(5UL),
+    m_makePlots(false)
 {
 }
 
@@ -34,7 +37,7 @@ bool HitPurityTool::Run(const Algorithm *const pAlgorithm, LArFittedTrackInfo::T
         return true;
 
     std::sort(trackHitEnergyVector.begin(), trackHitEnergyVector.end(),
-              [](const LArTrackHitValue &lhs, const LArTrackHitValue &rhs) { return lhs.Coordinate() < rhs.Coordinate(); });
+        [](const LArTrackHitValue &lhs, const LArTrackHitValue &rhs) { return lhs.Coordinate() < rhs.Coordinate(); });
 
     const float lowerCoordinateBound = trackHitEnergyVector.front().Coordinate();
     const float upperCoordinateBound = trackHitEnergyVector.back().Coordinate();
@@ -116,7 +119,7 @@ FloatVector HitPurityTool::GetValueAverages(const LArFittedTrackInfo::TrackHitVa
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool HitPurityTool::GetStatistics(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
-                                  float &scaleFactor, float &mean, float &sigma) const
+    float &scaleFactor, float &mean, float &sigma) const
 {
     if (nHits < 3UL)
         return false;
@@ -138,7 +141,7 @@ bool HitPurityTool::GetStatistics(const LArFittedTrackInfo::TrackHitValueVector 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void HitPurityTool::CalculateRanges(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector, const std::size_t nHits,
-                                    float &coordinateRange, float &caloValueRange) const
+    float &coordinateRange, float &caloValueRange) const
 {
     float minCoordinate(std::numeric_limits<float>::max()), maxCoordinate(std::numeric_limits<float>::min());
     float minCaloValue(std::numeric_limits<float>::max()), maxCaloValue(std::numeric_limits<float>::min());
@@ -189,7 +192,7 @@ float HitPurityTool::CalculateMean(const LArFittedTrackInfo::TrackHitValueVector
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float HitPurityTool::CalculateStandardDeviation(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
-                                                const std::size_t nHits, const float scaleFactor, const float mean) const
+    const std::size_t nHits, const float scaleFactor, const float mean) const
 {
     float squaredSummedDeviation(0.f);
     std::size_t numDistances(0UL);
@@ -212,7 +215,7 @@ float HitPurityTool::CalculateStandardDeviation(const LArFittedTrackInfo::TrackH
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 FloatVector HitPurityTool::CalculateImpurityScores(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
-                                                   const float scaleFactor, const std::size_t nHits, const float mean, const float sigma) const
+    const float scaleFactor, const std::size_t nHits, const float mean, const float sigma) const
 {
     FloatVector impurityScores(nHits, 0.f);
 
@@ -238,7 +241,7 @@ FloatVector HitPurityTool::CalculateImpurityScores(const LArFittedTrackInfo::Tra
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 FloatVector HitPurityTool::GetSortedDistanceVector(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
-                                                   const LArTrackHitValue &currentTrackHitValue, const float scaleFactor, const std::size_t nHits) const
+    const LArTrackHitValue &currentTrackHitValue, const float scaleFactor, const std::size_t nHits) const
 {
     FloatVector distanceVector(nHits, 0.f);
 
@@ -258,7 +261,7 @@ FloatVector HitPurityTool::GetSortedDistanceVector(const LArFittedTrackInfo::Tra
 
 // ATTN temporary
 void HitPurityTool::MakePlots(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergyVector,
-                              const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergiesChanged) const
+    const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergiesChanged) const
 {
     static int uniquePlotIdentifier(0);
 
@@ -338,12 +341,12 @@ void HitPurityTool::MakePlots(const LArFittedTrackInfo::TrackHitValueVector &tra
 
 StatusCode HitPurityTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxImpurityScore", m_maxImpurityScore));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "MaxImpurityScore", m_maxImpurityScore));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "ValueAverageSearchRadius", m_valueAverageSearchRadius));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "NearestNeighbourNumber", m_nearestNeighbourNumber));
+        XmlHelper::ReadValue(xmlHandle, "ValueAverageSearchRadius", m_valueAverageSearchRadius));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NearestNeighbourNumber", m_nearestNeighbourNumber));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MakePlots", m_makePlots));
 
     return STATUS_CODE_SUCCESS;

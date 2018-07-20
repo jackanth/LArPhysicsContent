@@ -35,8 +35,8 @@ public:
      */
     TrackHitEnergyTool();
 
-    bool Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
-             float &excessCharge, const HitPurityToolCallback &hitPurityToolCallback);
+    bool Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo,
+        LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, float &excessCharge, const HitPurityToolCallback &hitPurityToolCallback);
 
 private:
     using HitProjectionPair = std::pair<const CaloHit *, float>; ///< Alias for a map from CaloHits to their projected track coordinate
@@ -55,7 +55,7 @@ private:
      *  @param  slidingFitWindow the sliding fit window size
      */
     void RecursivelyAppendMap(const ParticleFlowObject *const pPfo, float &excessCharge, HitPurityToolCallback hitPurityToolCallback,
-                              LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
+        LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
 
     /**
      *  @brief  Perform a 3D sliding track fit for a given PFO
@@ -76,8 +76,8 @@ private:
      *
      *  @return the vector of track hit energies
      */
-    LArFittedTrackInfo::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &trackFit,
-                                                                       float &excessCharge, HitPurityToolCallback hitPurityToolCallback) const;
+    LArFittedTrackInfo::TrackHitValueVector AppendLArTrackHitEnergyMap(const ParticleFlowObject *const pPfo,
+        const ThreeDSlidingFitResult &trackFit, float &excessCharge, HitPurityToolCallback hitPurityToolCallback) const;
 
     /**
      *  @brief  Get a 3D distance from a cell

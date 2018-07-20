@@ -26,8 +26,7 @@ using namespace lar_content;
 namespace lar_physics_content
 {
 void LArAnalysisParticleHelper::GetFiducialCutParameters(const Pandora &pandoraInstance, const CartesianVector &fiducialCutLowMargins,
-                                                         const CartesianVector &fiducialCutHighMargins, CartesianVector &minCoordinates,
-                                                         CartesianVector &maxCoordinates)
+    const CartesianVector &fiducialCutHighMargins, CartesianVector &minCoordinates, CartesianVector &maxCoordinates)
 {
     const LArTPCMap &larTPCMap(pandoraInstance.GetGeometry()->GetLArTPCMap());
 
@@ -64,8 +63,8 @@ CaloHitList LArAnalysisParticleHelper::GetHitsOfType(const ParticleFlowObject *c
         for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
         {
             CaloHitList daughterCaloHitList = GetHitsOfType(pDaughterPfo, hitType, recurseOverDaughters);
-            caloHitList.insert(caloHitList.end(), std::make_move_iterator(daughterCaloHitList.begin()),
-                               std::make_move_iterator(daughterCaloHitList.end()));
+            caloHitList.insert(
+                caloHitList.end(), std::make_move_iterator(daughterCaloHitList.begin()), std::make_move_iterator(daughterCaloHitList.end()));
         }
     }
 
@@ -74,8 +73,8 @@ CaloHitList LArAnalysisParticleHelper::GetHitsOfType(const ParticleFlowObject *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit,
-                                                                        const CartesianVector &position, const bool pointTowardsMiddle)
+CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(
+    const ThreeDSlidingFitResult &trackFit, const CartesianVector &position, const bool pointTowardsMiddle)
 {
     const CartesianVector &minPosition = trackFit.GetGlobalMinLayerPosition();
     const CartesianVector &maxPosition = trackFit.GetGlobalMaxLayerPosition();
@@ -140,8 +139,8 @@ CartesianVector LArAnalysisParticleHelper::GetFittedDirectionAtPosition(const Th
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArAnalysisParticleHelper::GetFractionOfFiducialHits(const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates,
-                                                           const CartesianVector &maxCoordinates)
+float LArAnalysisParticleHelper::GetFractionOfFiducialHits(
+    const ParticleFlowObject *const pPfo, const CartesianVector &minCoordinates, const CartesianVector &maxCoordinates)
 {
     PfoList downstreamPfos;
     LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);

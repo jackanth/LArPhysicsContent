@@ -18,20 +18,20 @@ using namespace lar_content;
 namespace lar_physics_content
 {
 
-WriteAnalysisParticlesAlgorithm::WriteAnalysisParticlesAlgorithm()
-    : m_pfoListName(),
-      m_outputFile(),
-      m_treeName("PandoraTree"),
-      m_treeTitle("PandoraTree"),
-      m_pOutputTFile(nullptr),
-      m_pOutputTree(nullptr),
-      m_verbose(false),
-      m_treeParameters(),
-      m_mcParticleListName(),
-      m_fiducialHitFractionLowerBound(0.9f),
-      m_mcOnlyParticleContainmentCut(0.f),
-      m_mcOnlyParticleEnergyCut(0.f),
-      m_pMcInfoTool(nullptr)
+WriteAnalysisParticlesAlgorithm::WriteAnalysisParticlesAlgorithm() :
+    m_pfoListName(),
+    m_outputFile(),
+    m_treeName("PandoraTree"),
+    m_treeTitle("PandoraTree"),
+    m_pOutputTFile(nullptr),
+    m_pOutputTree(nullptr),
+    m_verbose(false),
+    m_treeParameters(),
+    m_mcParticleListName(),
+    m_fiducialHitFractionLowerBound(0.9f),
+    m_mcOnlyParticleContainmentCut(0.f),
+    m_mcOnlyParticleEnergyCut(0.f),
+    m_pMcInfoTool(nullptr)
 {
 }
 
@@ -116,7 +116,7 @@ WriteAnalysisParticlesAlgorithm::MCPrimaryMap WriteAnalysisParticlesAlgorithm::G
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool WriteAnalysisParticlesAlgorithm::ProcessAnalysisParticle(const LArAnalysisParticle *const pAnalysisParticle,
-                                                              const MCPrimaryMap &mainMcParticleMap, const MCParticleList *const pMCParticleList) const
+    const MCPrimaryMap &mainMcParticleMap, const MCParticleList *const pMCParticleList) const
 {
     if (LArAnalysisParticleHelper::IsNeutrino(pAnalysisParticle))
     {
@@ -241,8 +241,8 @@ MCParticleSet WriteAnalysisParticlesAlgorithm::GetAllMcPrimaries(const MCParticl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalysisParticle &neutrinoAnalysisParticle,
-                                                                 const MCParticleList *const pMCParticleList) const
+void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(
+    const LArAnalysisParticle &neutrinoAnalysisParticle, const MCParticleList *const pMCParticleList) const
 {
     // m_nu_WasReconstructed is dealt with by the calling method.
 
@@ -293,8 +293,8 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoParameters(const LArAnalys
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::CountRecoTracksAndShowers(const LArAnalysisParticle &currentAnalysisParticle,
-                                                                unsigned int &numberOfRecoTracks, unsigned int &numberOfRecoShowers) const
+void WriteAnalysisParticlesAlgorithm::CountRecoTracksAndShowers(
+    const LArAnalysisParticle &currentAnalysisParticle, unsigned int &numberOfRecoTracks, unsigned int &numberOfRecoShowers) const
 {
     for (const ParticleFlowObject *const pDaughterPfo : currentAnalysisParticle.GetDaughterPfoList())
     {
@@ -314,8 +314,8 @@ void WriteAnalysisParticlesAlgorithm::CountRecoTracksAndShowers(const LArAnalysi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo,
-                                                                   const MCParticleList *const pMCParticleList) const
+void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(
+    const LArAnalysisParticleHelper::PfoMcInfo &pfoMcInfo, const MCParticleList *const pMCParticleList) const
 {
     if (pfoMcInfo.m_pMCParticle)
         m_treeParameters.m_nu_mc_McParticleUid = reinterpret_cast<std::uint64_t>(pfoMcInfo.m_pMCParticle->GetUid());
@@ -374,8 +374,8 @@ void WriteAnalysisParticlesAlgorithm::PopulateNeutrinoMcParameters(const LArAnal
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void WriteAnalysisParticlesAlgorithm::CalculateNeutrinoMcVisibleMomentum(const MCParticleList *const pMCParticleList, float &visibleEnergy,
-                                                                         CartesianVector &visibleMomentum) const
+void WriteAnalysisParticlesAlgorithm::CalculateNeutrinoMcVisibleMomentum(
+    const MCParticleList *const pMCParticleList, float &visibleEnergy, CartesianVector &visibleMomentum) const
 {
     visibleMomentum = CartesianVector(0.f, 0.f, 0.f);
     visibleEnergy = 0.f;
@@ -768,18 +768,18 @@ bool WriteAnalysisParticlesAlgorithm::IsChargedCurrent(const LArInteractionTypeH
 StatusCode WriteAnalysisParticlesAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_outputFile));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TreeName", m_treeName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TreeTitle", m_treeTitle));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Verbose", m_verbose));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "FiducialHitFractionLowerBound", m_fiducialHitFractionLowerBound));
+        XmlHelper::ReadValue(xmlHandle, "FiducialHitFractionLowerBound", m_fiducialHitFractionLowerBound));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "McOnlyParticleContainmentCut", m_mcOnlyParticleContainmentCut));
+        XmlHelper::ReadValue(xmlHandle, "McOnlyParticleContainmentCut", m_mcOnlyParticleContainmentCut));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-                                    XmlHelper::ReadValue(xmlHandle, "McOnlyParticleEnergyCut", m_mcOnlyParticleEnergyCut));
+        XmlHelper::ReadValue(xmlHandle, "McOnlyParticleEnergyCut", m_mcOnlyParticleEnergyCut));
 
     AlgorithmTool *pMcInfoAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "McInfo", pMcInfoAlgorithmTool));
@@ -808,10 +808,10 @@ void WriteAnalysisParticlesAlgorithm::InitializeTree()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TreeParameters::TreeParameters() noexcept
-    : TREE_SCALAR_MEMBERS(INITIALIZE_SCALAR_MEMBER) TREE_VECTOR_MEMBERS_PRIMARY(INITIALIZE_VECTOR_MEMBER)
-          TREE_VECTOR_MEMBERS_PRIMARY_MC(INITIALIZE_VECTOR_MEMBER) TREE_VECTOR_MEMBERS_CR(INITIALIZE_VECTOR_MEMBER)
-              TREE_VECTOR_MEMBERS_CR_MC(INITIALIZE_VECTOR_MEMBER) m_dummy(false)
+TreeParameters::TreeParameters() noexcept :
+    TREE_SCALAR_MEMBERS(INITIALIZE_SCALAR_MEMBER) TREE_VECTOR_MEMBERS_PRIMARY(INITIALIZE_VECTOR_MEMBER)
+        TREE_VECTOR_MEMBERS_PRIMARY_MC(INITIALIZE_VECTOR_MEMBER) TREE_VECTOR_MEMBERS_CR(INITIALIZE_VECTOR_MEMBER)
+            TREE_VECTOR_MEMBERS_CR_MC(INITIALIZE_VECTOR_MEMBER) m_dummy(false)
 {
 }
 

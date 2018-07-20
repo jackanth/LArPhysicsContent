@@ -93,7 +93,7 @@ private:
      *  @return success
      */
     bool ProduceBirksFitData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
-                             const MCParticleMap &mcParticleMap) const;
+        const MCParticleMap &mcParticleMap) const;
 
     /**
      *  @brief  Get the Birks fit data for a given PFO
@@ -108,7 +108,7 @@ private:
      *  @return success
      */
     bool GetBirksFitData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
-                         float &totalNoBirksAdcIntegral, FloatVector &birksAdcIntegrals, FloatVector &threeDDistances) const;
+        float &totalNoBirksAdcIntegral, FloatVector &birksAdcIntegrals, FloatVector &threeDDistances) const;
 
     /**
      *  @brief  Add up the shower ADCs for a PFO
@@ -128,7 +128,7 @@ private:
      *  @param  threeDDistances the vector of 3D distances over which the charges were deposited (to be populated)
      */
     void GetTrackAdcsAndDistances(const LArFittedTrackInfo::TrackHitValueVector &trackHitEnergies, float &totalNoBirksAdcIntegral,
-                                  FloatVector &birksAdcIntegrals, FloatVector &threeDDistances) const;
+        FloatVector &birksAdcIntegrals, FloatVector &threeDDistances) const;
 
     /**
      *  @brief  Recurse through the PFO hierarchy and produce energy from range data for a given set of PDG codes
@@ -140,8 +140,7 @@ private:
      *  @param  pdgCodeSet The set of PDG codes
      */
     void RecursivelyProduceEnergyFromRangeData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
-                                               const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap, TNtuple *const pNtuple,
-                                               const PdgCodeSet &pdgCodeSet) const;
+        const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap, TNtuple *const pNtuple, const PdgCodeSet &pdgCodeSet) const;
 
     /**
      *  @brief  Get the kinetic energy of an MC particle
@@ -161,7 +160,7 @@ private:
      *  @param  isCosmicRay whether the particle is a cosmic ray
      */
     void RecursivelyProducePidData(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
-                                   const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap, const bool isCosmicRay) const;
+        const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap, const bool isCosmicRay) const;
 };
 
 } // namespace lar_physics_content

@@ -72,9 +72,12 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArFittedTrackInfo::LArFittedTrackInfo(const ParticleFlowObject *const pPfo, TrackHitValueVector hitChargeVector,
-                                              ThreeDSlidingFitResult fit, const float range) noexcept
-    : m_pPfo(pPfo), m_hitChargeVector(std::move_if_noexcept(hitChargeVector)), m_fit(std::move_if_noexcept(fit)), m_range(range)
+inline LArFittedTrackInfo::LArFittedTrackInfo(
+    const ParticleFlowObject *const pPfo, TrackHitValueVector hitChargeVector, ThreeDSlidingFitResult fit, const float range) noexcept :
+    m_pPfo(pPfo),
+    m_hitChargeVector(std::move_if_noexcept(hitChargeVector)),
+    m_fit(std::move_if_noexcept(fit)),
+    m_range(range)
 {
 }
 

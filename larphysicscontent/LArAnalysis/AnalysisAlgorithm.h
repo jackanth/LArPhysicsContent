@@ -115,7 +115,7 @@ private:
      *  @param  trackFitMap the track fit map
      */
     void RecursivelyAppendParticleTypeMap(const ParticleFlowObject *const pPfo, LArAnalysisParticle::PfoTypeMap &pfoTypeMap,
-                                          const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
+        const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
 
     /**
      *  @brief  Estimate the particle type for a given PFO
@@ -126,8 +126,8 @@ private:
      *
      *  @return the estimated particle type
      */
-    LArAnalysisParticle::TYPE EstimateParticleType(const ParticleFlowObject *const pPfo,
-                                                   const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
+    LArAnalysisParticle::TYPE EstimateParticleType(
+        const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap) const;
 
     /**
      *  @brief  Estimate the energy of a PFO
@@ -143,9 +143,8 @@ private:
      *  @param  energySourcedFromCorrectedTrackCharge the amount of energy sourced from Birks-corrected track charge value to populate
      */
     void EstimateParticleEnergy(const ParticleFlowObject *const pPfo, const LArAnalysisParticle::PfoTypeMap &typeMap,
-                                const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, float &particleEnergy,
-                                float &energySourcedFromRange, float &energySourcedFromShowerCharge, float &energySourcedFromTrackCharge,
-                                float &energySourcedFromCorrectedTrackCharge) const;
+        const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, float &particleEnergy, float &energySourcedFromRange,
+        float &energySourcedFromShowerCharge, float &energySourcedFromTrackCharge, float &energySourcedFromCorrectedTrackCharge) const;
 
     /**
      *  @brief  Estimate the energy of a shower-like PFO
@@ -232,8 +231,8 @@ private:
      *
      *  @return the direction of the PFO at the vertex
      */
-    CartesianVector GetDirectionAtVertex(const ParticleFlowObject *const pPfo, const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap,
-                                         const Vertex *const pVertex, const bool isCosmicRay) const;
+    CartesianVector GetDirectionAtVertex(const ParticleFlowObject *const pPfo,
+        const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, const Vertex *const pVertex, const bool isCosmicRay) const;
 
     /**
      *  @brief  Get MC information for a PFO
@@ -265,14 +264,18 @@ private:
      *  @param  pPfo address of the PFO
      *  @param  numberOfParticles The number of downstream particles value to populate
      */
-    void CountNumberOfDownstreamParticles(const ParticleFlowObject *const pPfo, unsigned &numberOfParticles) const;
+    void CountNumberOfDownstreamParticles(const ParticleFlowObject *const pPfo,
+
+        unsigned &numberOfParticles) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline AnalysisAlgorithm::EnergyFromRangeData::EnergyFromRangeData(const float rangeMin, const float rangeMax, const float energy) noexcept
-    : m_rangeMin(rangeMin), m_rangeMax(rangeMax), m_energy(energy)
+inline AnalysisAlgorithm::EnergyFromRangeData::EnergyFromRangeData(const float rangeMin, const float rangeMax, const float energy) noexcept :
+    m_rangeMin(rangeMin),
+    m_rangeMax(rangeMax),
+    m_energy(energy)
 {
 }
 } // namespace lar_physics_content

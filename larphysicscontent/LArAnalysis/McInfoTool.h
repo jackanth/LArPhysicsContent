@@ -71,9 +71,8 @@ private:
      *  @param  muMax the maximum mu value to be adjusted
      *  @param  forceZeroContainment whether this face constraint tells us that the particle definitely has zero containment (to populate)
      */
-    void AdjustMusForContainmentFraction(const CartesianVector &planePoint, const CartesianVector &planeNormal,
-                                         const CartesianVector &vertexPosition, const CartesianVector &originalDisplacementVector,
-                                         float &muMin, float &muMax, bool &forceZeroContainment) const;
+    void AdjustMusForContainmentFraction(const CartesianVector &planePoint, const CartesianVector &planeNormal, const CartesianVector &vertexPosition,
+        const CartesianVector &originalDisplacementVector, float &muMin, float &muMax, bool &forceZeroContainment) const;
 
     /**
      *  @brief  Create a type tree for an MC particle
