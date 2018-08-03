@@ -20,10 +20,7 @@ using namespace pandora;
 
 namespace lar_physics_content
 {
-
-TrackHitEnergyTool::TrackHitEnergyTool() :
-
-    m_trackSlidingFitWindow(25U)
+TrackHitEnergyTool::TrackHitEnergyTool() : m_trackSlidingFitWindow(25U)
 {
 }
 
@@ -115,7 +112,7 @@ LArFittedTrackInfo::TrackHitValueVector TrackHitEnergyTool::AppendLArTrackHitEne
     for (const HitProjectionPair &projectionPair : orderedHitProjections)
     {
         const CaloHit *const pCaloHit = projectionPair.first;
-        const float coordinate = projectionPair.second;
+        const float coordinate        = projectionPair.second;
 
         const float threeDDistance = this->CaloHitToThreeDDistance(pCaloHit, trackFit);
         trackHitChargeVector.emplace_back(pCaloHit, coordinate, threeDDistance, pCaloHit->GetInputEnergy());
@@ -130,7 +127,7 @@ LArFittedTrackInfo::TrackHitValueVector TrackHitEnergyTool::AppendLArTrackHitEne
 float TrackHitEnergyTool::CaloHitToThreeDDistance(const CaloHit *const pCaloHit, const ThreeDSlidingFitResult &trackFit) const
 {
     const CartesianVector fitDirection = LArAnalysisParticleHelper::GetFittedDirectionAtPosition(trackFit, pCaloHit->GetPositionVector(), true);
-    const float wirePitch = LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W);
+    const float wirePitch              = LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W);
     return this->CellToThreeDDistance(pCaloHit->GetCellSize1(), wirePitch, fitDirection);
 }
 
@@ -160,7 +157,7 @@ float TrackHitEnergyTool::CellToThreeDDistance(const float hitWidth, const float
 
 std::pair<float, float> TrackHitEnergyTool::GetPolarAnglesFromDirection(const CartesianVector &direction) const
 {
-    const float polarAngle = std::acos(std::fabs(direction.GetY()));
+    const float polarAngle     = std::acos(std::fabs(direction.GetY()));
     const float azimuthalAngle = std::asin(std::fabs(direction.GetX() / std::sin(polarAngle)));
 
     return {polarAngle, azimuthalAngle};

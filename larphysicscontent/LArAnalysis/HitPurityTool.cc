@@ -39,9 +39,9 @@ bool HitPurityTool::Run(const Algorithm *const pAlgorithm, LArFittedTrackInfo::T
     std::sort(trackHitEnergyVector.begin(), trackHitEnergyVector.end(),
         [](const LArTrackHitValue &lhs, const LArTrackHitValue &rhs) { return lhs.Coordinate() < rhs.Coordinate(); });
 
-    const float lowerCoordinateBound = trackHitEnergyVector.front().Coordinate();
-    const float upperCoordinateBound = trackHitEnergyVector.back().Coordinate();
-    const float range = upperCoordinateBound - lowerCoordinateBound;
+    const float lowerCoordinateBound   = trackHitEnergyVector.front().Coordinate();
+    const float upperCoordinateBound   = trackHitEnergyVector.back().Coordinate();
+    const float range                  = upperCoordinateBound - lowerCoordinateBound;
     const float minProtectedCoordinate = lowerCoordinateBound + range * 0.05;
     const float maxProtectedCoordinate = upperCoordinateBound - range * 0.05;
 
@@ -51,7 +51,7 @@ bool HitPurityTool::Run(const Algorithm *const pAlgorithm, LArFittedTrackInfo::T
 
     while (somethingChanged)
     {
-        somethingChanged = false;
+        somethingChanged                = false;
         const FloatVector valueAverages = this->GetValueAverages(trackHitEnergyVector, nHits);
 
         float scaleFactor(0.f), mean(0.f), sigma(0.f);
@@ -132,7 +132,7 @@ bool HitPurityTool::GetStatistics(const LArFittedTrackInfo::TrackHitValueVector 
 
     scaleFactor = coordinateRange / caloValueRange;
 
-    mean = this->CalculateMean(trackHitEnergyVector, nHits, scaleFactor);
+    mean  = this->CalculateMean(trackHitEnergyVector, nHits, scaleFactor);
     sigma = this->CalculateStandardDeviation(trackHitEnergyVector, nHits, scaleFactor, mean);
 
     return true;
@@ -149,7 +149,7 @@ void HitPurityTool::CalculateRanges(const LArFittedTrackInfo::TrackHitValueVecto
     for (std::size_t i = 0UL; i < nHits; ++i)
     {
         const float coordinate = trackHitEnergyVector[i].Coordinate();
-        const float caloValue = trackHitEnergyVector[i].CaloValue();
+        const float caloValue  = trackHitEnergyVector[i].CaloValue();
 
         if (coordinate < minCoordinate)
             minCoordinate = coordinate;
@@ -165,7 +165,7 @@ void HitPurityTool::CalculateRanges(const LArFittedTrackInfo::TrackHitValueVecto
     }
 
     coordinateRange = maxCoordinate - minCoordinate;
-    caloValueRange = maxCaloValue - minCaloValue;
+    caloValueRange  = maxCaloValue - minCaloValue;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -247,9 +247,9 @@ FloatVector HitPurityTool::GetSortedDistanceVector(const LArFittedTrackInfo::Tra
 
     for (std::size_t j = 0UL; j < nHits; ++j)
     {
-        const float deltaCoordinate = trackHitEnergyVector[j].Coordinate() - currentTrackHitValue.Coordinate();
+        const float deltaCoordinate      = trackHitEnergyVector[j].Coordinate() - currentTrackHitValue.Coordinate();
         const float scaledDeltaCaloValue = scaleFactor * (trackHitEnergyVector[j].CaloValue() - currentTrackHitValue.CaloValue());
-        distanceVector[j] = std::sqrt(deltaCoordinate * deltaCoordinate + scaledDeltaCaloValue * scaledDeltaCaloValue);
+        distanceVector[j]                = std::sqrt(deltaCoordinate * deltaCoordinate + scaledDeltaCaloValue * scaledDeltaCaloValue);
     }
 
     std::sort(distanceVector.begin(), distanceVector.end(), std::less<float>());
@@ -265,7 +265,7 @@ void HitPurityTool::MakePlots(const LArFittedTrackInfo::TrackHitValueVector &tra
 {
     static int uniquePlotIdentifier(0);
 
-    TNtuple *const pNtuple = new TNtuple("TrackHitsUncorrected", "TrackHitsUncorrected", "Coordinate:CaloValue");
+    TNtuple *const pNtuple        = new TNtuple("TrackHitsUncorrected", "TrackHitsUncorrected", "Coordinate:CaloValue");
     TNtuple *const pNtupleChanged = new TNtuple("TrackHitsCorrected", "TrackHitsCorrected", "Coordinate:CaloValue");
 
     float minCoordinate = std::numeric_limits<float>::max();
@@ -311,21 +311,21 @@ void HitPurityTool::MakePlots(const LArFittedTrackInfo::TrackHitValueVector &tra
     TCanvas *pCanvas = nullptr;
 
     {
-        auto plotSettings = g_defaultPlotSettings2D;
-        plotSettings.plotType = SCATTER;
+        auto plotSettings       = g_defaultPlotSettings2D;
+        plotSettings.plotType   = SCATTER;
         plotSettings.pointColor = kRed;
-        plotSettings.xMin = minCoordinate;
-        plotSettings.xMax = maxCoordinate;
-        plotSettings.yMin = 0.f;
-        plotSettings.yMax = maxCaloValue;
+        plotSettings.xMin       = minCoordinate;
+        plotSettings.xMax       = maxCoordinate;
+        plotSettings.yMin       = 0.f;
+        plotSettings.yMax       = maxCaloValue;
         strcpy(plotSettings.title, "Selection of hits to Birks-correct");
         strcpy(plotSettings.xTitle, "Projected 3D track coordinate (cm)");
         strcpy(plotSettings.yTitle, "#frac{dQ}{dx} (ADC/cm)");
 
         pCanvas = PlotNtuple2D(pNtuple, "Coordinate", "CaloValue", std::to_string(uniquePlotIdentifier++).c_str(), plotSettings);
 
-        plotSettings.plotType = SAME;
-        plotSettings.newCanvas = false;
+        plotSettings.plotType   = SAME;
+        plotSettings.newCanvas  = false;
         plotSettings.pointColor = kBlue;
 
         PlotNtuple2D(pNtupleChanged, "Coordinate", "CaloValue", std::to_string(uniquePlotIdentifier++).c_str(), plotSettings);

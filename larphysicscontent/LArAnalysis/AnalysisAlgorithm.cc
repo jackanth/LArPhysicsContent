@@ -90,7 +90,7 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     }
 
     const Vertex *const pVertex = pInputPfo->GetVertexList().front();
-    bool gotMcInformation = false;
+    bool gotMcInformation       = false;
     LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo;
 
     if (m_addMcInformation)
@@ -100,16 +100,16 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     LArAnalysisParticleParameters analysisParticleParameters;
 
     analysisParticleParameters.m_particleId = pInputPfo->GetParticleId();
-    analysisParticleParameters.m_charge = pInputPfo->GetCharge();
-    analysisParticleParameters.m_mass = pInputPfo->GetMass();
-    analysisParticleParameters.m_energy = pInputPfo->GetEnergy();
-    analysisParticleParameters.m_momentum = pInputPfo->GetMomentum();
+    analysisParticleParameters.m_charge     = pInputPfo->GetCharge();
+    analysisParticleParameters.m_mass       = pInputPfo->GetMass();
+    analysisParticleParameters.m_energy     = pInputPfo->GetEnergy();
+    analysisParticleParameters.m_momentum   = pInputPfo->GetMomentum();
 
     analysisParticleParameters.m_isVertexFiducial =
         LArAnalysisParticleHelper::IsPointFiducial(pVertex->GetPosition(), m_minCoordinates, m_maxCoordinates);
 
     analysisParticleParameters.m_vertexPosition = pVertex->GetPosition();
-    analysisParticleParameters.m_isShower = LArPfoHelper::IsShower(pInputPfo);
+    analysisParticleParameters.m_isShower       = LArPfoHelper::IsShower(pInputPfo);
 
     unsigned numberOfDownstreamParticles(0U);
     this->CountNumberOfDownstreamParticles(pInputPfo, numberOfDownstreamParticles);
@@ -122,10 +122,10 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
 
     if (gotMcInformation)
     {
-        analysisParticleParameters.m_mcEnergy = pfoMcInfo.m_mcEnergy;
-        analysisParticleParameters.m_mcKineticEnergy = pfoMcInfo.m_mcKineticEnergy;
-        analysisParticleParameters.m_mcMass = pfoMcInfo.m_mcMass;
-        analysisParticleParameters.m_mcMomentum = pfoMcInfo.m_mcMomentum;
+        analysisParticleParameters.m_mcEnergy         = pfoMcInfo.m_mcEnergy;
+        analysisParticleParameters.m_mcKineticEnergy  = pfoMcInfo.m_mcKineticEnergy;
+        analysisParticleParameters.m_mcMass           = pfoMcInfo.m_mcMass;
+        analysisParticleParameters.m_mcMomentum       = pfoMcInfo.m_mcMomentum;
         analysisParticleParameters.m_mcVertexPosition = pfoMcInfo.m_mcVertexPosition;
 
         if (pfoMcInfo.m_mcMomentum.GetMagnitude() > std::numeric_limits<float>::epsilon())
@@ -141,11 +141,11 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
             LArAnalysisParticleHelper::IsPointFiducial(pfoMcInfo.m_mcVertexPosition, m_minCoordinates, m_maxCoordinates);
 
         analysisParticleParameters.m_mcContainmentFraction = pfoMcInfo.m_mcContainmentFraction;
-        analysisParticleParameters.m_mcIsShower = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::SHOWER);
-        analysisParticleParameters.m_mcPdgCode = pfoMcInfo.m_mcPdgCode;
-        analysisParticleParameters.m_mcType = pfoMcInfo.m_mcType;
-        analysisParticleParameters.m_mcTypeTree = pfoMcInfo.m_mcTypeTree;
-        analysisParticleParameters.m_pMcMainMCParticle = pfoMcInfo.m_pMCParticle;
+        analysisParticleParameters.m_mcIsShower            = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::SHOWER);
+        analysisParticleParameters.m_mcPdgCode             = pfoMcInfo.m_mcPdgCode;
+        analysisParticleParameters.m_mcType                = pfoMcInfo.m_mcType;
+        analysisParticleParameters.m_mcTypeTree            = pfoMcInfo.m_mcTypeTree;
+        analysisParticleParameters.m_pMcMainMCParticle     = pfoMcInfo.m_pMCParticle;
     }
 
     // Neutrino-specific calculations.
@@ -182,27 +182,27 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
                 std::cout << "AnalysisAlgorithm: primary daughter of neutrino could not be cast an analysis particle" << std::endl;
         }
 
-        analysisParticleParameters.m_kineticEnergy = analysisEnergy;
-        analysisParticleParameters.m_analysisMomentum = analysisMomentum;
-        analysisParticleParameters.m_directionCosines = analysisMomentum.GetUnitVector();
-        analysisParticleParameters.m_numberOf3dHits = numberOf3dHits;
+        analysisParticleParameters.m_kineticEnergy               = analysisEnergy;
+        analysisParticleParameters.m_analysisMomentum            = analysisMomentum;
+        analysisParticleParameters.m_directionCosines            = analysisMomentum.GetUnitVector();
+        analysisParticleParameters.m_numberOf3dHits              = numberOf3dHits;
         analysisParticleParameters.m_numberOfCollectionPlaneHits = numberOfCollectionPlaneHits;
         analysisParticleParameters.m_typeTree = LArAnalysisParticle::TypeTree(LArAnalysisParticle::TYPE::NEUTRINO, primaryTypeTrees);
 
         if (analysisEnergy > std::numeric_limits<float>::epsilon())
         {
-            analysisParticleParameters.m_kineticEnergyFromRangeFraction = energySourcedFromRange / analysisEnergy;
+            analysisParticleParameters.m_kineticEnergyFromRangeFraction                = energySourcedFromRange / analysisEnergy;
             analysisParticleParameters.m_kineticEnergyFromCorrectedTrackChargeFraction = energySourcedFromCorrectedTrackCharge / analysisEnergy;
             analysisParticleParameters.m_kineticEnergyFromUncorrectedTrackChargeFraction = energySourcedFromTrackCharge / analysisEnergy;
-            analysisParticleParameters.m_kineticEnergyFromShowerChargeFraction = energySourcedFromShowerCharge / analysisEnergy;
+            analysisParticleParameters.m_kineticEnergyFromShowerChargeFraction           = energySourcedFromShowerCharge / analysisEnergy;
         }
 
         else
         {
-            analysisParticleParameters.m_kineticEnergyFromRangeFraction = 0.f;
-            analysisParticleParameters.m_kineticEnergyFromCorrectedTrackChargeFraction = 0.f;
+            analysisParticleParameters.m_kineticEnergyFromRangeFraction                  = 0.f;
+            analysisParticleParameters.m_kineticEnergyFromCorrectedTrackChargeFraction   = 0.f;
             analysisParticleParameters.m_kineticEnergyFromUncorrectedTrackChargeFraction = 0.f;
-            analysisParticleParameters.m_kineticEnergyFromShowerChargeFraction = 0.f;
+            analysisParticleParameters.m_kineticEnergyFromShowerChargeFraction           = 0.f;
         }
     }
 
@@ -222,8 +222,13 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         LArAnalysisParticle::PfoTypeMap particleTypeMap;
 
         if (isCosmicRay)
-            particleTypeMap.emplace(pInputPfo, LArAnalysisParticle::TYPE::COSMIC_RAY);
+        {
+            if (LArPfoHelper::IsShower(pInputPfo))
+                particleTypeMap.emplace(pInputPfo, LArAnalysisParticle::TYPE::COSMIC_RAY_SHOWER);
 
+            else
+                particleTypeMap.emplace(pInputPfo, LArAnalysisParticle::TYPE::COSMIC_RAY_TRACK);
+        }
         else if (isPrimaryNeutrinoDaughter)
             particleTypeMap.emplace(pInputPfo, this->EstimateParticleType(pInputPfo, fittedTrackInfoMap));
 
@@ -240,32 +245,32 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         const CartesianVector initialDirection = this->GetDirectionAtVertex(pInputPfo, fittedTrackInfoMap, pVertex, isCosmicRay);
 
         const int num3DHits = LArAnalysisParticleHelper::GetHitsOfType(pInputPfo, TPC_3D, true).size();
-        const int numWHits = LArAnalysisParticleHelper::GetHitsOfType(pInputPfo, TPC_VIEW_W, true).size();
+        const int numWHits  = LArAnalysisParticleHelper::GetHitsOfType(pInputPfo, TPC_VIEW_W, true).size();
 
         const LArAnalysisParticle::TYPE particleType = particleTypeMap.at(pInputPfo);
 
-        analysisParticleParameters.m_kineticEnergy = particleEnergy;
-        analysisParticleParameters.m_directionCosines = initialDirection;
-        analysisParticleParameters.m_analysisMomentum = initialDirection * particleEnergy;
-        analysisParticleParameters.m_numberOf3dHits = num3DHits;
+        analysisParticleParameters.m_kineticEnergy               = particleEnergy;
+        analysisParticleParameters.m_directionCosines            = initialDirection;
+        analysisParticleParameters.m_analysisMomentum            = initialDirection * particleEnergy;
+        analysisParticleParameters.m_numberOf3dHits              = num3DHits;
         analysisParticleParameters.m_numberOfCollectionPlaneHits = numWHits;
-        analysisParticleParameters.m_type = particleType;
-        analysisParticleParameters.m_typeTree = typeTree;
+        analysisParticleParameters.m_type                        = particleType;
+        analysisParticleParameters.m_typeTree                    = typeTree;
 
         if (particleEnergy > std::numeric_limits<float>::epsilon())
         {
-            analysisParticleParameters.m_kineticEnergyFromRangeFraction = energySourcedFromRange / particleEnergy;
+            analysisParticleParameters.m_kineticEnergyFromRangeFraction                = energySourcedFromRange / particleEnergy;
             analysisParticleParameters.m_kineticEnergyFromCorrectedTrackChargeFraction = energySourcedFromCorrectedTrackCharge / particleEnergy;
             analysisParticleParameters.m_kineticEnergyFromUncorrectedTrackChargeFraction = energySourcedFromTrackCharge / particleEnergy;
-            analysisParticleParameters.m_kineticEnergyFromShowerChargeFraction = energySourcedFromShowerCharge / particleEnergy;
+            analysisParticleParameters.m_kineticEnergyFromShowerChargeFraction           = energySourcedFromShowerCharge / particleEnergy;
         }
 
         else
         {
-            analysisParticleParameters.m_kineticEnergyFromRangeFraction = 0.f;
-            analysisParticleParameters.m_kineticEnergyFromCorrectedTrackChargeFraction = 0.f;
+            analysisParticleParameters.m_kineticEnergyFromRangeFraction                  = 0.f;
+            analysisParticleParameters.m_kineticEnergyFromCorrectedTrackChargeFraction   = 0.f;
             analysisParticleParameters.m_kineticEnergyFromUncorrectedTrackChargeFraction = 0.f;
-            analysisParticleParameters.m_kineticEnergyFromShowerChargeFraction = 0.f;
+            analysisParticleParameters.m_kineticEnergyFromShowerChargeFraction           = 0.f;
         }
     }
 
@@ -294,9 +299,9 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
     const Vertex *const pInputVertex = LArPfoHelper::GetVertex(pInputPfo);
 
     PandoraContentApi::Vertex::Parameters vtxParameters;
-    vtxParameters.m_position = pInputVertex->GetPosition();
+    vtxParameters.m_position    = pInputVertex->GetPosition();
     vtxParameters.m_vertexLabel = pInputVertex->GetVertexLabel();
-    vtxParameters.m_vertexType = pInputVertex->GetVertexType();
+    vtxParameters.m_vertexType  = pInputVertex->GetVertexType();
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, vtxParameters, pOutputVertex));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pOutputPfo, pOutputVertex));
@@ -328,11 +333,11 @@ LArAnalysisParticle::TYPE AnalysisAlgorithm::EstimateParticleType(
         return LArAnalysisParticle::TYPE::TRACK;
 
     const float particleEnergy = this->EstimateTrackEnergyFromCharge(trackHitFindIter->second.HitChargeVector());
-    const float particleRange = trackHitFindIter->second.Range();
+    const float particleRange  = trackHitFindIter->second.Range();
 
     if (particleEnergy > 0.f && particleRange > 0.f)
     {
-        m_tmvaTrackLength = particleRange;
+        m_tmvaTrackLength         = particleRange;
         m_tmvaAvgEnergyDeposition = particleEnergy / particleRange;
 
         const float bdtResponse = m_pTmvaReader->EvaluateMVA("BDT");
@@ -356,7 +361,7 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
     const LArAnalysisParticle::TYPE particleType = typeMap.at(pPfo);
 
     const auto fitFindIter = fittedTrackInfoMap.find(pPfo);
-    const auto fitFound = (fitFindIter != fittedTrackInfoMap.end());
+    const auto fitFound    = (fitFindIter != fittedTrackInfoMap.end());
 
     switch (particleType)
     {
@@ -395,7 +400,8 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
         {
             if (fitFound)
             {
-                const float energyFromCharge = this->EstimateTrackEnergyFromCharge(fitFindIter->second.HitChargeVector()); // incl recombination correction
+                const float energyFromCharge =
+                    this->EstimateTrackEnergyFromCharge(fitFindIter->second.HitChargeVector()); // incl recombination correction
                 particleEnergy += energyFromCharge;
                 energySourcedFromCorrectedTrackCharge += energyFromCharge;
             }
@@ -458,9 +464,9 @@ float AnalysisAlgorithm::CaloHitToScaledEnergy(const CaloHit *const pCaloHit) co
 
 float AnalysisAlgorithm::RecombinationCorrectEnergy(const float hitCharge, const float threeDDistance) const
 {
-    const float dEdx_uncorrected = hitCharge / (m_birksFitAlpha * threeDDistance);             // MeV / cm
-    const float dEdx_corrected = dEdx_uncorrected / (1.f - dEdx_uncorrected / m_birksFitBeta); // MeV / cm
-    return dEdx_corrected * threeDDistance / 1000.f;                                           // GeV
+    const float dEdx_uncorrected = hitCharge / (m_birksFitAlpha * threeDDistance);               // MeV / cm
+    const float dEdx_corrected   = dEdx_uncorrected / (1.f - dEdx_uncorrected / m_birksFitBeta); // MeV / cm
+    return dEdx_corrected * threeDDistance / 1000.f;                                             // GeV
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -480,7 +486,7 @@ float AnalysisAlgorithm::EstimateTrackEnergyFromCharge(const LArFittedTrackInfo:
 float AnalysisAlgorithm::EstimateTrackEnergyFromRange(const LArFittedTrackInfo &fittedTrackInfo, const LArAnalysisParticle::TYPE particleType) const
 {
     const float trackRange = fittedTrackInfo.Range();
-    float trackEnergy = 0.f;
+    float trackEnergy      = 0.f;
 
     switch (particleType)
     {
@@ -552,7 +558,7 @@ CartesianVector AnalysisAlgorithm::GetDirectionAtVertex(const ParticleFlowObject
         return CartesianVector{0.f, 0.f, 0.f};
     }
 
-    CartesianVector fitDirection = eigenVectors.at(0);
+    CartesianVector fitDirection           = eigenVectors.at(0);
     const CartesianVector vertexToCentroid = centroid - pVertex->GetPosition();
 
     // We want the fit direction to be mostly aligned with the vertex-to-centroid direction.
@@ -671,9 +677,9 @@ StatusCode AnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     pBirksNtuple->GetEntry(0);
 
     m_birksFitAlpha = alpha;
-    m_birksFitBeta = beta;
-    m_birksFitPole = dQdxPole;
-    m_birksFitPole = dQdxPole;
+    m_birksFitBeta  = beta;
+    m_birksFitPole  = dQdxPole;
+    m_birksFitPole  = dQdxPole;
 
     //--------------------------------------------------------------------------------------------------------------------------------------
 

@@ -235,7 +235,7 @@ const MCParticle *LArAnalysisParticleHelper::GetMainMCParticle(const ParticleFlo
         if (currentWeight > bestWeight)
         {
             pBestMCParticle = pCurrentMCParticle;
-            bestWeight = currentWeight;
+            bestWeight      = currentWeight;
         }
     }
 
@@ -256,7 +256,7 @@ bool LArAnalysisParticleHelper::IsNeutrino(const ParticleFlowObject *const pPfo)
 
 bool LArAnalysisParticleHelper::IsCosmicRay(const ParticleFlowObject *const pPfo)
 {
-    return (pPfo->GetParentPfoList().empty() && !LArPfoHelper::IsNeutrino(pPfo) && LArPfoHelper::IsTrack(pPfo));
+    return (pPfo->GetParentPfoList().empty() && !LArPfoHelper::IsNeutrino(pPfo));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -271,17 +271,17 @@ bool LArAnalysisParticleHelper::IsPrimaryNeutrinoDaughter(const ParticleFlowObje
 std::string LArAnalysisParticleHelper::TypeTreeAsStringImpl(const LArAnalysisParticle::TypeTree &typeTree, const bool printTrailingDelimiter)
 {
     const std::string delimiter = " - ";
-    std::string typeTreeString = LArAnalysisParticle::TypeAsString(typeTree.Type());
+    std::string typeTreeString  = LArAnalysisParticle::TypeAsString(typeTree.Type());
 
     if (!typeTree.Daughters().empty())
     {
         typeTreeString += delimiter;
         typeTreeString += "[ ";
 
-        for (auto iter = typeTree.Daughters().begin(); iter != typeTree.Daughters().end(); ++iter)
+        for (auto iter = typeTree.Daughters().begin(); iter != typeTree.Daughters()IsCosmicRay
         {
             const bool isLast = (std::next(iter, 1) == typeTree.Daughters().end());
-            typeTreeString += TypeTreeAsStringImpl(*iter, !isLast);
+            IsCosmicRay typeTreeString += TypeTreeAsStringImpl(*iter, !isLast);
         }
 
         typeTreeString += " ]";

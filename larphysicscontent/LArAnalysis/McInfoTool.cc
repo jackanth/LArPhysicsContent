@@ -50,12 +50,12 @@ LArAnalysisParticleHelper::PfoMcInfo McInfoTool::GetMcInformation(const MCPartic
     pfoMcInfo.m_pMCParticle = pMCParticle;
     this->CreateMcTypeTree(pMCParticle, pfoMcInfo.m_mcTypeTree);
 
-    pfoMcInfo.m_mcEnergy = pMCParticle->GetEnergy();
-    pfoMcInfo.m_mcKineticEnergy = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
-    pfoMcInfo.m_mcMass = PdgTable::GetParticleMass(pMCParticle->GetParticleId());
-    pfoMcInfo.m_mcType = pfoMcInfo.m_mcTypeTree.Type();
+    pfoMcInfo.m_mcEnergy         = pMCParticle->GetEnergy();
+    pfoMcInfo.m_mcKineticEnergy  = pMCParticle->GetEnergy() - PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+    pfoMcInfo.m_mcMass           = PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+    pfoMcInfo.m_mcType           = pfoMcInfo.m_mcTypeTree.Type();
     pfoMcInfo.m_mcVertexPosition = pMCParticle->GetVertex();
-    pfoMcInfo.m_mcMomentum = pMCParticle->GetMomentum();
+    pfoMcInfo.m_mcMomentum       = pMCParticle->GetMomentum();
 
     if (pfoMcInfo.m_mcMomentum.GetMagnitude() < std::numeric_limits<float>::epsilon())
         std::cout << "LArAnalysisParticleHelper: could not get direction from MC momentum as it was too small" << std::endl;
@@ -73,11 +73,11 @@ LArAnalysisParticleHelper::PfoMcInfo McInfoTool::GetMcInformation(const MCPartic
     else
         pfoMcInfo.m_mcContainmentFraction = 0.f;
 
-    pfoMcInfo.m_mcIsContained = (pfoMcInfo.m_mcContainmentFraction >= m_mcContainmentFractionLowerBound);
-    pfoMcInfo.m_mcIsShower = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::SHOWER);
-    pfoMcInfo.m_mcIsProton = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PROTON);
+    pfoMcInfo.m_mcIsContained  = (pfoMcInfo.m_mcContainmentFraction >= m_mcContainmentFractionLowerBound);
+    pfoMcInfo.m_mcIsShower     = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::SHOWER);
+    pfoMcInfo.m_mcIsProton     = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PROTON);
     pfoMcInfo.m_mcIsPionOrMuon = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PION_MUON);
-    pfoMcInfo.m_mcIsCosmicRay = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::COSMIC_RAY);
+    pfoMcInfo.m_mcIsCosmicRay  = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::COSMIC_RAY);
 
     return pfoMcInfo;
 }
@@ -167,7 +167,7 @@ void McInfoTool::AdjustMusForContainmentFraction(const CartesianVector &planePoi
         return;
 
     const float muIntercept = (planePoint - vertexPosition).GetDotProduct(planeNormal) / projectedDisplacement;
-    const bool isAligned = (projectedDisplacement > 0.f);
+    const bool isAligned    = (projectedDisplacement > 0.f);
 
     if (isAligned)
     {
