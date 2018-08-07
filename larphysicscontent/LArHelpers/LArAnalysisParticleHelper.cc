@@ -278,10 +278,10 @@ std::string LArAnalysisParticleHelper::TypeTreeAsStringImpl(const LArAnalysisPar
         typeTreeString += delimiter;
         typeTreeString += "[ ";
 
-        for (auto iter = typeTree.Daughters().begin(); iter != typeTree.Daughters()IsCosmicRay
+        for (auto iter = typeTree.Daughters().begin(); iter != typeTree.Daughters().end(); ++iter)
         {
             const bool isLast = (std::next(iter, 1) == typeTree.Daughters().end());
-            IsCosmicRay typeTreeString += TypeTreeAsStringImpl(*iter, !isLast);
+            typeTreeString += TypeTreeAsStringImpl(*iter, !isLast);
         }
 
         typeTreeString += " ]";

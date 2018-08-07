@@ -63,8 +63,8 @@ AnalysisDataAlgorithm::~AnalysisDataAlgorithm()
         delete m_pRootDataFile;
     }
 
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_pidDataProtonsTTreeName.c_str(), m_rootDataFileName.c_str(), "UPDATE"));
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_pidDataMuonsPionsTTreeName.c_str(), m_rootDataFileName.c_str(), "UPDATE"));
+    // PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_pidDataProtonsTTreeName.c_str(), m_rootDataFileName.c_str(), "UPDATE"));
+    // PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_pidDataMuonsPionsTTreeName.c_str(), m_rootDataFileName.c_str(), "UPDATE"));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -129,8 +129,7 @@ StatusCode AnalysisDataAlgorithm::Run()
         LArAnalysisParticleHelper::PfoMcInfo pfoMcInfo;
         m_pMcInfoTool->Run(this, pMCParticle, pfoMcInfo);
 
-        //        if (mcContainmentFraction < 0.95f || mcHitPurity < 0.95f || mcHitCompleteness < 0.95f || mcCollectionPlaneHitPurity <
-        //        0.95f ||
+        //        if (mcContainmentFraction < 0.95f || mcHitPurity < 0.95f || mcHitCompleteness < 0.95f || mcCollectionPlaneHitPurity < 0.95f ||
         //            mcCollectionPlaneHitCompleteness < 0.95f)
         //        {
         //            std::cout << "Skipping..." << std::endl;
@@ -142,8 +141,8 @@ StatusCode AnalysisDataAlgorithm::Run()
         float excessCaloValue(0.f);
 
         m_pTrackHitEnergyTool->Run(this, pPfo, fittedTrackInfoMap, excessCaloValue,
-            [&](LArFittedTrackInfo::TrackHitValueVector &trackHitValueVector, float &excessCaloValue) -> bool {
-                return m_pHitPurityTool->Run(this, trackHitValueVector, excessCaloValue);
+            [&](LArFittedTrackInfo::TrackHitValueVector &trackHitValueVector, float &excess) -> bool {
+                return m_pHitPurityTool->Run(this, trackHitValueVector, excess);
             });
 
         // For each PFO, get its main MC particle and store it in a map.
@@ -259,13 +258,11 @@ bool AnalysisDataAlgorithm::GetBirksFitData(const ParticleFlowObject *const pPfo
     }
 
     return true;
-    300
 }
-300 300
-    //--------------------------------------------------------300----------------------------------------------------------------------------------
 
-    float
-    AnalysisDataAlgorithm::AddUpShowerAdcs(const ParticleFlowObject *const pPfo) const
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float AnalysisDataAlgorithm::AddUpShowerAdcs(const ParticleFlowObject *const pPfo) const
 {
     float showerAdcs = 0.f;
 
@@ -295,7 +292,7 @@ void AnalysisDataAlgorithm::RecursivelyProduceEnergyFromRangeData(const Particle
     const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap,
     TNtuple *const pNtuple, const PdgCodeSet &pdgCodeSet) const
 {
-    const auto trackFitFindIter = fittedTrackInfoMap.find(pPfo);
+    const auto trackFitFindIter   = fittedTrackInfoMap.find(pPfo);
     const auto mcParticleFindIter = mcParticleMap.find(pPfo);
 
     if ((trackFitFindIter != fittedTrackInfoMap.end()) && (mcParticleFindIter != mcParticleMap.end()))
@@ -303,15 +300,18 @@ void AnalysisDataAlgorithm::RecursivelyProduceEnergyFromRangeData(const Particle
         const int pdgCode = mcParticleFindIter->second->GetParticleId();
 
         if (pdgCodeSet.find(pdgCode) != pdgCodeSet.end())
-            300 300nge();
-300ParticleFindIter->second);
-300 if (range > 0.f && trueEnergy > 0.f) pNtuple->Fill(range, trueEnergy);
-    }
-}
+        {
+            const float range      = trackFitFindIter->second.Range();
+            const float trueEnergy = this->GetTrueEnergy(mcParticleFindIter->second);
 
-for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
-    this->RecursivelyProduceEnergyFromRangeData(pDaughterPfo, fittedTrackInfoMap, mcParticleMap, pNtuple, pdgCodeSet);
-} // namespace lar_physics_content
+            if (range > 0.f && trueEnergy > 0.f)
+                pNtuple->Fill(range, trueEnergy);
+        }
+    }
+
+    for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
+        this->RecursivelyProduceEnergyFromRangeData(pDaughterPfo, fittedTrackInfoMap, mcParticleMap, pNtuple, pdgCodeSet);
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -326,7 +326,7 @@ void AnalysisDataAlgorithm::RecursivelyProducePidData(const ParticleFlowObject *
     const LArAnalysisParticleHelper::FittedTrackInfoMap &fittedTrackInfoMap, const AnalysisDataAlgorithm::MCParticleMap &mcParticleMap,
     const bool isCosmicRay) const
 {
-    const auto trackFitFindIter = fittedTrackInfoMap.find(pPfo);
+    const auto trackFitFindIter   = fittedTrackInfoMap.find(pPfo);
     const auto mcParticleFindIter = mcParticleMap.find(pPfo);
 
     if ((trackFitFindIter != fittedTrackInfoMap.end()) && (mcParticleFindIter != mcParticleMap.end()))
@@ -335,8 +335,8 @@ void AnalysisDataAlgorithm::RecursivelyProducePidData(const ParticleFlowObject *
         {
             case PROTON:
             {
-                float range = trackFitFindIter->second.Range();
-                float trueEnergy = this->GetTrueEnergy(mcParticleFindIter->second);
+                float range        = trackFitFindIter->second.Range();
+                float trueEnergy   = this->GetTrueEnergy(mcParticleFindIter->second);
                 int isCosmicRayInt = static_cast<int>(isCosmicRay);
 
                 if (range > 0.f && trueEnergy > 0.f)
@@ -354,8 +354,8 @@ void AnalysisDataAlgorithm::RecursivelyProducePidData(const ParticleFlowObject *
             case PI_PLUS:
             case MU_MINUS:
             {
-                float range = trackFitFindIter->second.Range();
-                float trueEnergy = this->GetTrueEnergy(mcParticleFindIter->second);
+                float range        = trackFitFindIter->second.Range();
+                float trueEnergy   = this->GetTrueEnergy(mcParticleFindIter->second);
                 int isCosmicRayInt = static_cast<int>(isCosmicRay);
 
                 if (range > 0.f && trueEnergy > 0.f)

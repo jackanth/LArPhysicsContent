@@ -77,7 +77,8 @@ LArAnalysisParticleHelper::PfoMcInfo McInfoTool::GetMcInformation(const MCPartic
     pfoMcInfo.m_mcIsShower     = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::SHOWER);
     pfoMcInfo.m_mcIsProton     = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PROTON);
     pfoMcInfo.m_mcIsPionOrMuon = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::PION_MUON);
-    pfoMcInfo.m_mcIsCosmicRay  = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::COSMIC_RAY);
+    pfoMcInfo.m_mcIsCosmicRay  = (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::COSMIC_RAY_SHOWER) ||
+                                (pfoMcInfo.m_mcType == LArAnalysisParticle::TYPE::COSMIC_RAY_TRACK);
 
     return pfoMcInfo;
 }
@@ -225,7 +226,19 @@ LArAnalysisParticle::TYPE McInfoTool::GetMcParticleType(const MCParticle *const 
         return LArAnalysisParticle::TYPE::NEUTRINO;
 
     if (LArMCParticleHelper::IsCosmicRay(pMCParticle))
-        return LArAnalysisParticle::TYPE::COSMIC_RAY;
+    {
+        switch (pMCParticle->GetParticleId())
+        {
+            case PHOTON:
+            case E_MINUS:
+            case E_PLUS:
+                return LArAnalysisParticle::TYPE::COSMIC_RAY_SHOWER;
+            default:
+                break;
+        }
+
+        return LArAnalysisParticle::TYPE::COSMIC_RAY_TRACK;
+    }
 
     switch (pMCParticle->GetParticleId())
     {

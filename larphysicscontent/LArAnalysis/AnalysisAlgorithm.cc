@@ -213,8 +213,8 @@ void AnalysisAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, con
         float excessCaloValue(0.f);
 
         m_pTrackHitEnergyTool->Run(this, pInputPfo, fittedTrackInfoMap, excessCaloValue,
-            [&](LArFittedTrackInfo::TrackHitValueVector &trackHitValueVector, float &excessCaloValue) -> bool {
-                return m_pHitPurityTool->Run(this, trackHitValueVector, excessCaloValue);
+            [&](LArFittedTrackInfo::TrackHitValueVector &trackHitValueVector, float &excess) -> bool {
+                return m_pHitPurityTool->Run(this, trackHitValueVector, excess);
             });
         ;
 
@@ -367,6 +367,7 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
     {
         // For showers, we assume everything downstream of a showerlike PFO is part of the shower.
         case LArAnalysisParticle::TYPE::SHOWER:
+        case LArAnalysisParticle::TYPE::COSMIC_RAY_SHOWER:
         {
             const float showerEnergy = this->EstimateShowerEnergy(pPfo);
             particleEnergy += showerEnergy;
@@ -374,7 +375,7 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
             return;
         }
 
-        case LArAnalysisParticle::TYPE::COSMIC_RAY:
+        case LArAnalysisParticle::TYPE::COSMIC_RAY_TRACK:
         case LArAnalysisParticle::TYPE::PION_MUON:
         case LArAnalysisParticle::TYPE::PROTON:
         {
@@ -400,8 +401,7 @@ void AnalysisAlgorithm::EstimateParticleEnergy(const ParticleFlowObject *const p
         {
             if (fitFound)
             {
-                const float energyFromCharge =
-                    this->EstimateTrackEnergyFromCharge(fitFindIter->second.HitChargeVector()); // incl recombination correction
+                const float energyFromCharge = this->EstimateTrackEnergyFromCharge(fitFindIter->second.HitChargeVector()); // incl recombination correction
                 particleEnergy += energyFromCharge;
                 energySourcedFromCorrectedTrackCharge += energyFromCharge;
             }
@@ -490,7 +490,7 @@ float AnalysisAlgorithm::EstimateTrackEnergyFromRange(const LArFittedTrackInfo &
 
     switch (particleType)
     {
-        case LArAnalysisParticle::TYPE::COSMIC_RAY:
+        case LArAnalysisParticle::TYPE::COSMIC_RAY_TRACK:
         case LArAnalysisParticle::TYPE::PION_MUON:
         case LArAnalysisParticle::TYPE::PROTON:
         {

@@ -11,7 +11,7 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/Pandora.h"
 
-#include "larphysicscontent/LArPhysicsContent─.h"
+#include "larphysicscontent/LArPhysicsContent.h"
 
 #include "larphysicscontent/LArAnalysis/AnalysisAlgorithm.h"
 #include "larphysicscontent/LArAnalysis/AnalysisDataAlgorithm.h"

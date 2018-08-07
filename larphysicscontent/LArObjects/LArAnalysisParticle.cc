@@ -146,8 +146,10 @@ std::string LArAnalysisParticle::TypeAsString(const LArAnalysisParticle::TYPE ty
             return "TRACK";
         case TYPE::NEUTRINO:
             return "NEUTRINO";
-        case TYPE::COSMIC_RAY:
-            return "COSMIC_RAY";
+        case TYPE::COSMIC_RAY_TRACK:
+            return "COSMIC_RAY_TRACK";
+        case TYPE::COSMIC_RAY_SHOWER:
+            return "COSMIC_RAY_SHOWER";
         default:
             break;
     }
