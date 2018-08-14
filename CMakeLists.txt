@@ -47,6 +47,7 @@ find_package(ROOT 5.26.00 REQUIRED COMPONENTS Eve Geom RGL EG TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 link_libraries(${ROOT_LIBRARIES} ${ROOT_COMPONENT_LIBRARIES})
 add_definitions(${ROOT_DEFINITIONS})
+include(${ROOT_USE_FILE})
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Low level settings - compiler etc
@@ -63,15 +64,30 @@ endif()
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Build products
 
+# - Generate any custom ROOT classes required for the ntuple
+ROOT_GENERATE_DICTIONARY(PandoraNtupleClassesDict vector LINKDEF larphysicscontent/LinkDef.h MODULE PandoraNtupleClasses)
+
 # - Collect sources - not ideal because you have to keep running CMake to pick up changes
-file(GLOB_RECURSE LAR_PHYSICS_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larphysicscontent/*.cc")
+file(GLOB_RECURSE LAR_PHYSICS_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larphysicscontent/*.cc" "test/*.cc")
 
 # - Add library and properties
-add_library(${PROJECT_NAME} SHARED ${LAR_PHYSICS_CONTENT_SRCS})
+add_library(${PROJECT_NAME} SHARED ${LAR_PHYSICS_CONTENT_SRCS} PandoraNtupleClassesDict.cxx)
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSION} SOVERSION ${${PROJECT_NAME}_SOVERSION})
+
+add_library(PandoraNtupleClasses SHARED PandoraNtupleClassesDict.cxx)
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Install products
+
+#Install the ROOT 6 PCM and rootmap files.
+if (${ROOT_VERSION} VERSION_GREATER "6.0")
+   install(
+      FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/libPandoraNtupleClasses_rdict.pcm
+      ${CMAKE_CURRENT_BINARY_DIR}/libPandoraNtupleClasses.rootmap
+    ${CMAKE_CURRENT_BINARY_DIR}/lib/libPandoraNtupleClasses.so
+      DESTINATION lib)
+endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 
 # - library
 install(TARGETS ${PROJECT_NAME} DESTINATION lib COMPONENT Runtime)

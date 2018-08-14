@@ -4,3 +4,4 @@
 /*.cmake
 /include/
 /.vscode
+.clang-format

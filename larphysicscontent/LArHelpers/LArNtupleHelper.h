@@ -1,21 +1,21 @@
 /**
- *  @file   larphysicscontent/LArHelpers/LArAnalysisNtupleHelper.h
+ *  @file   larphysicscontent/LArHelpers/LArNtupleHelper.h
  *
- *  @brief  Header file for the lar analysis ntuple helper class.
+ *  @brief  Header file for the lar ntuple helper class.
  *
  *  $Log: $
  */
-#ifndef LAR_ANALYSIS_NTUPLE_HELPER_H
-#define LAR_ANALYSIS_NTUPLE_HELPER_H 1
+#ifndef LAR_NTUPLE_HELPER_H
+#define LAR_NTUPLE_HELPER_H 1
 
 #include "Objects/ParticleFlowObject.h"
 
 namespace lar_physics_content
 {
 /**
- *  @brief  LArAnalysisNtupleHelper class
+ *  @brief  LArNtupleHelper class
  */
-class LArAnalysisNtupleHelper
+class LArNtupleHelper
 {
 public:
     /**
@@ -28,6 +28,31 @@ public:
         COSMIC_RAY = 2, ///< A cosmic ray
         OTHER      = 3  ///< Another class
     };
+
+    /**
+     *  @brief  Deleted copy constructor
+     */
+    LArNtupleHelper(const LArNtupleHelper &) = delete;
+
+    /**
+     *  @brief  Deleted move constructor
+     */
+    LArNtupleHelper(LArNtupleHelper &&) = delete;
+
+    /**
+     *  @brief  Deleted copy assignment operator
+     */
+    LArNtupleHelper &operator=(const LArNtupleHelper &) = delete;
+
+    /**
+     *  @brief  Deleted move assignment operator
+     */
+    LArNtupleHelper &operator=(LArNtupleHelper &&) = delete;
+
+    /**
+     *  @brief  Deleted destructor
+     */
+    ~LArNtupleHelper() = delete;
 
     /**
      *  @brief  Get the class of a PFO
@@ -50,4 +75,4 @@ public:
 
 } // namespace lar_physics_content
 
-#endif // #ifndef LAR_ANALYSIS_NTUPLE_HELPER_H
+#endif // #ifndef LAR_NTUPLE_HELPER_H

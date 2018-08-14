@@ -14,14 +14,14 @@
 #include "larphysicscontent/LArPhysicsContent.h"
 
 #include "larphysicscontent/LArAnalysis/AnalysisNtupleAlgorithm.h"
-#include "larphysicscontent/LArAnalysis/TestTool.h"
+#include "test/TestNtupleTool.h"
 
 // clang-format off
 #define LAR_ALGORITHM_LIST(d)                       \
     d("LArAnalysisNtuple", AnalysisNtupleAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)   \
-    d("LArTestTool", TestTool)
+    d("LArTestNtupleTool", TestNtupleTool)
 // clang-format on
 
 #define FACTORY Factory
