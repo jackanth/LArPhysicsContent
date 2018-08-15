@@ -5,3 +5,4 @@
 /include/
 /.vscode
 .clang-format
+*.root
