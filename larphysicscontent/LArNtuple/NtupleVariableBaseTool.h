@@ -109,25 +109,27 @@ protected:
         const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList);
 
     /**
-     *  @brief  Process an event (wrapper method)
-     *
-     *  @param  pfoList The list of all PFOs
-     */
-    virtual std::vector<LArNtupleRecord> ProcessEventWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-        const pandora::PfoList &pfoList, const MCParticleList *const pMCParticleList);
-
-    /**
      *  @brief  Get an MC particle
      *
      *  @param  pfoList The list of all PFOs
      */
-    virtual const MCParticle * GetMCParticle(const pandora::ParticleFlowObject *const pPfo,
-    const MCParticleList *const pMCParticleList);
+    virtual const MCParticle *GetMCParticle(const pandora::ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList);
 
     friend class AnalysisNtupleAlgorithm;
 
 private:
-    using Processor = std::function<std::vector<LArNtupleRecord>(const MCParticle *const)>; ///< Alias for a function to process a PFO
+    using Processor  = std::function<std::vector<LArNtupleRecord>(const MCParticle *const)>; ///< Alias for a function to process a PFO
+    using MCCacheMap = std::unordered_map<const ParticleFlowObject *, const MCParticle *>; ///< Alias for cache map from PFOs to MCParticles
+
+    mutable MCCacheMap m_mcCacheMap; ///< The cached mappings from PFOs to MCParticles
+
+    /**
+     *  @brief  Process an event (wrapper method)
+     *
+     *  @param  pfoList The list of all PFOs
+     */
+    std::vector<LArNtupleRecord> ProcessEventWrapper(
+        const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::PfoList &pfoList, const MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process any particle (wrapper method)
@@ -174,6 +176,12 @@ private:
     std::vector<LArNtupleRecord> ProcessImpl(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
         const MCParticleList *const pMCParticleList, const std::string &prefix, const Processor &processor);
 
+    /**
+     *  @brief  Get an MC particle (wrapper method)
+     *
+     *  @param  pfoList The list of all PFOs
+     */
+    const MCParticle *GetMCParticleWrapper(const pandora::ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList);
 
     MCParticleWeightMap GetMCParticleWeightMap(const CaloHitList &caloHitList) const;
 };

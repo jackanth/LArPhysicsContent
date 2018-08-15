@@ -9,8 +9,8 @@
 #include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
 #include "larphysicscontent/LArAnalysis/AnalysisNtupleAlgorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 using namespace pandora;
 using namespace lar_content;
@@ -18,14 +18,13 @@ using namespace lar_content;
 namespace lar_physics_content
 {
 
-NtupleVariableBaseTool::NtupleVariableBaseTool() noexcept : AlgorithmTool()
+NtupleVariableBaseTool::NtupleVariableBaseTool() noexcept : AlgorithmTool(), m_mcCacheMap()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const MCParticle * NtupleVariableBaseTool::GetMCParticle(const pandora::ParticleFlowObject *const pPfo,
-    const MCParticleList *const)
+const MCParticle *NtupleVariableBaseTool::GetMCParticle(const pandora::ParticleFlowObject *const pPfo, const MCParticleList *const)
 {
     // Get all the PFO's 2D hits
     ClusterList clusterList;
@@ -118,8 +117,7 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessCosmicRayWrapper(con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessImpl(const AnalysisNtupleAlgorithm *const pAlgorithm,
-    const pandora::ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList,
-    const std::string &prefix, const Processor &processor)
+    const pandora::ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList, const std::string &prefix, const Processor &processor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -131,6 +129,21 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessImpl(const AnalysisN
         record.AddBranchNamePrefix(prefix);
 
     return records;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const MCParticle *NtupleVariableBaseTool::GetMCParticleWrapper(const pandora::ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList)
+{
+    const auto findIter = m_mcCacheMap.find(pPfo);
+
+    if (findIter != m_mcCacheMap.end())
+        return findIter->second;
+
+    const MCParticle *pMCParticle = this->GetMCParticle(pPfo, pMCParticleList);
+    m_mcCacheMap.emplace(pPfo, pMCParticle);
+
+    return pMCParticle;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
