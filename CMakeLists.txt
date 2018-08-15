@@ -74,18 +74,19 @@ file(GLOB_RECURSE LAR_PHYSICS_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larph
 add_library(${PROJECT_NAME} SHARED ${LAR_PHYSICS_CONTENT_SRCS} PandoraNtupleClassesDict.cxx)
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSION} SOVERSION ${${PROJECT_NAME}_SOVERSION})
 
+# - Add unversioned PandoraNtupleClasses library
 add_library(PandoraNtupleClasses SHARED PandoraNtupleClassesDict.cxx)
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Install products
 
-#Install the ROOT 6 PCM and rootmap files.
+# - the ROOT 6 PCM and rootmap files
 if (${ROOT_VERSION} VERSION_GREATER "6.0")
    install(
       FILES
       ${CMAKE_CURRENT_BINARY_DIR}/libPandoraNtupleClasses_rdict.pcm
       ${CMAKE_CURRENT_BINARY_DIR}/libPandoraNtupleClasses.rootmap
-    ${CMAKE_CURRENT_BINARY_DIR}/lib/libPandoraNtupleClasses.so
+      ${CMAKE_CURRENT_BINARY_DIR}/lib/libPandoraNtupleClasses.so
       DESTINATION lib)
 endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 
