@@ -55,6 +55,12 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    int m_eventCounter;    ///< The event counter
+    int m_neutrinoCounter; ///< The neutrino counter
+    int m_pfoCounter;      ///< The PFO counter
+    int m_cosmicCounter;   ///< The cosmic counter
+    int m_primaryCounter;  ///< The primary counter
+
     std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) override;
     std::vector<LArNtupleRecord> ProcessNeutrino(const ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;

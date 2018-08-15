@@ -22,40 +22,40 @@
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-#define TEST(fn, valueExpr, counter)                                                                                                 \
-{                                                                                                                                    \
-    if (fn(counter) == valueExpr)                                                                                                    \
-    {                                                                                                                                \
-        ++successfulTests;                                                                                                           \
-        std::cout << "[ " << TEXT_GREEN_BOLD << "SUCCESS" << TEXT_NORMAL << " ] "#fn"("#valueExpr", "#counter");" << std::endl;      \
-    }                                                                                                                                \
-                                                                                                                                     \
-    else                                                                                                                             \
-    {                                                                                                                                \
-        ++failedTests;                                                                                                               \
-        std::cerr << "[ " << TEXT_RED_BOLD << "FAILURE" << TEXT_NORMAL << " ] "#fn"("#valueExpr", "#counter");" << std::endl;        \
-        std::cerr << "    - Got value     " << valueExpr << std::endl;                                                               \
-        std::cerr << "    - Correct value " << fn(counter) << std::endl;                                                             \
-    }                                                                                                                                \
+#define TEST(fn, valueExpr, counter)                                                                                            \
+{                                                                                                                               \
+    if (fn(counter) == valueExpr)                                                                                               \
+    {                                                                                                                           \
+        ++successfulTests;                                                                                                      \
+        std::cout << "[ " << TEXT_GREEN_BOLD << "SUCCESS" << TEXT_NORMAL << " ] "#fn"("#valueExpr", "#counter");" << std::endl; \
+    }                                                                                                                           \
+                                                                                                                                \
+    else                                                                                                                        \
+    {                                                                                                                           \
+        ++failedTests;                                                                                                          \
+        std::cerr << "[ " << TEXT_RED_BOLD << "FAILURE" << TEXT_NORMAL << " ] "#fn"("#valueExpr", "#counter");" << std::endl;   \
+        std::cerr << "    - Got value     " << valueExpr << std::endl;                                                          \
+        std::cerr << "    - Correct value " << fn(counter) << std::endl;                                                        \
+    }                                                                                                                           \
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-#define TEST_SIZE(theVector, correctSize)                                                                                           \
-{                                                                                                                                    \
-    if ((theVector).size() == correctSize)                                                                                             \
-    {                                                                                                                                \
-        ++successfulTests;                                                                                                           \
-        std::cout << "[ " << TEXT_GREEN_BOLD << "SUCCESS" << TEXT_NORMAL << " ] ("#theVector").size();" << std::endl;                  \
-    }                                                                                                                                \
-                                                                                                                                     \
-    else                                                                                                                             \
-    {                                                                                                                                \
-        ++failedTests;                                                                                                               \
-        std::cerr << "[ " << TEXT_RED_BOLD << "FAILURE" << TEXT_NORMAL << " ] ("#theVector").size();" << std::endl;                    \
-        std::cerr << "    - Got size     " << (theVector).size() << std::endl;                                                         \
-        std::cerr << "    - Correct size " << correctSize << std::endl;                                                              \
-    }                                                                                                                                \
+#define TEST_SIZE(theVector, correctSize)                                                                             \
+{                                                                                                                     \
+    if ((theVector).size() == correctSize)                                                                            \
+    {                                                                                                                 \
+        ++successfulTests;                                                                                            \
+        std::cout << "[ " << TEXT_GREEN_BOLD << "SUCCESS" << TEXT_NORMAL << " ] ("#theVector").size();" << std::endl; \
+    }                                                                                                                 \
+                                                                                                                      \
+    else                                                                                                              \
+    {                                                                                                                 \
+        ++failedTests;                                                                                                \
+        std::cerr << "[ " << TEXT_RED_BOLD << "FAILURE" << TEXT_NORMAL << " ] ("#theVector").size();" << std::endl;   \
+        std::cerr << "    - Got size     " << (theVector).size() << std::endl;                                        \
+        std::cerr << "    - Correct size " << correctSize << std::endl;                                               \
+    }                                                                                                                 \
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -156,10 +156,12 @@ void ValidateNtuple()
     std::cout << "Beginning ntuple validation" << std::endl;
 
     int successfulTests(0), failedTests(0);
-    int counter(0), evtCounter(0), nuCounter(0), pfoCounter(0), primaryCounter(0), cosmicCounter(0);
+    int counter(0), evtCounter(0);
 
     while (treeReader.Next())
     {
+        int counter(0), evtCounter(0), nuCounter(0), pfoCounter(0), primaryCounter(0), cosmicCounter(0);
+
         // Output event info
         std::cout << "--------------------------------------------------------------------------------------------" << std::endl;
         std::cout << TEXT_WHITE_BOLD << "Processing event #" << counter++ << TEXT_NORMAL << std::endl;
@@ -171,21 +173,22 @@ void ValidateNtuple()
         std::cout << "numPfos       = " << *numPfos << std::endl;
         std::cout << "hasMcInfo     = " << std::boolalpha << *hasMcInfo << std::endl;
 
-        // Event numbers should get out of sync only if there are completely null events (i.e. all hits removed by CR tagger)
+        // Event numbers should get out of sync only if there are completely null events (i.e. all hits removed by CR tagger) or the ntuple
+        // was composed through multiple pandora calls
         if (evtCounter != *eventNum)
             std::cerr << "[ " << TEXT_YELLOW_BOLD << "WARNING" << TEXT_NORMAL << " ] Event numbers are misaligned" << std::endl;
 
         // Per-event tests
         std::cout << std::endl << "Testing per-event parameters" << std::endl;
 
-        TEST(GetRFloatValue, *evt_RFloat, evtCounter);
-        TEST(GetRIntValue, *evt_RInt, evtCounter);
-        TEST(GetRBoolValue, *evt_RBool, evtCounter);
-        TEST(GetRUIntValue, *evt_RUInt, evtCounter);
-        TEST(GetRULong64Value, *evt_RULong64, evtCounter);
-        TEST(GetRTStringValue, *evt_RTString, evtCounter);
-        TEST(GetRFloatVectorValue, *evt_RFloatVector, evtCounter);
-        TEST(GetRIntVectorValue, *evt_RIntVector, evtCounter);
+        TEST(GetRFloatValue, *evt_RFloat, *eventNum);
+        TEST(GetRIntValue, *evt_RInt, *eventNum);
+        TEST(GetRBoolValue, *evt_RBool, *eventNum);
+        TEST(GetRUIntValue, *evt_RUInt, *eventNum);
+        TEST(GetRULong64Value, *evt_RULong64, *eventNum);
+        TEST(GetRTStringValue, *evt_RTString, *eventNum);
+        TEST(GetRFloatVectorValue, *evt_RFloatVector, *eventNum);
+        TEST(GetRIntVectorValue, *evt_RIntVector, *eventNum);
 
         // Per-neutrino tests
         std::cout << std::endl << "Testing per-neutrino parameters" << std::endl;
@@ -201,14 +204,29 @@ void ValidateNtuple()
 
         for (std::size_t i = 0; i < *numNeutrinos; ++i)
         {
-            TEST(GetRFloatValue, (*nu_RFloat).at(i), nuCounter);
-            TEST(GetRIntValue, (*nu_RInt).at(i), nuCounter);
-            TEST(GetRBoolValue, (*nu_RBool).at(i), nuCounter);
-            TEST(GetRUIntValue, (*nu_RUInt).at(i), nuCounter);
-            TEST(GetRULong64Value, (*nu_RULong64).at(i), nuCounter);
-            TEST(GetRTStringValue, (*nu_RTString).at(i), nuCounter);
-            TEST(GetRFloatVectorValue, (*nu_RFloatVector).at(i), nuCounter);
-            TEST(GetRIntVectorValue, (*nu_RIntVector).at(i), nuCounter);
+            if (i < (*nu_RFloat).size())
+                TEST(GetRFloatValue, (*nu_RFloat).at(i), nuCounter);
+
+            if (i < (*nu_RInt).size())
+                TEST(GetRIntValue, (*nu_RInt).at(i), nuCounter);
+
+            if (i < (*nu_RBool).size())
+                TEST(GetRBoolValue, (*nu_RBool).at(i), nuCounter);
+
+            if (i < (*nu_RUInt).size())
+                TEST(GetRUIntValue, (*nu_RUInt).at(i), nuCounter);
+
+            if (i < (*nu_RULong64).size())
+                TEST(GetRULong64Value, (*nu_RULong64).at(i), nuCounter);
+
+            if (i < (*nu_RTString).size())
+                TEST(GetRTStringValue, (*nu_RTString).at(i), nuCounter);
+
+            if (i < (*nu_RFloatVector).size())
+                TEST(GetRFloatVectorValue, (*nu_RFloatVector).at(i), nuCounter);
+
+            if (i < (*nu_RIntVector).size())
+                TEST(GetRIntVectorValue, (*nu_RIntVector).at(i), nuCounter);
 
             ++nuCounter;
         }
@@ -227,14 +245,29 @@ void ValidateNtuple()
 
         for (std::size_t i = 0; i < *numPfos; ++i)
         {
-            TEST(GetRFloatValue, (*pfo_RFloat).at(i), pfoCounter);
-            TEST(GetRIntValue, (*pfo_RInt).at(i), pfoCounter);
-            TEST(GetRBoolValue, (*pfo_RBool).at(i), pfoCounter);
-            TEST(GetRUIntValue, (*pfo_RUInt).at(i), pfoCounter);
-            TEST(GetRULong64Value, (*pfo_RULong64).at(i), pfoCounter);
-            TEST(GetRTStringValue, (*pfo_RTString).at(i), pfoCounter);
-            TEST(GetRFloatVectorValue, (*pfo_RFloatVector).at(i), pfoCounter);
-            TEST(GetRIntVectorValue, (*pfo_RIntVector).at(i), pfoCounter);
+            if (i < (*pfo_RFloat).size())
+                TEST(GetRFloatValue, (*pfo_RFloat).at(i), pfoCounter);
+
+            if (i < (*pfo_RInt).size())
+                TEST(GetRIntValue, (*pfo_RInt).at(i), pfoCounter);
+            
+            if (i < (*pfo_RBool).size())
+                TEST(GetRBoolValue, (*pfo_RBool).at(i), pfoCounter);
+
+            if (i < (*pfo_RUInt).size())
+                TEST(GetRUIntValue, (*pfo_RUInt).at(i), pfoCounter);
+
+            if (i < (*pfo_RULong64).size())
+                TEST(GetRULong64Value, (*pfo_RULong64).at(i), pfoCounter);
+
+            if (i < (*pfo_RTString).size())
+                TEST(GetRTStringValue, (*pfo_RTString).at(i), pfoCounter);
+
+            if (i < (*pfo_RFloatVector).size())
+                TEST(GetRFloatVectorValue, (*pfo_RFloatVector).at(i), pfoCounter);
+
+            if (i < (*pfo_RIntVector).size())
+                TEST(GetRIntVectorValue, (*pfo_RIntVector).at(i), pfoCounter);
 
             ++pfoCounter;
         }
@@ -253,14 +286,29 @@ void ValidateNtuple()
 
         for (std::size_t i = 0; i < *numPrimaries; ++i)
         {
-            TEST(GetRFloatValue, (*primary_RFloat).at(i), primaryCounter);
-            TEST(GetRIntValue, (*primary_RInt).at(i), primaryCounter);
-            TEST(GetRBoolValue, (*primary_RBool).at(i), primaryCounter);
-            TEST(GetRUIntValue, (*primary_RUInt).at(i), primaryCounter);
-            TEST(GetRULong64Value, (*primary_RULong64).at(i), primaryCounter);
-            TEST(GetRTStringValue, (*primary_RTString).at(i), primaryCounter);
-            TEST(GetRFloatVectorValue, (*primary_RFloatVector).at(i), primaryCounter);
-            TEST(GetRIntVectorValue, (*primary_RIntVector).at(i), primaryCounter);
+            if (i < (*primary_RFloat).size())
+                TEST(GetRFloatValue, (*primary_RFloat).at(i), primaryCounter);
+
+            if (i < (*primary_RInt).size())
+                TEST(GetRIntValue, (*primary_RInt).at(i), primaryCounter);
+
+            if (i < (*primary_RBool).size())
+                TEST(GetRBoolValue, (*primary_RBool).at(i), primaryCounter);
+
+            if (i < (*primary_RUInt).size())
+                TEST(GetRUIntValue, (*primary_RUInt).at(i), primaryCounter);
+
+            if (i < (*primary_RULong64).size())
+                TEST(GetRULong64Value, (*primary_RULong64).at(i), primaryCounter);
+
+            if (i < (*primary_RTString).size())
+                TEST(GetRTStringValue, (*primary_RTString).at(i), primaryCounter);
+
+            if (i < (*primary_RFloatVector).size())
+                TEST(GetRFloatVectorValue, (*primary_RFloatVector).at(i), primaryCounter);
+
+            if (i < (*primary_RIntVector).size())
+                TEST(GetRIntVectorValue, (*primary_RIntVector).at(i), primaryCounter);
 
             ++primaryCounter;
         }
@@ -279,14 +327,29 @@ void ValidateNtuple()
 
         for (std::size_t i = 0; i < *numCosmicRays; ++i)
         {
-            TEST(GetRFloatValue, (*cr_RFloat).at(i), cosmicCounter);
-            TEST(GetRIntValue, (*cr_RInt).at(i), cosmicCounter);
-            TEST(GetRBoolValue, (*cr_RBool).at(i), cosmicCounter);
-            TEST(GetRUIntValue, (*cr_RUInt).at(i), cosmicCounter);
-            TEST(GetRULong64Value, (*cr_RULong64).at(i), cosmicCounter);
-            TEST(GetRTStringValue, (*cr_RTString).at(i), cosmicCounter);
-            TEST(GetRFloatVectorValue, (*cr_RFloatVector).at(i), cosmicCounter);
-            TEST(GetRIntVectorValue, (*cr_RIntVector).at(i), cosmicCounter);
+            if (i < (*cr_RFloat).size())
+                TEST(GetRFloatValue, (*cr_RFloat).at(i), cosmicCounter);
+
+            if (i < (*cr_RInt).size())
+                TEST(GetRIntValue, (*cr_RInt).at(i), cosmicCounter);
+
+            if (i < (*cr_RBool).size())
+                TEST(GetRBoolValue, (*cr_RBool).at(i), cosmicCounter);
+
+            if (i < (*cr_RUInt).size())
+                TEST(GetRUIntValue, (*cr_RUInt).at(i), cosmicCounter);
+
+            if (i < (*cr_RULong64).size())
+                TEST(GetRULong64Value, (*cr_RULong64).at(i), cosmicCounter);
+
+            if (i < (*cr_RTString).size())
+                TEST(GetRTStringValue, (*cr_RTString).at(i), cosmicCounter);
+
+            if (i < (*cr_RFloatVector).size())
+                TEST(GetRFloatVectorValue, (*cr_RFloatVector).at(i), cosmicCounter);
+
+            if (i < (*cr_RIntVector).size())
+                TEST(GetRIntVectorValue, (*cr_RIntVector).at(i), cosmicCounter);
 
             ++cosmicCounter;
         }
