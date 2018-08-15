@@ -25,7 +25,8 @@ AnalysisNtupleAlgorithm::AnalysisNtupleAlgorithm() :
     m_ntupleTreeTitle("Pandora Ntuple"),
     m_spNtuple(nullptr),
     m_fileIdentifier(0),
-    m_eventNumber(0)
+    m_eventNumber(0),
+    m_appendNtuple(false)
 {
 }
 
@@ -50,8 +51,8 @@ StatusCode AnalysisNtupleAlgorithm::Run()
     const MCParticleList *pMCParticleList(nullptr);
     PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList);
 
-    // Drop old branch values in case this algorithm failed in a previous event
-    m_spNtuple->ResetBranches();
+    // Prepare the ntuple state in case previous instance encountered an exception 
+    m_spNtuple->Reset();
 
     const PfoList &pfoList                        = *pPfoList;
     const auto [neutrinos, cosmicRays, primaries] = this->GetParticleLists(pfoList);
@@ -122,7 +123,7 @@ void AnalysisNtupleAlgorithm::RegisterNtupleRecords(const PfoList &neutrinos, co
     m_spNtuple->AddScalarRecord(LArNtupleRecord("numPrimaries", static_cast<LArNtupleRecord::RUInt>(primaries.size())));
     m_spNtuple->AddScalarRecord(LArNtupleRecord("numPfos", static_cast<LArNtupleRecord::RUInt>(pfoList.size())));
     m_spNtuple->AddScalarRecord(LArNtupleRecord("hasMcInfo", static_cast<LArNtupleRecord::RBool>(pMCParticleList)));
-    
+
     // Register the per-event records.
     for (NtupleVariableBaseTool *const pNtupleTool : m_ntupleVariableTools)
     {
@@ -170,8 +171,9 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NtupleTreeName", m_ntupleTreeName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NtupleTreeTitle", m_ntupleTreeTitle));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FileIdentifier", m_fileIdentifier));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AppendNtuple", m_appendNtuple));
 
-    m_spNtuple = std::shared_ptr<LArNtuple>(new LArNtuple(m_ntupleOutputFile, m_ntupleTreeName, m_ntupleTreeTitle));
+    m_spNtuple = std::shared_ptr<LArNtuple>(new LArNtuple(m_ntupleOutputFile, m_ntupleTreeName, m_ntupleTreeTitle, m_appendNtuple));
 
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "NtupleTools", algorithmToolVector));

@@ -33,17 +33,15 @@ LArNtuple::~LArNtuple()
 
 void LArNtuple::AddScalarRecord(const LArNtupleRecord &record)
 {
-    if (m_hasBeenFilled)
+    if (m_addressesSet)
         this->ValidateAndAddRecord(m_scalarBranchMap, record);
 
-    else // first time
+    else
     {
         // Add the record and check that one does not already exist by the same name (this includes type-checking)
         if (!m_scalarBranchMap.emplace(record.BranchName(), LArBranchPlaceholder(record)).second)
         {
-            this->Reset();
             std::cerr << "LArNtuple: cannot add multiple scalar records with the same branch name '" << record.BranchName() << "'" << std::endl;
-
             throw STATUS_CODE_NOT_ALLOWED;
         }
     }
@@ -56,17 +54,15 @@ void LArNtuple::AddVectorRecordElement(const LArNtupleRecord &record)
     BranchMap &branchMap = this->GetCurrentVectorBranchMap();
 
     // If the vector elements are locked in, reuse the scalar record validation mechanics
-    if (m_areVectorElementsLocked || m_hasBeenFilled)
+    if (m_areVectorElementsLocked || m_addressesSet)
         this->ValidateAndAddRecord(branchMap, record);
 
-    else // first time
+    else
     {
         // Add the record and check that one does not already exist by the same name (this includes type-checking)
         if (!branchMap.emplace(record.BranchName(), LArBranchPlaceholder(record)).second)
         {
-            this->Reset();
             std::cerr << "LArNtuple: cannot add multiple scalar records with the same branch name '" << record.BranchName() << "'" << std::endl;
-
             throw STATUS_CODE_NOT_ALLOWED;
         }
     }
@@ -84,7 +80,6 @@ void LArNtuple::FillVectors()
 
         if (!branchPlaceholder.GetNtupleScalarRecord()) // the branch has not been filled
         {
-            this->Reset();
             std::cerr << "LArNtuple: Could not fill vectors as the branch '" << entry.first << "' has not been populated" << std::endl;
             throw STATUS_CODE_NOT_ALLOWED;
         }
@@ -101,7 +96,7 @@ void LArNtuple::FillVectors()
 void LArNtuple::PushVectors()
 {
     // Tick over the vector stack
-    if (m_hasBeenFilled)
+    if (m_addressesSet)
         ++m_vectorBranchMapIndex;
 
     else
@@ -117,38 +112,46 @@ void LArNtuple::PushVectors()
 void LArNtuple::Fill()
 {
     // Fill the ntuple
-    this->SetScalarBranchAddresses();
-    this->SetVectorBranchAddresses();
+    std::size_t numBranches(0UL);
+
+    numBranches += this->SetScalarBranchAddresses();
+    numBranches += this->SetVectorBranchAddresses();
+
+    if (numBranches == 0UL)
+    {
+        std::cerr << "LArNtuple: Could not fill because no branches were set" << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
 
     if (m_pOutputTree->Fill() < 0)
     {
-        this->Reset();
         std::cerr << "LArNtuple: Error filling TTree" << std::endl;
         throw STATUS_CODE_FAILURE;
     }
 
     // Prepare the ntuple for the next event
-    m_hasBeenFilled = true;
-    this->ResetBranches();
-    m_vectorBranchMapIndex = 0UL;
+    m_addressesSet = true;
+    m_ntupleEmpty = false;
+    this->Reset();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, const std::string &treeTitle) :
+LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, const std::string &treeTitle, const bool appendMode) :
     m_pOutputTFile(nullptr),
     m_pOutputTree(nullptr),
     m_scalarBranchMap(),
     m_vectorElementBranchMap(),
     m_vectorBranchMaps(),
     m_vectorBranchMapIndex(0UL),
-    m_hasBeenFilled(false),
+    m_addressesSet(false),
+    m_ntupleEmpty(true),
     m_areVectorElementsLocked(false),
     m_cache()
 {
     try
     {
-        m_pOutputTFile = new TFile(filePath.c_str(), "UPDATE");
+        m_pOutputTFile = new TFile(filePath.c_str(), appendMode ? "UPDATE" : "NEW");
     }
 
     catch (...)
@@ -165,30 +168,67 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
 
     try
     {
-        m_pOutputTree = new TTree(treeName.c_str(), treeTitle.c_str());
+        if (appendMode && m_pOutputTFile->GetListOfKeys()->Contains(treeName.c_str()))
+        {
+            m_pOutputTree = dynamic_cast<TTree *>(m_pOutputTFile->Get(treeName.c_str()));
+
+            if (TObjArray *pArray = m_pOutputTree->GetListOfBranches())
+            {
+                if (pArray->GetEntries() > 0)
+                {
+                    m_ntupleEmpty = false;
+                    std::cout << "LArNtuple: Appending new data to non-empty TTree '" << treeName << "' at " << filePath << std::endl;
+                }
+
+                else
+                    std::cout << "LArNtuple: Appending new data to empty TTree '" << treeName << "' at " << filePath << std::endl;
+            }
+
+            else
+                std::cout << "LArNtuple: Appending new data to empty TTree '" << treeName << "' at " << filePath << std::endl;
+        }
+
+        else
+        {
+            m_pOutputTree = new TTree(treeName.c_str(), treeTitle.c_str());
+            std::cout << "LArNtuple: Writing data to new TTree '" << treeName << "' at " << filePath << std::endl;
+        }
     }
 
     catch (...)
     {
-        std::cerr << "LArNtuple: Failed to instantiate TTree with name " << treeName << " and title " << treeTitle << std::endl;
+        std::cerr << "LArNtuple: Failed to find/instantiate TTree with name " << treeName << " and title " << treeTitle << std::endl;
         throw STATUS_CODE_FAILURE;
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArNtuple::ResetBranches() noexcept
+void LArNtuple::Reset()
 {
+    // Reset the ntuple state to allow recovery from internal errors
     m_vectorElementBranchMap.clear();
     m_areVectorElementsLocked = false;
+    m_vectorBranchMapIndex = 0UL;
 
-    for (auto &entry : m_scalarBranchMap)
-        entry.second.ClearNtupleRecords();
-
-    for (auto &branchMap : m_vectorBranchMaps)
+    if (m_addressesSet)
     {
-        for (auto &entry : branchMap)
+        for (auto &entry : m_scalarBranchMap)
             entry.second.ClearNtupleRecords();
+
+        for (auto &branchMap : m_vectorBranchMaps)
+        {
+            for (auto &entry : branchMap)
+                entry.second.ClearNtupleRecords();
+        }
+    }
+
+    else
+    {
+        m_scalarBranchMap.clear();
+        m_vectorBranchMaps.clear();
+        m_pOutputTree->ResetBranchAddresses();
+        m_cache.clear();
     }
 }
 
@@ -196,7 +236,7 @@ void LArNtuple::ResetBranches() noexcept
 
 LArNtuple::BranchMap &LArNtuple::GetCurrentVectorBranchMap()
 {
-    if (!m_hasBeenFilled)
+    if (!m_addressesSet)
         return m_vectorElementBranchMap;
 
     if (m_vectorBranchMapIndex >= m_vectorBranchMaps.size())
@@ -210,17 +250,17 @@ LArNtuple::BranchMap &LArNtuple::GetCurrentVectorBranchMap()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArNtuple::SetScalarBranchAddresses()
+std::size_t LArNtuple::SetScalarBranchAddresses()
 {
+    std::size_t numBranches(0UL);
+
     for (auto &entry : m_scalarBranchMap)
     {
         const auto spRecord = entry.second.GetNtupleScalarRecord();
 
         if (!spRecord) // the branch has not been filled
         {
-            this->Reset();
             std::cerr << "LArNtuple: Could not fill ntuple as the branch '" << entry.first << "' has not been populated" << std::endl;
-
             throw STATUS_CODE_NOT_ALLOWED;
         }
 
@@ -259,17 +299,22 @@ void LArNtuple::SetScalarBranchAddresses()
                 break;
 
             default:
-                this->Reset();
                 std::cerr << "LArNtuple: Unknown value type" << std::endl;
                 throw STATUS_CODE_FAILURE;
         }
+
+        ++numBranches;
     }
+
+    return numBranches;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArNtuple::SetVectorBranchAddresses()
+std::size_t LArNtuple::SetVectorBranchAddresses()
 {
+    std::size_t numBranches(0UL);
+
     for (auto &branchMap : m_vectorBranchMaps)
     {
         for (auto &entry : branchMap)
@@ -311,12 +356,15 @@ void LArNtuple::SetVectorBranchAddresses()
                     break;
 
                 default:
-                    this->Reset();
                     std::cerr << "LArNtuple: Unknown value type" << std::endl;
                     throw STATUS_CODE_FAILURE;
             }
+
+            ++numBranches;
         }
     }
+
+    return numBranches;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -327,7 +375,6 @@ void LArNtuple::ValidateAndAddRecord(BranchMap &branchMap, const LArNtupleRecord
 
     if (findIter == branchMap.end())
     {
-        this->Reset();
         std::cerr << "LArNtuple: cannot add vector record element with branch name '" << record.BranchName()
                   << "' as it was not present in previous ntuple fills" << std::endl;
 
@@ -336,7 +383,6 @@ void LArNtuple::ValidateAndAddRecord(BranchMap &branchMap, const LArNtupleRecord
 
     if (findIter->second.GetNtupleScalarRecord()) // the branch is already filled
     {
-        this->Reset();
         std::cerr << "LArNtuple: cannot add vector record element with branch name '" << record.BranchName()
                   << "' as it has already been populated since the last fill" << std::endl;
 

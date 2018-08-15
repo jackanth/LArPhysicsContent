@@ -71,7 +71,7 @@ protected:
      *  @param  treeName the TTree name
      *  @param  treeTitle the TTree title
      */
-    LArNtuple(const std::string &filePath, const std::string &treeName, const std::string &treeTitle);
+    LArNtuple(const std::string &filePath, const std::string &treeName, const std::string &treeTitle, const bool appendMode);
 
     /**
      *  @brief  Add a scalar record to the cache
@@ -103,9 +103,9 @@ protected:
     void Fill();
 
     /**
-     *  @brief  Drop all the current branch values
+     *  @brief  Reset the per-event ntuple state
      */
-    void ResetBranches() noexcept;
+    void Reset();
 
     friend class AnalysisNtupleAlgorithm;
 
@@ -119,14 +119,10 @@ public:
     BranchMap m_vectorElementBranchMap;        ///< The vector element branch map
     std::vector<BranchMap> m_vectorBranchMaps; ///< The vector branch map
     std::size_t m_vectorBranchMapIndex;        ///< The vector branch map index
-    bool m_hasBeenFilled;                      ///< Whether the tree has ever been filled
+    bool m_addressesSet;                       ///< Whether the addresses have been set
+    bool m_ntupleEmpty;                        ///< Whether the ntuple is empty
     bool m_areVectorElementsLocked;            ///< Whether scalar entries are locked
     mutable Cache m_cache;                     ///< The cache
-
-    /**
-     *  @brief  Reset the ntuple state after an internal error
-     */
-    void Reset() noexcept;
 
     template <typename T>
     std::vector<std::decay_t<T>> CreateVector(const std::vector<LArBranchPlaceholder::NtupleRecordSPtr> &records) const;
@@ -168,12 +164,12 @@ public:
     /**
      *  @brief  Set the vector branch addresses
      */
-    void SetVectorBranchAddresses();
+    std::size_t SetVectorBranchAddresses();
 
     /**
      *  @brief  Set the scalar branch addresses
      */
-    void SetScalarBranchAddresses();
+    std::size_t SetScalarBranchAddresses();
 
     /**
      *  @brief  Validate a record and add it to the ntuple
@@ -185,20 +181,6 @@ public:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void LArNtuple::Reset() noexcept
-{
-    // Reset the entire ntuple state to allow recovery from internal errors
-    m_scalarBranchMap.clear();
-    m_vectorElementBranchMap.clear();
-    m_vectorBranchMaps.clear();
-    m_pOutputTree->ResetBranchAddresses();
-    m_cache.clear();
-    m_hasBeenFilled           = false;
-    m_areVectorElementsLocked = false;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
@@ -227,7 +209,31 @@ inline std::decay_t<T> &LArNtuple::CacheObject(T &&obj) const
 template <typename TOBJECT>
 inline void LArNtuple::AddBranch(const std::string &branchName, std::decay_t<TOBJECT> &obj, const bool splitMode) const
 {
-    m_pOutputTree->Branch(branchName.c_str(), &obj, 32000, splitMode ? 99 : -1);
+    if (m_ntupleEmpty)
+        m_pOutputTree->Branch(branchName.c_str(), &obj, 32000, splitMode ? 99 : -1);
+
+    else // we have loaded this non-empty TTree from a file and now need to tie up all the branches with new addresses
+    {
+        TBranch *pBranch = m_pOutputTree->GetBranch(branchName.c_str());
+
+        if (!pBranch)
+        {
+            std::cerr << "LArNtuple: Could not append to existing TTree because no existing branch matched '" << branchName << "'" << std::endl;
+            throw STATUS_CODE_NOT_FOUND;
+        }
+
+        // For any non-fundamental types, we need to cache a nullptr to the cached object and use a pointer to this cached
+        // nullptr as the argument to SetAddress, then set the nullptr to point at the object.
+        if constexpr (std::is_fundamental_v<std::decay_t<TOBJECT>>)
+            pBranch->SetAddress(&obj);
+
+        else
+        {
+            std::decay_t<TOBJECT *> &pObj = this->CacheObject<std::decay_t<TOBJECT *>>(nullptr);
+            pBranch->SetAddress(&pObj);
+            pObj = &obj;
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -255,7 +261,7 @@ void LArNtuple::PushToBranch(const std::string &branchName, LArBranchPlaceholder
 {
     using TOBJ_D = std::decay_t<TOBJ>;
 
-    if (m_hasBeenFilled)
+    if (m_addressesSet)
     {
         if (branchPlaceholder.CacheIndex() >= m_cache.size())
         {
@@ -269,8 +275,8 @@ void LArNtuple::PushToBranch(const std::string &branchName, LArBranchPlaceholder
     else
     {
         TOBJ_D &cachedObject = this->CacheObject(std::forward<T>(object));
-        this->AddBranch<TOBJ_D>(branchName, cachedObject, splitMode);
         branchPlaceholder.CacheIndex(m_cache.size() - 1UL);
+        this->AddBranch<TOBJ_D>(branchName, cachedObject, splitMode);
     }
 }
 

@@ -70,6 +70,7 @@ private:
     std::shared_ptr<LArNtuple> m_spNtuple;                       ///< Shared pointer to the ntuple
     int m_fileIdentifier;                                        ///< The input file identifier
     int m_eventNumber;                                           ///< The event number
+    bool m_appendNtuple;                                         ///< Whether to append to an existing ntuple
 
     /**
      *  @brief  Get the particle lists.
