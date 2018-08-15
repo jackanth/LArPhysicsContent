@@ -155,16 +155,16 @@ void ValidateNtuple()
 
     std::cout << "Beginning ntuple validation" << std::endl;
 
-    int successfulTests(0), failedTests(0);
-    int counter(0), evtCounter(0);
+    int successfulTests(0), failedTests(0), warnings(0);
+    int evtCounter(0);
 
     while (treeReader.Next())
     {
-        int counter(0), evtCounter(0), nuCounter(0), pfoCounter(0), primaryCounter(0), cosmicCounter(0);
+        int nuCounter(0), pfoCounter(0), primaryCounter(0), cosmicCounter(0);
 
         // Output event info
         std::cout << "--------------------------------------------------------------------------------------------" << std::endl;
-        std::cout << TEXT_WHITE_BOLD << "Processing event #" << counter++ << TEXT_NORMAL << std::endl;
+        std::cout << TEXT_WHITE_BOLD << "Processing event #" << evtCounter++ << TEXT_NORMAL << std::endl;
         std::cout << "fileId        = " << *fileId << std::endl;
         std::cout << "eventNum      = " << *eventNum << std::endl;
         std::cout << "numNeutrinos  = " << *numNeutrinos << std::endl;
@@ -176,7 +176,10 @@ void ValidateNtuple()
         // Event numbers should get out of sync only if there are completely null events (i.e. all hits removed by CR tagger) or the ntuple
         // was composed through multiple pandora calls
         if (evtCounter != *eventNum)
+        {
             std::cerr << "[ " << TEXT_YELLOW_BOLD << "WARNING" << TEXT_NORMAL << " ] Event numbers are misaligned" << std::endl;
+            ++warnings;
+        }
 
         // Per-event tests
         std::cout << std::endl << "Testing per-event parameters" << std::endl;
@@ -359,8 +362,9 @@ void ValidateNtuple()
 
     // Print summary
     std::cout << "--------------------------------------------------------------------------------------------" << std::endl;
-    std::cout << "Processed " << TEXT_WHITE_BOLD << counter << " event(s) " << TEXT_NORMAL << "with " << TEXT_GREEN_BOLD << successfulTests
-              << " passed test(s) " << TEXT_NORMAL << "and " << TEXT_RED_BOLD << failedTests << " failed test(s)" << TEXT_NORMAL << std::endl;
+    std::cout << "Processed " << TEXT_WHITE_BOLD << evtCounter << " event(s) " << TEXT_NORMAL << "with " << TEXT_GREEN_BOLD << successfulTests
+              << " passed test(s)" << TEXT_NORMAL << ", " << TEXT_RED_BOLD << failedTests << " failed test(s) " << TEXT_NORMAL << "and "
+              << TEXT_YELLOW_BOLD << warnings <<  " warning(s)" << TEXT_NORMAL << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
