@@ -82,10 +82,13 @@ std::vector<LArNtupleRecord> TestNtupleTool::GetTestRecords(const int counter) c
 
     records.emplace_back("RFloat", static_cast<LArNtupleRecord::RFloat>(-1.234) + static_cast<LArNtupleRecord::RFloat>(counter));
     records.emplace_back("RInt", static_cast<LArNtupleRecord::RInt>(-1234) + static_cast<LArNtupleRecord::RInt>(counter));
+
     records.emplace_back("RBool", static_cast<LArNtupleRecord::RBool>(counter % 2));
     records.emplace_back("RUInt", static_cast<LArNtupleRecord::RUInt>(1234U) + static_cast<LArNtupleRecord::RUInt>(counter));
+
     records.emplace_back("RULong64", static_cast<LArNtupleRecord::RULong64>(1234UL) + static_cast<LArNtupleRecord::RULong64>(counter));
     records.emplace_back("RTString", LArNtupleRecord::RTString("1 2 3 4 " + std::to_string(counter)));
+
     records.emplace_back("RFloatVector", LArNtupleRecord::RFloatVector{1.2f + static_cast<LArNtupleRecord::RFloat>(counter),
                                              -3.4f + static_cast<LArNtupleRecord::RFloat>(counter)});
     records.emplace_back("RIntVector",

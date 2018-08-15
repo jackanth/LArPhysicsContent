@@ -8,6 +8,7 @@
 
 #include "Rtypes.h"
 #include "TString.h"
+
 #include <vector>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +23,13 @@
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+/**
+ *  @brief  Macro for testing the value of an ntuple parameter
+ * 
+ *  @param  fn the function to retrieve the true value
+ *  @param  valueExpr the expression giving the found value
+ *  @param  counter the counter argument to the function
+ */
 #define TEST(fn, valueExpr, counter)                                                                                            \
 {                                                                                                                               \
     if (fn(counter) == valueExpr)                                                                                               \
@@ -41,6 +49,12 @@
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+/**
+ *  @brief  Macro for testing the size of an ntuple vector parameter
+ * 
+ *  @param  theVector the vector
+ *  @param  correctSize the correct size
+ */
 #define TEST_SIZE(theVector, correctSize)                                                                             \
 {                                                                                                                     \
     if ((theVector).size() == correctSize)                                                                            \
@@ -71,6 +85,14 @@ std::vector<Int_t> GetRIntVectorValue(const int counter);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+/**
+ *  @brief  Function for printing vectors
+ * 
+ *  @param  os the ostream object
+ *  @param  vec the vector to print
+ * 
+ *  @return the ostream object
+ */
 template<typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec)
 {
@@ -88,11 +110,17 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ValidateNtuple()
+/**
+ *  @brief  Validate the ntuple produced by the Pandora test ntuple tools
+ * 
+ *  @param  filePath path to the ntuple file
+ *  @param  ntupleName the ntuple name
+ */
+void ValidateNtuple(const TString &filePath, const TString &ntupleName = "PandoraNtuple")
 {
     // Load the ntuple
-    TFile ntupleFile("PandoraNtuple.root");
-    TTreeReader treeReader("PandoraNtuple", &ntupleFile);
+    TFile ntupleFile(filePath);
+    TTreeReader treeReader(ntupleName, &ntupleFile);
 
     // Prepare the reserved values
     TTreeReaderValue<Int_t> fileId(treeReader, "fileId");
@@ -164,7 +192,7 @@ void ValidateNtuple()
 
         // Output event info
         std::cout << "--------------------------------------------------------------------------------------------" << std::endl;
-        std::cout << TEXT_WHITE_BOLD << "Processing event #" << evtCounter++ << TEXT_NORMAL << std::endl;
+        std::cout << TEXT_WHITE_BOLD << "Processing event #" << evtCounter << TEXT_NORMAL << std::endl;
         std::cout << "fileId        = " << *fileId << std::endl;
         std::cout << "eventNum      = " << *eventNum << std::endl;
         std::cout << "numNeutrinos  = " << *numNeutrinos << std::endl;
