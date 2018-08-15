@@ -38,7 +38,7 @@ const MCParticle *NtupleVariableBaseTool::GetMCParticle(const pandora::ParticleF
     // Find the MC particle with the highest weight
     const MCParticleWeightMap mcParticleWeightMap = this->GetMCParticleWeightMap(caloHitList);
 
-    float bestWeight(0.f);
+    float             bestWeight(0.f);
     const MCParticle *pBestMCParticle(nullptr);
 
     MCParticleVector mcParticleVector;
@@ -59,7 +59,7 @@ const MCParticle *NtupleVariableBaseTool::GetMCParticle(const pandora::ParticleF
         }
     }
 
-    return pBestMCParticle;
+    return pBestMCParticle; // can be nullptr
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -122,9 +122,11 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessImpl(const AnalysisN
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    const MCParticle *const pMCParticle  = pMCParticleList ? this->GetMCParticle(pPfo, pMCParticleList) : nullptr;
-    std::vector<LArNtupleRecord> records = processor(pMCParticle);
+    // (bool)pMCParticleList indicates whether there is any MC information at all
+    const MCParticle *const      pMCParticle = pMCParticleList ? this->GetMCParticleWrapper(pPfo, pMCParticleList) : nullptr;
+    std::vector<LArNtupleRecord> records     = processor(pMCParticle);
 
+    // Add the prefix to the records and return them
     for (LArNtupleRecord &record : records)
         record.AddBranchNamePrefix(prefix);
 
@@ -135,11 +137,13 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessImpl(const AnalysisN
 
 const MCParticle *NtupleVariableBaseTool::GetMCParticleWrapper(const pandora::ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList)
 {
+    // Check the cache first (can return nullptr)
     const auto findIter = m_mcCacheMap.find(pPfo);
 
     if (findIter != m_mcCacheMap.end())
         return findIter->second;
 
+    // Not in cache; find it and cache it
     const MCParticle *pMCParticle = this->GetMCParticle(pPfo, pMCParticleList);
     m_mcCacheMap.emplace(pPfo, pMCParticle);
 
@@ -156,7 +160,7 @@ MCParticleWeightMap NtupleVariableBaseTool::GetMCParticleWeightMap(const CaloHit
     {
         // Synthesize the weights from every hit into the main map
         const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
-        MCParticleVector mcParticleVector;
+        MCParticleVector           mcParticleVector;
 
         for (const MCParticleWeightMap::value_type &mapEntry : hitMCParticleWeightMap)
             mcParticleVector.push_back(mapEntry.first);

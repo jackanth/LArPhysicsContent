@@ -15,11 +15,11 @@ namespace lar_physics_content
 
 LArNtuple::~LArNtuple()
 {
-    // Write any remaining data in the TTree.
+    // Write any remaining data in the TTree
     if (m_pOutputTree)
         m_pOutputTree->Write();
 
-    // If we have a TFile, close and delete it. The TTree is then deleted by its owning TFile.
+    // If we have a TFile, close and delete it - the TTree is then deleted by its owning TFile
     if (m_pOutputTFile)
     {
         if (m_pOutputTFile->IsOpen())
@@ -112,9 +112,7 @@ void LArNtuple::PushVectors()
 void LArNtuple::Fill()
 {
     // Fill the ntuple
-    std::size_t numBranches(0UL);
-
-    numBranches += this->SetScalarBranchAddresses();
+    std::size_t numBranches = this->SetScalarBranchAddresses();
     numBranches += this->SetVectorBranchAddresses();
 
     if (numBranches == 0UL)
@@ -131,7 +129,7 @@ void LArNtuple::Fill()
 
     // Prepare the ntuple for the next event
     m_addressesSet = true;
-    m_ntupleEmpty = false;
+    m_ntupleEmpty  = false;
     this->Reset();
 }
 
@@ -149,57 +147,8 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
     m_areVectorElementsLocked(false),
     m_cache()
 {
-    try
-    {
-        m_pOutputTFile = new TFile(filePath.c_str(), appendMode ? "UPDATE" : "NEW");
-    }
-
-    catch (...)
-    {
-        std::cerr << "LArNtuple: Failed to open file at " << filePath << std::endl;
-        throw STATUS_CODE_FAILURE;
-    }
-
-    if (!m_pOutputTFile->IsOpen())
-    {
-        std::cerr << "LArNtuple: Failed to open file at " << filePath << std::endl;
-        throw STATUS_CODE_FAILURE;
-    }
-
-    try
-    {
-        if (appendMode && m_pOutputTFile->GetListOfKeys()->Contains(treeName.c_str()))
-        {
-            m_pOutputTree = dynamic_cast<TTree *>(m_pOutputTFile->Get(treeName.c_str()));
-
-            if (TObjArray *pArray = m_pOutputTree->GetListOfBranches())
-            {
-                if (pArray->GetEntries() > 0)
-                {
-                    m_ntupleEmpty = false;
-                    std::cout << "LArNtuple: Appending new data to non-empty TTree '" << treeName << "' at " << filePath << std::endl;
-                }
-
-                else
-                    std::cout << "LArNtuple: Appending new data to empty TTree '" << treeName << "' at " << filePath << std::endl;
-            }
-
-            else
-                std::cout << "LArNtuple: Appending new data to empty TTree '" << treeName << "' at " << filePath << std::endl;
-        }
-
-        else
-        {
-            m_pOutputTree = new TTree(treeName.c_str(), treeTitle.c_str());
-            std::cout << "LArNtuple: Writing data to new TTree '" << treeName << "' at " << filePath << std::endl;
-        }
-    }
-
-    catch (...)
-    {
-        std::cerr << "LArNtuple: Failed to find/instantiate TTree with name " << treeName << " and title " << treeTitle << std::endl;
-        throw STATUS_CODE_FAILURE;
-    }
+    this->InstantiateTFile(appendMode, filePath);
+    this->InstantiateTTree(appendMode, treeName, treeTitle, filePath); // the TTree will now be 'owned' by the TFile
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -209,7 +158,7 @@ void LArNtuple::Reset()
     // Reset the ntuple state to allow recovery from internal errors
     m_vectorElementBranchMap.clear();
     m_areVectorElementsLocked = false;
-    m_vectorBranchMapIndex = 0UL;
+    m_vectorBranchMapIndex    = 0UL;
 
     if (m_addressesSet)
     {
@@ -391,6 +340,64 @@ void LArNtuple::ValidateAndAddRecord(BranchMap &branchMap, const LArNtupleRecord
 
     // Add the record (includes type-checking)
     findIter->second.SetNtupleScalarRecord(record);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArNtuple::InstantiateTFile(const bool appendMode, const std::string &filePath)
+{
+    try
+    {
+        m_pOutputTFile = new TFile(filePath.c_str(), appendMode ? "UPDATE" : "NEW");
+    }
+
+    catch (...)
+    {
+        std::cerr << "LArNtuple: Failed to open file at " << filePath << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
+
+    if (!m_pOutputTFile->IsOpen())
+    {
+        std::cerr << "LArNtuple: Failed to open file at " << filePath << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArNtuple::InstantiateTTree(const bool appendMode, const std::string &treeName, const std::string &treeTitle, const std::string &filePath)
+{
+    try
+    {
+        if (appendMode && m_pOutputTFile->GetListOfKeys()->Contains(treeName.c_str()))
+        {
+            m_pOutputTree     = dynamic_cast<TTree *>(m_pOutputTFile->Get(treeName.c_str()));
+            TObjArray *pArray = m_pOutputTree->GetListOfBranches();
+
+            if (pArray && pArray->GetEntries() > 0)
+            {
+                m_ntupleEmpty = false;
+                std::cout << "LArNtuple: Appending new data to non-empty TTree '" << treeName << "' at " << filePath << std::endl;
+            }
+
+            else
+                std::cout << "LArNtuple: Appending new data to empty TTree '" << treeName << "' at " << filePath << std::endl;
+        }
+
+        else
+        {
+            m_pOutputTree = new TTree(treeName.c_str(), treeTitle.c_str());
+            std::cout << "LArNtuple: Writing data to new TTree '" << treeName << "' at " << filePath << std::endl;
+        }
+    }
+
+    catch (...)
+    {
+        std::cerr << "LArNtuple: Failed to find/instantiate TTree with name '" << treeName << "' and title '" << treeTitle << "' at "
+                  << filePath << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
 }
 
 } // namespace lar_physics_content

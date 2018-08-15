@@ -7,6 +7,7 @@
  */
 
 #include "larphysicscontent/LArNtuple/LArBranchPlaceholder.h"
+
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/StatusCodes.h"
 
@@ -50,6 +51,17 @@ LArBranchPlaceholder::LArBranchPlaceholder(const LArNtupleRecord &record) noexce
     m_cacheIndex(0UL),
     m_cacheIndexSet(false)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::size_t LArBranchPlaceholder::CacheIndex() const
+{
+    if (m_cacheIndexSet)
+        return m_cacheIndex;
+
+    std::cerr << "LArBranchPlaceholder: Could not get cache index because it has not been set" << std::endl;
+    throw STATUS_CODE_NOT_FOUND;
 }
 
 } // namespace lar_physics_content

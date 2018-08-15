@@ -51,7 +51,7 @@ StatusCode AnalysisNtupleAlgorithm::Run()
     const MCParticleList *pMCParticleList(nullptr);
     PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList);
 
-    // Prepare the ntuple state in case previous instance encountered an exception 
+    // Prepare the ntuple state in case previous instance encountered an exception
     m_spNtuple->Reset();
 
     const PfoList &pfoList                        = *pPfoList;
@@ -167,6 +167,7 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NtupleOutputFile", m_ntupleOutputFile));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NtupleTreeName", m_ntupleTreeName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NtupleTreeTitle", m_ntupleTreeTitle));

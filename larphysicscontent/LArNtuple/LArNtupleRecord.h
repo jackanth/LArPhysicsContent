@@ -1,5 +1,5 @@
 /**
- *  @file   larphysicscontent/LArAnalysis/LArNtupleRecord.h
+ *  @file   larphysicscontent/LArNtple/LArNtupleRecord.h
  *
  *  @brief  Header file for the lar ntuple record class.
  *
@@ -9,6 +9,7 @@
 #define LAR_NTUPLE_RECORD_H 1
 
 #include "Pandora/AlgorithmHeaders.h"
+
 #include "Rtypes.h"
 #include "TString.h"
 
@@ -138,8 +139,8 @@ protected:
 
 private:
     using VariantType = std::variant<RFloat, RInt, RBool, RUInt, RULong64, RTString, RFloatVector, RIntVector>; ///< Alias for the variant type
-    
-    VALUE_TYPE m_valueType;   ///< The value type
+
+    VALUE_TYPE  m_valueType;  ///< The value type
     std::string m_branchName; ///< The branch name
     VariantType m_value;      ///< The value
 };

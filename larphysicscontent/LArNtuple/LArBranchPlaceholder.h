@@ -60,9 +60,7 @@ public:
     void SetNtupleScalarRecord(const LArNtupleRecord &record);
 
     /**
-     *  @brief  Push the ntuple scalar record
-     *
-     *  @param  record the record to add
+     *  @brief  Push the stored ntuple scalar record into the vector
      */
     void PushNtupleScalarRecord();
 
@@ -79,7 +77,7 @@ public:
     const std::vector<NtupleRecordSPtr> &GetNtupleVectorRecord() const noexcept;
 
     /**
-     *  @brief  Assuming this is a scalar record (so the number of records must be 0 or 1), get the single record shared pointer if exists
+     *  @brief  Get the scalar record shared pointer if one exists
      *
      *  @return the record shared pointer, or nullptr if there is none
      */
@@ -91,7 +89,7 @@ protected:
      *
      *  @param  record the first LArNtupleRecord
      */
-    LArBranchPlaceholder(const LArNtupleRecord &record) noexcept;
+    explicit LArBranchPlaceholder(const LArNtupleRecord &record) noexcept;
 
     /**
      *  @brief  Get the value type
@@ -100,17 +98,35 @@ protected:
      */
     LArNtupleRecord::VALUE_TYPE ValueType() const noexcept;
 
+    /**
+     *  @brief  Get the cache index if it has been set
+     *
+     *  @return the cache index
+     */
     std::size_t CacheIndex() const;
+
+    /**
+     *  @brief  Set the cache index
+     *
+     *  @param cacheIndex the cache index
+     */
     void CacheIndex(const std::size_t cacheIndex);
+
+    /**
+     *  @brief  Get whether the cache index has been set
+     *
+     *  @return whether the cache index has been set
+     */
+    bool CacheIndexSet() const noexcept;
 
     friend class LArNtuple;
 
 private:
-    NtupleRecordSPtr m_spNtupleScalarRecord;            ///< Shared pointer to the ntuple scalar record
-    std::vector<NtupleRecordSPtr> m_ntupleVectorRecord; ///< The vector record shared pointers
-    LArNtupleRecord::VALUE_TYPE m_valueType;            ///< The branch's value type
-    std::size_t m_cacheIndex;
-    bool m_cacheIndexSet;
+    NtupleRecordSPtr              m_spNtupleScalarRecord; ///< Shared pointer to the ntuple scalar record
+    std::vector<NtupleRecordSPtr> m_ntupleVectorRecord;   ///< The vector record shared pointers
+    LArNtupleRecord::VALUE_TYPE   m_valueType;            ///< The branch's value type
+    std::size_t                   m_cacheIndex;           ///< The cache index
+    bool                          m_cacheIndexSet;        ///< Whether the cache index has been set
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -145,21 +161,17 @@ inline LArNtupleRecord::VALUE_TYPE LArBranchPlaceholder::ValueType() const noexc
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::size_t LArBranchPlaceholder::CacheIndex() const
+inline void LArBranchPlaceholder::CacheIndex(const std::size_t cacheIndex)
 {
-    if (m_cacheIndexSet)
-        return m_cacheIndex;
-
-    std::cerr << "LArBranchPlaceholder: ..." << std::endl;
-    throw STATUS_CODE_NOT_FOUND;
+    m_cacheIndex    = cacheIndex;
+    m_cacheIndexSet = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void LArBranchPlaceholder::CacheIndex(const std::size_t cacheIndex)
+inline bool LArBranchPlaceholder::CacheIndexSet() const noexcept
 {
-    m_cacheIndex = cacheIndex;
-    m_cacheIndexSet = true;
+    return m_cacheIndexSet;
 }
 
 } // namespace lar_physics_content
