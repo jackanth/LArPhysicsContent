@@ -21,8 +21,6 @@
 #include <any>
 #include <deque>
 
-using namespace pandora;
-
 namespace lar_physics_content
 {
 
@@ -273,7 +271,7 @@ inline void LArNtuple::AddBranch(const std::string &branchName, std::decay_t<TOB
         if (!pBranch)
         {
             std::cerr << "LArNtuple: Could not append to existing TTree because no existing branch matched '" << branchName << "'" << std::endl;
-            throw STATUS_CODE_NOT_FOUND;
+            throw pandora::STATUS_CODE_NOT_FOUND;
         }
 
         // For any non-fundamental types, we need to cache a nullptr to the cached object and use a pointer to this cached nullptr as the
@@ -320,7 +318,7 @@ void LArNtuple::PushToBranch(const std::string &branchName, LArBranchPlaceholder
         if (branchPlaceholder.CacheIndex() >= m_cache.size())
         {
             std::cerr << "LArNtuple: Cache index was out of bounds" << std::endl;
-            throw STATUS_CODE_FAILURE;
+            throw pandora::STATUS_CODE_FAILURE;
         }
 
         std::any_cast<TOBJ_D &>(m_cache.at(branchPlaceholder.CacheIndex())) = std::forward<T>(object);

@@ -10,8 +10,6 @@
 
 #include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
 
-using namespace pandora;
-
 namespace lar_physics_content
 {
 /**
@@ -61,16 +59,16 @@ private:
 
     std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) override;
 
-    std::vector<LArNtupleRecord> ProcessNeutrino(const ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
+    std::vector<LArNtupleRecord> ProcessNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
 
-    std::vector<LArNtupleRecord> ProcessParticle(const ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
+    std::vector<LArNtupleRecord> ProcessParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
 
-    std::vector<LArNtupleRecord> ProcessCosmicRay(const ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
+    std::vector<LArNtupleRecord> ProcessCosmicRay(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
 
-    std::vector<LArNtupleRecord> ProcessPrimary(const ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
+    std::vector<LArNtupleRecord> ProcessPrimary(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
 
     /**

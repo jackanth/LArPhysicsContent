@@ -17,8 +17,6 @@
 
 #include <functional>
 
-using namespace pandora;
-
 namespace lar_physics_content
 {
 
@@ -30,7 +28,7 @@ class AnalysisNtupleAlgorithm;
 /**
  *  @brief  NtupleVariableBaseTool class
  */
-class NtupleVariableBaseTool : public AlgorithmTool
+class NtupleVariableBaseTool : public pandora::AlgorithmTool
 {
 public:
     /**
@@ -64,7 +62,7 @@ public:
     virtual ~NtupleVariableBaseTool() = default;
 
 protected:
-    StatusCode ReadSettings(const TiXmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle);
 
     /**
      *  @brief  Process an event - to be overriden
@@ -74,7 +72,7 @@ protected:
      *
      *  @return the event records
      */
-    virtual std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const MCParticleList *const pMCParticleList);
+    virtual std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process any particle (including non-primary daughters) - to be overriden
@@ -87,7 +85,7 @@ protected:
      *  @return the particle records
      */
     virtual std::vector<LArNtupleRecord> ProcessParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList);
+        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process a neutrino - to be overriden
@@ -100,7 +98,7 @@ protected:
      *  @return the neutrino records
      */
     virtual std::vector<LArNtupleRecord> ProcessNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList);
+        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process a primary neutrino daughter - to be overriden
@@ -113,7 +111,7 @@ protected:
      *  @return the primary records
      */
     virtual std::vector<LArNtupleRecord> ProcessPrimary(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList);
+        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process a cosmic ray - to be overriden
@@ -126,7 +124,7 @@ protected:
      *  @return the cosmic ray records
      */
     virtual std::vector<LArNtupleRecord> ProcessCosmicRay(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList);
+        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Get an MC particle
@@ -137,13 +135,13 @@ protected:
      *
      *  @return address of the corresponding MCParticle, if one can be found
      */
-    virtual const MCParticle *GetMCParticle(const pandora::ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList);
+    virtual const pandora::MCParticle *GetMCParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
 
     friend class AnalysisNtupleAlgorithm;
 
 private:
-    using Processor  = std::function<std::vector<LArNtupleRecord>(const MCParticle *const)>; ///< Alias for a function to process a PFO
-    using MCCacheMap = std::unordered_map<const ParticleFlowObject *, const MCParticle *>; ///< Alias for cache map from PFOs to MCParticles
+    using Processor = std::function<std::vector<LArNtupleRecord>(const pandora::MCParticle *const)>; ///< Alias for a function to process a PFO
+    using MCCacheMap = std::unordered_map<const pandora::ParticleFlowObject *, const pandora::MCParticle *>; ///< Alias for cache map from PFOs to MCParticles
 
     mutable MCCacheMap m_mcCacheMap; ///< The cached mappings from PFOs to MCParticles
 
@@ -156,8 +154,8 @@ private:
      *
      *  @return the event records
      */
-    std::vector<LArNtupleRecord> ProcessEventWrapper(
-        const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::PfoList &pfoList, const MCParticleList *const pMCParticleList);
+    std::vector<LArNtupleRecord> ProcessEventWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::PfoList &pfoList,
+        const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process any particle (wrapper method)
@@ -170,7 +168,7 @@ private:
      *  @return the particle records
      */
     std::vector<LArNtupleRecord> ProcessParticleWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const MCParticleList *const pMCParticleList);
+        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process a neutrino (wrapper method)
@@ -183,7 +181,7 @@ private:
      *  @return the neutrino records
      */
     std::vector<LArNtupleRecord> ProcessNeutrinoWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const MCParticleList *const pMCParticleList);
+        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process a primary neutrino daughter (wrapper method)
@@ -196,7 +194,7 @@ private:
      *  @return the primary records
      */
     std::vector<LArNtupleRecord> ProcessPrimaryWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const MCParticleList *const pMCParticleList);
+        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process a cosmic ray (wrapper method)
@@ -209,7 +207,7 @@ private:
      *  @return the cosmic ray records
      */
     std::vector<LArNtupleRecord> ProcessCosmicRayWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const MCParticleList *const pMCParticleList);
+        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Implementation of PFO processing wrapper
@@ -224,7 +222,7 @@ private:
      *  @return the records
      */
     std::vector<LArNtupleRecord> ProcessImpl(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
-        const MCParticleList *const pMCParticleList, const std::string &prefix, const Processor &processor);
+        const pandora::MCParticleList *const pMCParticleList, const std::string &prefix, const Processor &processor);
 
     /**
      *  @brief  Get an MC particle (wrapper method)
@@ -234,7 +232,7 @@ private:
      *
      *  @return address of the corresponding MCParticle, if one can be found
      */
-    const MCParticle *GetMCParticleWrapper(const pandora::ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList);
+    const pandora::MCParticle *GetMCParticleWrapper(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Get the MCParticle weight map for a set of CaloHits
@@ -243,52 +241,52 @@ private:
      *
      *  @return the MCParticle weight map
      */
-    MCParticleWeightMap GetMCParticleWeightMap(const CaloHitList &caloHitList) const;
+    pandora::MCParticleWeightMap GetMCParticleWeightMap(const pandora::CaloHitList &caloHitList) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline StatusCode NtupleVariableBaseTool::ReadSettings(const TiXmlHandle)
+inline pandora::StatusCode NtupleVariableBaseTool::ReadSettings(const pandora::TiXmlHandle)
 {
-    return STATUS_CODE_SUCCESS;
+    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEvent(const pandora::PfoList &, const MCParticleList *const)
-{
-    return {};
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessParticle(
-    const pandora::ParticleFlowObject *const, const pandora::PfoList &, const MCParticle *const, const MCParticleList *const)
+inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEvent(const pandora::PfoList &, const pandora::MCParticleList *const)
 {
     return {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessNeutrino(
-    const pandora::ParticleFlowObject *const, const pandora::PfoList &, const MCParticle *const, const MCParticleList *const)
+inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessParticle(const pandora::ParticleFlowObject *const,
+    const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
 {
     return {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessPrimary(
-    const pandora::ParticleFlowObject *const, const pandora::PfoList &, const MCParticle *const, const MCParticleList *const)
+inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessNeutrino(const pandora::ParticleFlowObject *const,
+    const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
 {
     return {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessCosmicRay(
-    const pandora::ParticleFlowObject *const, const pandora::PfoList &, const MCParticle *const, const MCParticleList *const)
+inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessPrimary(const pandora::ParticleFlowObject *const,
+    const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
+{
+    return {};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessCosmicRay(const pandora::ParticleFlowObject *const,
+    const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
 {
     return {};
 }

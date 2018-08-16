@@ -21,7 +21,7 @@ namespace lar_physics_content
 /**
  *  @brief  AnalysisNtupleAlgorithm class
  */
-class AnalysisNtupleAlgorithm : public Algorithm
+class AnalysisNtupleAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -55,8 +55,8 @@ public:
     ~AnalysisNtupleAlgorithm() = default;
 
 protected:
-    StatusCode ReadSettings(const TiXmlHandle xmlHandle);
-    StatusCode Run();
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode Run();
 
 private:
     using VectorRecordProcessor =
@@ -80,7 +80,7 @@ private:
      *
      *  @return the list of neutrinos, the list of cosmics, and the list of primaries
      */
-    std::tuple<PfoList, PfoList, PfoList> GetParticleLists(const PfoList &pfoList) const;
+    std::tuple<pandora::PfoList, pandora::PfoList, pandora::PfoList> GetParticleLists(const pandora::PfoList &pfoList) const;
 
     /**
      *  @brief  Register the vector records for a given processor
@@ -88,7 +88,7 @@ private:
      *  @param  particles the list of all PFOs
      *  @param  processor the PFO processor
      */
-    void RegisterVectorRecords(const PfoList &particles, const VectorRecordProcessor &processor) const;
+    void RegisterVectorRecords(const pandora::PfoList &particles, const VectorRecordProcessor &processor) const;
 
     /**
      *  @brief  Register the ntuple records
@@ -99,8 +99,8 @@ private:
      *  @param  pfoList the list of all PFOs
      *  @param  pMCParticleList the optional address of the MC particle list
      */
-    void RegisterNtupleRecords(const PfoList &neutrinos, const PfoList &cosmicRays, const PfoList &primaries, const PfoList &pfoList,
-        const MCParticleList *const pMCParticleList) const;
+    void RegisterNtupleRecords(const pandora::PfoList &neutrinos, const pandora::PfoList &cosmicRays, const pandora::PfoList &primaries,
+        const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) const;
 };
 
 } // namespace lar_physics_content

@@ -16,8 +16,6 @@
 #include <cassert>
 #include <variant>
 
-using namespace pandora;
-
 namespace lar_physics_content
 {
 
