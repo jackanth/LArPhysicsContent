@@ -110,7 +110,7 @@ protected:
      *
      *  @param cacheIndex the cache index
      */
-    void CacheIndex(const std::size_t cacheIndex);
+    void CacheIndex(const std::size_t cacheIndex) noexcept;
 
     /**
      *  @brief  Get whether the cache index has been set
@@ -161,7 +161,7 @@ inline LArNtupleRecord::VALUE_TYPE LArBranchPlaceholder::ValueType() const noexc
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void LArBranchPlaceholder::CacheIndex(const std::size_t cacheIndex)
+inline void LArBranchPlaceholder::CacheIndex(const std::size_t cacheIndex) noexcept
 {
     m_cacheIndex    = cacheIndex;
     m_cacheIndexSet = true;

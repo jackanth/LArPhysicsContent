@@ -50,12 +50,8 @@ public:
      *  @brief  Get the minimum and maximum fiducial cut coordinates
      *
      *  @param  pandoraInstance the instance of Pandora
-     *  @param  fiducialCutLowXMargin the fiducial cut low-x margin
-     *  @param  fiducialCutHighXMargin the fiducial cut high-x margin
-     *  @param  fiducialCutLowYMargin the fiducial cut low-y margin
-     *  @param  fiducialCutHighYMargin the fiducial cut high-y margin
-     *  @param  fiducialCutLowZMargin the fiducial cut low-z margin
-     *  @param  fiducialCutHighZMargin the fiducial cut high-z margin
+     *  @param  fiducialCutLowMargins the fiducial cut low margins
+     *  @param  fiducialCutHighMargins the fiducial cut high margins
      *
      *  @return the minimum and maximum fiducial cut coordinates
      */

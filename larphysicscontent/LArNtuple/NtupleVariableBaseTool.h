@@ -16,6 +16,7 @@
 #include "Pandora/AlgorithmTool.h"
 
 #include <functional>
+#include <memory>
 
 namespace lar_physics_content
 {
@@ -24,6 +25,11 @@ namespace lar_physics_content
  *  @brief  Forward declaration of the AnalysisNtupleAlgorithm class
  */
 class AnalysisNtupleAlgorithm;
+
+/**
+ *  @brief  Forward declaration of the LArNtuple class
+ */
+class LArNtuple;
 
 /**
  *  @brief  NtupleVariableBaseTool class
@@ -127,23 +133,56 @@ protected:
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
 
     /**
-     *  @brief  Get an MC particle
+     *  @brief  Get all the downstream 3D hits of a PFO (from the cache if possible)
      *
      *  @param  pPfo address of the PFO
-     *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticleList optional pointer to the MC particle list
      *
-     *  @return address of the corresponding MCParticle, if one can be found
+     *  @return the hits
      */
-    virtual const pandora::MCParticle *GetMCParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
+    const pandora::CaloHitList &GetAllDownstreamThreeDHits(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get all the downstream 2D hits of a PFO (from the cache if possible)
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the hits
+     */
+    pandora::CaloHitList GetAllDownstreamTwoDHits(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get all the downstream U hits of a PFO (from the cache if possible)
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the hits
+     */
+    const pandora::CaloHitList &GetAllDownstreamUHits(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get all the downstream V hits of a PFO (from the cache if possible)
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the hits
+     */
+    const pandora::CaloHitList &GetAllDownstreamVHits(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get all the downstream W hits of a PFO (from the cache if possible)
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the hits
+     */
+    const pandora::CaloHitList &GetAllDownstreamWHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     friend class AnalysisNtupleAlgorithm;
 
 private:
-    using Processor = std::function<std::vector<LArNtupleRecord>(const pandora::MCParticle *const)>; ///< Alias for a function to process a PFO
-    using MCCacheMap = std::unordered_map<const pandora::ParticleFlowObject *, const pandora::MCParticle *>; ///< Alias for cache map from PFOs to MCParticles
+    using Processor = std::function<std::vector<LArNtupleRecord>()>; ///< Alias for a function to process a PFO
 
-    mutable MCCacheMap m_mcCacheMap; ///< The cached mappings from PFOs to MCParticles
+    std::shared_ptr<LArNtuple> m_spNtuple; ///< Shared pointer to the ntuple
 
     /**
      *  @brief  Process an event (wrapper method)
@@ -163,12 +202,13 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pPfo address of the PFO
      *  @param  pfoList the list of all PFOs
+     *  @param  pMCParticle optional address of the MC particle
      *  @param  pMCParticleList optional pointer to the MC particle list
      *
      *  @return the particle records
      */
-    std::vector<LArNtupleRecord> ProcessParticleWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
+    std::vector<LArNtupleRecord> ProcessParticleWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
+        const pandora::PfoList &pfoList, const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process a neutrino (wrapper method)
@@ -176,12 +216,13 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pPfo address of the PFO
      *  @param  pfoList the list of all PFOs
+     *  @param  pMCParticle optional address of the MC particle
      *  @param  pMCParticleList optional pointer to the MC particle list
      *
      *  @return the neutrino records
      */
-    std::vector<LArNtupleRecord> ProcessNeutrinoWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
+    std::vector<LArNtupleRecord> ProcessNeutrinoWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
+        const pandora::PfoList &pfoList, const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process a primary neutrino daughter (wrapper method)
@@ -189,12 +230,13 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pPfo address of the PFO
      *  @param  pfoList the list of all PFOs
+     *  @param  pMCParticle optional addresss of the MC particle
      *  @param  pMCParticleList optional pointer to the MC particle list
      *
      *  @return the primary records
      */
-    std::vector<LArNtupleRecord> ProcessPrimaryWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
+    std::vector<LArNtupleRecord> ProcessPrimaryWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
+        const pandora::PfoList &pfoList, const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process a cosmic ray (wrapper method)
@@ -202,46 +244,41 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pPfo address of the PFO
      *  @param  pfoList the list of all PFOs
+     *  @param  pMCParticle optional addresss of the MC particle
      *  @param  pMCParticleList optional pointer to the MC particle list
      *
      *  @return the cosmic ray records
      */
-    std::vector<LArNtupleRecord> ProcessCosmicRayWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
+    std::vector<LArNtupleRecord> ProcessCosmicRayWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
+        const pandora::PfoList &pfoList, const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Implementation of PFO processing wrapper
      *
      *  @param  pAlgorithm address of the calling algorithm
-     *  @param  pPfo address of the PFO
-     *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticleList optional pointer to the MC particle list
      *  @param  prefix the prefix to apply to branch names
      *  @param  processor the PFO processor method
      *
      *  @return the records
      */
-    std::vector<LArNtupleRecord> ProcessImpl(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
-        const pandora::MCParticleList *const pMCParticleList, const std::string &prefix, const Processor &processor);
+    std::vector<LArNtupleRecord> ProcessImpl(const AnalysisNtupleAlgorithm *const pAlgorithm, const std::string &prefix, const Processor &processor);
 
     /**
-     *  @brief  Get an MC particle (wrapper method)
+     *  @brief  Set the ntuple shared pointer
+     *
+     *  @param  spNtuple shared pointer to the ntuple
+     */
+    void SetNtuple(std::shared_ptr<LArNtuple> spNtuple) noexcept;
+
+    /**
+     *  @brief  Get an MC particle
      *
      *  @param  pPfo address of the PFO
      *  @param  pMCParticleList optional pointer to the MC particle list
      *
      *  @return address of the corresponding MCParticle, if one can be found
      */
-    const pandora::MCParticle *GetMCParticleWrapper(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
-
-    /**
-     *  @brief  Get the MCParticle weight map for a set of CaloHits
-     *
-     *  @param  caloHitList the list of CaloHits
-     *
-     *  @return the MCParticle weight map
-     */
-    pandora::MCParticleWeightMap GetMCParticleWeightMap(const pandora::CaloHitList &caloHitList) const;
+    const pandora::MCParticle *GetMCParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -289,6 +326,13 @@ inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessCosmicRay(con
     const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
 {
     return {};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void NtupleVariableBaseTool::SetNtuple(std::shared_ptr<LArNtuple> spNtuple) noexcept
+{
+    m_spNtuple = std::move_if_noexcept(spNtuple);
 }
 } // namespace lar_physics_content
 

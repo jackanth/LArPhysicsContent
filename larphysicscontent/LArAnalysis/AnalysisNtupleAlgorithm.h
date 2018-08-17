@@ -59,19 +59,20 @@ protected:
     pandora::StatusCode Run();
 
 private:
-    using VectorRecordProcessor =
-        std::function<std::vector<LArNtupleRecord>(const pandora::ParticleFlowObject *const)>; ///< Alias for vector record processing function
+    using VectorRecordProcessor = std::function<std::vector<LArNtupleRecord>(NtupleVariableBaseTool *const pNtupleTool,
+        const pandora::ParticleFlowObject *const, const pandora::MCParticle *const)>; ///< Alias for vector record processing function
 
-    std::string                           m_pfoListName;         ///< The PFO list name
-    std::string                           m_mcParticleListName;  ///< The MC particle list name
-    std::vector<NtupleVariableBaseTool *> m_ntupleVariableTools; ///< The ntuple variable tools
-    std::string                           m_ntupleOutputFile;    ///< The ntuple ROOT tree output file
-    std::string                           m_ntupleTreeName;      ///< The ntuple ROOT tree name
-    std::string                           m_ntupleTreeTitle;     ///< The ntuple ROOT tree title
-    std::shared_ptr<LArNtuple>            m_spNtuple;            ///< Shared pointer to the ntuple
-    int                                   m_fileIdentifier;      ///< The input file identifier
-    int                                   m_eventNumber;         ///< The event number
-    bool                                  m_appendNtuple;        ///< Whether to append to an existing ntuple
+    std::string                           m_pfoListName;                  ///< The PFO list name
+    std::string                           m_mcParticleListName;           ///< The MC particle list name
+    std::vector<NtupleVariableBaseTool *> m_ntupleVariableTools;          ///< The ntuple variable tools
+    std::string                           m_ntupleOutputFile;             ///< The ntuple ROOT tree output file
+    std::string                           m_ntupleTreeName;               ///< The ntuple ROOT tree name
+    std::string                           m_ntupleTreeTitle;              ///< The ntuple ROOT tree title
+    std::shared_ptr<LArNtuple>            m_spNtuple;                     ///< Shared pointer to the ntuple
+    int                                   m_fileIdentifier;               ///< The input file identifier
+    int                                   m_eventNumber;                  ///< The event number
+    bool                                  m_appendNtuple;                 ///< Whether to append to an existing ntuple
+    float                                 m_minUnmatchedMcParticleEnergy; ///< The minimum unmatched MCParticle energy that passes the cut
 
     /**
      *  @brief  Get the particle lists
@@ -83,12 +84,29 @@ private:
     std::tuple<pandora::PfoList, pandora::PfoList, pandora::PfoList> GetParticleLists(const pandora::PfoList &pfoList) const;
 
     /**
+     *  @brief  Get the MC particle lists
+     *
+     *  @param  pMCParticleList optional address of the MC particle list
+     *
+     *  @return the list of MC neutrinos, the list of MC cosmics, and the list of MC primaries
+     */
+    std::tuple<pandora::MCParticleList, pandora::MCParticleList, pandora::MCParticleList> GetMCParticleLists(
+        const pandora::MCParticleList *const pMCParticleList) const;
+
+    /**
      *  @brief  Register the vector records for a given processor
      *
+     *  @param  pNtupleTool address of the ntuple variable tool
      *  @param  particles the list of all PFOs
+     *  @param  mcParticleList the list of all relevant MC particles
+     *  @param  pMCParticleList optional address of the list of all MC particles
      *  @param  processor the PFO processor
+     *
+     *  @return the size of the vector records registered
      */
-    void RegisterVectorRecords(const pandora::PfoList &particles, const VectorRecordProcessor &processor) const;
+    std::size_t RegisterVectorRecords(NtupleVariableBaseTool *const pNtupleTool, const pandora::PfoList &particles,
+        const pandora::MCParticleList &mcParticleList, const pandora::MCParticleList *const pMCParticleList,
+        const VectorRecordProcessor &processor) const;
 
     /**
      *  @brief  Register the ntuple records
@@ -97,11 +115,45 @@ private:
      *  @param  cosmicRays the cosmic rays
      *  @param  primaries the primaries
      *  @param  pfoList the list of all PFOs
+     *  @param  mcNeutrinos the MC neutrinos
+     *  @param  mcCosmicRays the MC cosmic rays
+     *  @param  mcPrimaries the MC primaries
      *  @param  pMCParticleList the optional address of the MC particle list
      */
     void RegisterNtupleRecords(const pandora::PfoList &neutrinos, const pandora::PfoList &cosmicRays, const pandora::PfoList &primaries,
-        const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) const;
+        const pandora::PfoList &pfoList, const pandora::MCParticleList &mcNeutrinos, const pandora::MCParticleList &mcCosmicRays,
+        const pandora::MCParticleList &mcPrimaries, const pandora::MCParticleList *const pMCParticleList) const;
+
+    /**
+     *  @brief  Wrapper for registering the ntuple records and checking the vector sizes are internally consistent
+     *
+     *  @param  particleList the relevant particle list
+     *  @param  mcParticleList the relevant MC particle list
+     *  @param  pMCParticleList optional address of the list of all MC particles
+     *  @param  processor the PFO processor
+     *
+     *  @return the size of the vector records registered
+     */
+    std::size_t CheckAndRegisterVectorRecords(const pandora::PfoList &particleList, const pandora::MCParticleList &mcParticleList,
+        const pandora::MCParticleList *const pMCParticleList, const VectorRecordProcessor &processor) const;
+
+    /**
+     *  @brief  Test the quality of an MC particle
+     *
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return whether it passes the quality checks
+     */
+    bool TestMCParticleQuality(const pandora::MCParticle *const pMCParticle) const;
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool AnalysisNtupleAlgorithm::TestMCParticleQuality(const pandora::MCParticle *const pMCParticle) const
+{
+    return pMCParticle->GetEnergy() > m_minUnmatchedMcParticleEnergy;
+}
 
 } // namespace lar_physics_content
 

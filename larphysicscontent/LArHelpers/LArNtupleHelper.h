@@ -23,10 +23,10 @@ public:
      */
     enum class PARTICLE_CLASS : unsigned
     {
-        NEUTRINO   = 0, ///< A neutrino
-        PRIMARY    = 1, ///< A primary daughter of the neutrino
-        COSMIC_RAY = 2, ///< A cosmic ray
-        OTHER      = 3  ///< Another class
+        NEUTRINO   = 0U, ///< A beam neutrino
+        PRIMARY    = 1U, ///< A primary daughter of a beam neutrino
+        COSMIC_RAY = 2U, ///< A primary cosmic ray
+        OTHER      = 3U  ///< Everything else
     };
 
     /**
@@ -62,6 +62,15 @@ public:
      *  @return the PFO class
      */
     static PARTICLE_CLASS GetParticleClass(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Get the class of an MCParticle
+     *
+     *  @param  pMCParticle address of the MCParticle
+     *
+     *  @return the PFO class
+     */
+    static PARTICLE_CLASS GetParticleClass(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Translate a particle class to a string

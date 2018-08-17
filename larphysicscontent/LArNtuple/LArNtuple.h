@@ -58,9 +58,9 @@ public:
     LArNtuple &operator=(LArNtuple &&) = default;
 
     /**
-     * @brief  Destructor
+     * @brief  Virtual destructor
      */
-    ~LArNtuple();
+    virtual ~LArNtuple();
 
 protected:
     /**
@@ -71,6 +71,46 @@ protected:
      *  @param  treeTitle the TTree title
      */
     LArNtuple(const std::string &filePath, const std::string &treeName, const std::string &treeTitle, const bool appendMode);
+
+    /**
+     *  @brief  Get an MC particle
+     *
+     *  @param  pPfo address of the PFO
+     *  @param  pfoList the list of all PFOs
+     *  @param  pMCParticleList optional pointer to the MC particle list
+     *
+     *  @return address of the corresponding MCParticle, if one can be found
+     */
+    virtual const pandora::MCParticle *GetMCParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
+
+    friend class AnalysisNtupleAlgorithm;
+    friend class NtupleVariableBaseTool;
+
+private:
+    template <typename T>
+    using PfoCache =
+        std::unordered_map<const pandora::ParticleFlowObject *, std::decay_t<T>>; ///< Alias for a cache from PFO addresses to other objects
+
+    using MCParticleMapFn = std::function<const pandora::MCParticle *(const pandora::MCParticle *const)>; ///< Alias for an MC particle map function
+    using BranchMap = std::unordered_map<std::string, LArBranchPlaceholder>; ///< Alias for a map from branch names to branch placeholders
+    using Cache     = std::deque<std::any>; ///< Alias for a generic cache (deque to preserve pointers to elements)
+
+    TFile *                m_pOutputTFile;            ///< The output TFile
+    TTree *                m_pOutputTree;             ///< The output TTree
+    BranchMap              m_scalarBranchMap;         ///< The scalar branch map
+    BranchMap              m_vectorElementBranchMap;  ///< The vector element branch map
+    std::vector<BranchMap> m_vectorBranchMaps;        ///< The vector branch map
+    std::size_t            m_vectorBranchMapIndex;    ///< The vector branch map index
+    bool                   m_addressesSet;            ///< Whether the addresses have been set
+    bool                   m_ntupleEmpty;             ///< Whether the ntuple is empty
+    bool                   m_areVectorElementsLocked; ///< Whether scalar entries are locked
+
+    mutable Cache                                 m_cache;                     ///< The cache
+    mutable PfoCache<const pandora::MCParticle *> m_cacheMCParticles;          ///< The cached mappings from PFOs to MCParticles
+    mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamThreeDHits; ///< The pfo cache of downstream 3D hits
+    mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamUHits;      ///< The pfo cache of downstream U hits
+    mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamVHits;      ///< The pfo cache of downstream V hits
+    mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamWHits;      ///< The pfo cache of downstream W hits
 
     /**
      *  @brief  Add a scalar record to the cache
@@ -106,22 +146,50 @@ protected:
      */
     void Reset();
 
-    friend class AnalysisNtupleAlgorithm;
+    /**
+     *  @brief  Get all 3D hits downstream of a PFO
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the hits
+     */
+    const pandora::CaloHitList &GetAllDownstreamThreeDHits(const pandora::ParticleFlowObject *const pPfo) const;
 
-public:
-    using BranchMap = std::unordered_map<std::string, LArBranchPlaceholder>; ///< Alias for a map from branch names to branch placeholders
-    using Cache     = std::deque<std::any>; ///< Alias for a generic cache (deque to preserve pointers to elements)
+    /**
+     *  @brief  Get all 2D hits downstream of a PFO
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the hits
+     */
+    pandora::CaloHitList GetAllDownstreamTwoDHits(const pandora::ParticleFlowObject *const pPfo) const;
 
-    TFile *                m_pOutputTFile;            ///< The output TFile
-    TTree *                m_pOutputTree;             ///< The output TTree
-    BranchMap              m_scalarBranchMap;         ///< The scalar branch map
-    BranchMap              m_vectorElementBranchMap;  ///< The vector element branch map
-    std::vector<BranchMap> m_vectorBranchMaps;        ///< The vector branch map
-    std::size_t            m_vectorBranchMapIndex;    ///< The vector branch map index
-    bool                   m_addressesSet;            ///< Whether the addresses have been set
-    bool                   m_ntupleEmpty;             ///< Whether the ntuple is empty
-    bool                   m_areVectorElementsLocked; ///< Whether scalar entries are locked
-    mutable Cache          m_cache;                   ///< The cache
+    /**
+     *  @brief  Get all U hits downstream of a PFO
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the hits
+     */
+    const pandora::CaloHitList &GetAllDownstreamUHits(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get all V hits downstream of a PFO
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the hits
+     */
+    const pandora::CaloHitList &GetAllDownstreamVHits(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get all W hits downstream of a PFO
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the hits
+     */
+    const pandora::CaloHitList &GetAllDownstreamWHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
      *  @brief  Create a vector of objects from a vector of shared pointers to their records
@@ -230,9 +298,79 @@ public:
      *  @param  filePath the file path
      */
     void InstantiateTTree(const bool appendMode, const std::string &treeName, const std::string &treeTitle, const std::string &filePath);
+
+    /**
+     *  @brief  Get an MC particle (wrapper method)
+     *
+     *  @param  pPfo address of the PFO
+     *  @param  pMCParticleList optional pointer to the MC particle list
+     *
+     *  @return address of the corresponding MCParticle, if one can be found
+     */
+    const pandora::MCParticle *GetMCParticleWrapper(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
+
+    /**
+     *  @brief  Get the MCParticle weight map for a set of CaloHits
+     *
+     *  @param  caloHitList the list of CaloHits
+     *  @param  mapFn the MC particle mapping function
+     *
+     *  @return the MCParticle weight map
+     */
+    pandora::MCParticleWeightMap GetMCParticleWeightMap(const pandora::CaloHitList &caloHitList, const MCParticleMapFn &mapFn) const;
+
+    /**
+     *  @brief  Get all hits downstream of a PFO (implementation method)
+     *
+     *  @param  pPfo address of the PFO
+     *  @param  hitType the hit type
+     *  @param  the cache to use
+     *
+     *  @return the hits
+     */
+    const pandora::CaloHitList &GetAllDownstreamHitsImpl(
+        const pandora::ParticleFlowObject *const pPfo, const pandora::HitType hitType, PfoCache<pandora::CaloHitList> &cache) const;
+
+    /**
+     *  @brief  Get an MC particle (implementation method)
+     *
+     *  @param  caloHitList the CaloHit list
+     *  @param  mapFn the MC particle mapping function
+     *
+     *  @return address of the corresponding MCParticle, if one can be found
+     */
+    const pandora::MCParticle *GetMCParticleImpl(const pandora::CaloHitList &caloHitList, const MCParticleMapFn &mapFn) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CaloHitList &LArNtuple::GetAllDownstreamThreeDHits(const pandora::ParticleFlowObject *const pPfo) const
+{
+    return this->GetAllDownstreamHitsImpl(pPfo, pandora::TPC_3D, m_cacheDownstreamThreeDHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CaloHitList &LArNtuple::GetAllDownstreamUHits(const pandora::ParticleFlowObject *const pPfo) const
+{
+    return this->GetAllDownstreamHitsImpl(pPfo, pandora::TPC_VIEW_U, m_cacheDownstreamUHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CaloHitList &LArNtuple::GetAllDownstreamVHits(const pandora::ParticleFlowObject *const pPfo) const
+{
+    return this->GetAllDownstreamHitsImpl(pPfo, pandora::TPC_VIEW_V, m_cacheDownstreamVHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CaloHitList &LArNtuple::GetAllDownstreamWHits(const pandora::ParticleFlowObject *const pPfo) const
+{
+    return this->GetAllDownstreamHitsImpl(pPfo, pandora::TPC_VIEW_W, m_cacheDownstreamWHits);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
@@ -261,6 +399,8 @@ inline std::decay_t<T> &LArNtuple::CacheObject(T &&obj) const
 template <typename TOBJECT>
 inline void LArNtuple::AddBranch(const std::string &branchName, std::decay_t<TOBJECT> &obj, const bool splitMode) const
 {
+    using TOBJECT_D = std::decay_t<TOBJECT>;
+
     if (m_ntupleEmpty)
         m_pOutputTree->Branch(branchName.c_str(), &obj, 32000, splitMode ? 99 : -1);
 
@@ -276,12 +416,12 @@ inline void LArNtuple::AddBranch(const std::string &branchName, std::decay_t<TOB
 
         // For any non-fundamental types, we need to cache a nullptr to the cached object and use a pointer to this cached nullptr as the
         // argument to SetAddress, then set the nullptr to point to the object
-        if constexpr (std::is_fundamental_v<std::decay_t<TOBJECT>>)
+        if constexpr (std::is_fundamental_v<TOBJECT_D>)
             pBranch->SetAddress(&obj);
 
         else
         {
-            std::decay_t<TOBJECT *> &pObj = this->CacheObject<std::decay_t<TOBJECT *>>(nullptr);
+            TOBJECT_D *&pObj = this->CacheObject<TOBJECT_D *>(nullptr);
             pBranch->SetAddress(&pObj);
             pObj = &obj;
         }

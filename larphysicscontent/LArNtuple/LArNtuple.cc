@@ -7,8 +7,13 @@
  */
 
 #include "larphysicscontent/LArNtuple/LArNtuple.h"
+#include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
+
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 using namespace pandora;
+using namespace lar_content;
 
 namespace lar_physics_content
 {
@@ -145,10 +150,41 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
     m_addressesSet(false),
     m_ntupleEmpty(true),
     m_areVectorElementsLocked(false),
-    m_cache()
+    m_cache(),
+    m_cacheMCParticles(),
+    m_cacheDownstreamThreeDHits(),
+    m_cacheDownstreamUHits(),
+    m_cacheDownstreamVHits(),
+    m_cacheDownstreamWHits()
 {
     this->InstantiateTFile(appendMode, filePath);
     this->InstantiateTTree(appendMode, treeName, treeTitle, filePath); // the TTree will now be 'owned' by the TFile
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const MCParticle *LArNtuple::GetMCParticle(const ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList)
+{
+    const CaloHitList caloHitList = this->GetAllDownstreamTwoDHits(pPfo);
+
+    if (LArNtupleHelper::GetParticleClass(pPfo) != LArNtupleHelper::PARTICLE_CLASS::NEUTRINO)
+        return this->GetMCParticleImpl(caloHitList, LArMCParticleHelper::GetPrimaryMCParticle);
+
+    // If we only have 0 or 1 MC neutrinos, then the answer is obvious
+    MCParticleVector mcNeutrinoVector;
+    LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
+
+    if (mcNeutrinoVector.empty())
+        return nullptr;
+
+    if (mcNeutrinoVector.size() == 1UL)
+        return mcNeutrinoVector.front();
+
+    // We have multiple MC neutrinos, so find the most fitting one
+    return this->GetMCParticleImpl(caloHitList, [](const MCParticle *const pMCParticle) {
+        const MCParticle *const pParent = LArMCParticleHelper::GetParentMCParticle(pMCParticle);
+        return LArMCParticleHelper::IsNeutrino(pParent) ? pParent : nullptr; // this means 'is beam neutrino?'
+    });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -162,6 +198,7 @@ void LArNtuple::Reset()
 
     if (m_addressesSet)
     {
+        // We want to keep the structure but lose the shared pointers for both scalar and vector branches
         for (auto &entry : m_scalarBranchMap)
             entry.second.ClearNtupleRecords();
 
@@ -370,6 +407,7 @@ void LArNtuple::InstantiateTTree(const bool appendMode, const std::string &treeN
 {
     try
     {
+        // For our branch mechanics to work, we need to know if the TTree exists and whether it's empty or not
         if (appendMode && m_pOutputTFile->GetListOfKeys()->Contains(treeName.c_str()))
         {
             m_pOutputTree     = dynamic_cast<TTree *>(m_pOutputTFile->Get(treeName.c_str()));
@@ -398,6 +436,135 @@ void LArNtuple::InstantiateTTree(const bool appendMode, const std::string &treeN
                   << filePath << std::endl;
         throw STATUS_CODE_FAILURE;
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const MCParticle *LArNtuple::GetMCParticleWrapper(const ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList)
+{
+    // Check the cache first (can return nullptr)
+    const auto findIter = m_cacheMCParticles.find(pPfo);
+
+    if (findIter != m_cacheMCParticles.end())
+        return findIter->second;
+
+    // Not in cache; find it and cache it
+    const MCParticle *pMCParticle = this->GetMCParticle(pPfo, pMCParticleList);
+    m_cacheMCParticles.emplace(pPfo, pMCParticle);
+
+    return pMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+MCParticleWeightMap LArNtuple::GetMCParticleWeightMap(const CaloHitList &caloHitList, const MCParticleMapFn &mapFn) const
+{
+    MCParticleWeightMap mcParticleWeightMap;
+
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        // Synthesize the weights from every hit into the main map
+        const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
+        MCParticleVector           mcParticleVector;
+
+        for (const MCParticleWeightMap::value_type &mapEntry : hitMCParticleWeightMap)
+            mcParticleVector.push_back(mapEntry.first);
+
+        std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
+
+        for (const MCParticle *const pMCParticle : mcParticleVector)
+        {
+            try
+            {
+                const MCParticle *const pMCMappedParticle = mapFn(pMCParticle);
+
+                if (!pMCMappedParticle)
+                    continue;
+
+                const auto findIter = mcParticleWeightMap.find(pMCMappedParticle);
+
+                if (findIter == mcParticleWeightMap.end())
+                    mcParticleWeightMap.emplace(pMCMappedParticle, hitMCParticleWeightMap.at(pMCParticle));
+
+                else
+                    findIter->second += hitMCParticleWeightMap.at(pMCParticle);
+            }
+
+            catch (...)
+            {
+                continue;
+            }
+        }
+    }
+
+    return mcParticleWeightMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CaloHitList LArNtuple::GetAllDownstreamTwoDHits(const ParticleFlowObject *const pPfo) const
+{
+    // Get all the (possibly-cached) U-, V-, and W-hits and add them all up.
+    CaloHitList hitsU(this->GetAllDownstreamUHits(pPfo));
+    CaloHitList hitsV(this->GetAllDownstreamVHits(pPfo));
+    CaloHitList hitsW(this->GetAllDownstreamWHits(pPfo));
+
+    CaloHitList hitsTwoD;
+    hitsTwoD.insert(hitsTwoD.end(), std::make_move_iterator(hitsU.begin()), std::make_move_iterator(hitsU.end()));
+    hitsTwoD.insert(hitsTwoD.end(), std::make_move_iterator(hitsV.begin()), std::make_move_iterator(hitsV.end()));
+    hitsTwoD.insert(hitsTwoD.end(), std::make_move_iterator(hitsW.begin()), std::make_move_iterator(hitsW.end()));
+
+    return hitsTwoD;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const CaloHitList &LArNtuple::GetAllDownstreamHitsImpl(const ParticleFlowObject *const pPfo, const HitType hitType, PfoCache<CaloHitList> &cache) const
+{
+    // Check the cache first
+    const auto findIter = cache.find(pPfo);
+
+    if (findIter != cache.end())
+        return findIter->second;
+
+    // Not in cache, so work it out and cache it
+    PfoList downstreamPfos;
+    LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
+
+    CaloHitList caloHitList;
+    LArPfoHelper::GetCaloHits(downstreamPfos, hitType, caloHitList);
+
+    return cache.emplace(pPfo, std::move(caloHitList)).first->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const MCParticle *LArNtuple::GetMCParticleImpl(const CaloHitList &caloHitList, const MCParticleMapFn &mapFn) const
+{
+    const MCParticleWeightMap mcParticleWeightMap = this->GetMCParticleWeightMap(caloHitList, mapFn);
+
+    float             bestWeight(0.f);
+    const MCParticle *pBestMCParticle(nullptr);
+
+    MCParticleVector mcParticleVector;
+
+    for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
+        mcParticleVector.push_back(mapEntry.first);
+
+    std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
+
+    for (const MCParticle *const pCurrentMCParticle : mcParticleVector)
+    {
+        const float currentWeight(mcParticleWeightMap.at(pCurrentMCParticle));
+
+        if (currentWeight > bestWeight)
+        {
+            pBestMCParticle = pCurrentMCParticle;
+            bestWeight      = currentWeight;
+        }
+    }
+
+    return pBestMCParticle; // can be nullptr
 }
 
 } // namespace lar_physics_content
