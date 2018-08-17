@@ -59,6 +59,8 @@ protected:
     pandora::StatusCode Run();
 
 private:
+    using MCParticleRetriever =
+        std::function<const pandora::MCParticle *(const pandora::ParticleFlowObject *const pPfo)>; ///< Alias for an MCParticle retriever
     using VectorRecordProcessor = std::function<std::vector<LArNtupleRecord>(NtupleVariableBaseTool *const pNtupleTool,
         const pandora::ParticleFlowObject *const, const pandora::MCParticle *const)>; ///< Alias for vector record processing function
 
@@ -101,12 +103,13 @@ private:
      *  @param  mcParticleList the list of all relevant MC particles
      *  @param  pMCParticleList optional address of the list of all MC particles
      *  @param  processor the PFO processor
+     *  @param  mcParticleRetriever the MCParticle retriever
      *
      *  @return the size of the vector records registered
      */
     std::size_t RegisterVectorRecords(NtupleVariableBaseTool *const pNtupleTool, const pandora::PfoList &particles,
         const pandora::MCParticleList &mcParticleList, const pandora::MCParticleList *const pMCParticleList,
-        const VectorRecordProcessor &processor) const;
+        const VectorRecordProcessor &processor, const MCParticleRetriever &mcParticleRetriever) const;
 
     /**
      *  @brief  Register the ntuple records
@@ -131,11 +134,12 @@ private:
      *  @param  mcParticleList the relevant MC particle list
      *  @param  pMCParticleList optional address of the list of all MC particles
      *  @param  processor the PFO processor
+     *  @param  mcParticleRetriever the MCParticle retriever
      *
      *  @return the size of the vector records registered
      */
     std::size_t CheckAndRegisterVectorRecords(const pandora::PfoList &particleList, const pandora::MCParticleList &mcParticleList,
-        const pandora::MCParticleList *const pMCParticleList, const VectorRecordProcessor &processor) const;
+        const pandora::MCParticleList *const pMCParticleList, const VectorRecordProcessor &processor, const MCParticleRetriever &mcParticleRetriever) const;
 
     /**
      *  @brief  Test the quality of an MC particle

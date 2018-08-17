@@ -9,7 +9,6 @@
 #include "larphysicscontent/LArNtuple/LArNtuple.h"
 #include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
 
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 using namespace pandora;
@@ -152,6 +151,9 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
     m_areVectorElementsLocked(false),
     m_cache(),
     m_cacheMCParticles(),
+    m_cacheMCCosmics(),
+    m_cacheMCPrimaries(),
+    m_cacheMCNeutrinos(),
     m_cacheDownstreamThreeDHits(),
     m_cacheDownstreamUHits(),
     m_cacheDownstreamVHits(),
@@ -165,11 +167,17 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
 
 const MCParticle *LArNtuple::GetMCParticle(const ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList)
 {
-    const CaloHitList caloHitList = this->GetAllDownstreamTwoDHits(pPfo);
+    if (LArNtupleHelper::GetParticleClass(pPfo) == LArNtupleHelper::PARTICLE_CLASS::NEUTRINO)
+        return this->GetMCNeutrino(pPfo, pMCParticleList);
 
-    if (LArNtupleHelper::GetParticleClass(pPfo) != LArNtupleHelper::PARTICLE_CLASS::NEUTRINO)
-        return this->GetMCParticleImpl(caloHitList, LArMCParticleHelper::GetPrimaryMCParticle);
+    const CaloHitList caloHitList = this->GetAllTwoDHits(pPfo);
+    return this->GetMCParticleImpl(caloHitList, [](const MCParticle *const pMCParticle) { return pMCParticle; });
+}
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const MCParticle *LArNtuple::GetMCNeutrino(const ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList)
+{
     // If we only have 0 or 1 MC neutrinos, then the answer is obvious
     MCParticleVector mcNeutrinoVector;
     LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
@@ -181,6 +189,8 @@ const MCParticle *LArNtuple::GetMCParticle(const ParticleFlowObject *const pPfo,
         return mcNeutrinoVector.front();
 
     // We have multiple MC neutrinos, so find the most fitting one
+    const CaloHitList caloHitList = this->GetAllDownstreamTwoDHits(pPfo);
+
     return this->GetMCParticleImpl(caloHitList, [](const MCParticle *const pMCParticle) {
         const MCParticle *const pParent = LArMCParticleHelper::GetParentMCParticle(pMCParticle);
         return LArMCParticleHelper::IsNeutrino(pParent) ? pParent : nullptr; // this means 'is beam neutrino?'
@@ -440,23 +450,6 @@ void LArNtuple::InstantiateTTree(const bool appendMode, const std::string &treeN
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const MCParticle *LArNtuple::GetMCParticleWrapper(const ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList)
-{
-    // Check the cache first (can return nullptr)
-    const auto findIter = m_cacheMCParticles.find(pPfo);
-
-    if (findIter != m_cacheMCParticles.end())
-        return findIter->second;
-
-    // Not in cache; find it and cache it
-    const MCParticle *pMCParticle = this->GetMCParticle(pPfo, pMCParticleList);
-    m_cacheMCParticles.emplace(pPfo, pMCParticle);
-
-    return pMCParticle;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 MCParticleWeightMap LArNtuple::GetMCParticleWeightMap(const CaloHitList &caloHitList, const MCParticleMapFn &mapFn) const
 {
     MCParticleWeightMap mcParticleWeightMap;
@@ -565,6 +558,18 @@ const MCParticle *LArNtuple::GetMCParticleImpl(const CaloHitList &caloHitList, c
     }
 
     return pBestMCParticle; // can be nullptr
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CaloHitList LArNtuple::GetAllTwoDHits(const ParticleFlowObject *const pPfo) const
+{
+    CaloHitList caloHitList;
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, caloHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, caloHitList);
+
+    return caloHitList;
 }
 
 } // namespace lar_physics_content

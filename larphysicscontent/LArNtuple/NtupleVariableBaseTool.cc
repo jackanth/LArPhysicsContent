@@ -111,6 +111,7 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEventWrapper(
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessParticleWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
     const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
 {
+    
     return this->ProcessImpl(pAlgorithm, "pfo", [&]() { return this->ProcessParticle(pPfo, pfoList, pMCParticle, pMCParticleList); });
 }
 
