@@ -9,6 +9,8 @@
 #define LAR_BRANCH_PLACEHOLDER 1
 
 #include "larphysicscontent/LArNtuple/LArNtupleRecord.h"
+
+#include <any>
 #include <memory>
 
 namespace lar_physics_content
@@ -99,25 +101,16 @@ protected:
     LArNtupleRecord::VALUE_TYPE ValueType() const noexcept;
 
     /**
-     *  @brief  Get the cache index if it has been set
-     *
-     *  @return the cache index
+     *  @return the cache element pointer
      */
-    std::size_t CacheIndex() const;
+    std::any *CacheElement() const noexcept;
 
     /**
-     *  @brief  Set the cache index
+     *  @brief  Set the cache element pointer
      *
-     *  @param cacheIndex the cache index
+     *  @param  pCacheElement address of the element
      */
-    void CacheIndex(const std::size_t cacheIndex) noexcept;
-
-    /**
-     *  @brief  Get whether the cache index has been set
-     *
-     *  @return whether the cache index has been set
-     */
-    bool CacheIndexSet() const noexcept;
+    void CacheElement(std::any *const pCacheElement) noexcept;
 
     friend class LArNtuple;
 
@@ -125,8 +118,7 @@ private:
     NtupleRecordSPtr              m_spNtupleScalarRecord; ///< Shared pointer to the ntuple scalar record
     std::vector<NtupleRecordSPtr> m_ntupleVectorRecord;   ///< The vector record shared pointers
     LArNtupleRecord::VALUE_TYPE   m_valueType;            ///< The branch's value type
-    std::size_t                   m_cacheIndex;           ///< The cache index
-    bool                          m_cacheIndexSet;        ///< Whether the cache index has been set
+    std::any *                    m_pCacheElement;        ///< The cache element pointer
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -161,17 +153,16 @@ inline LArNtupleRecord::VALUE_TYPE LArBranchPlaceholder::ValueType() const noexc
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void LArBranchPlaceholder::CacheIndex(const std::size_t cacheIndex) noexcept
+inline void LArBranchPlaceholder::CacheElement(std::any *const pCacheElement) noexcept
 {
-    m_cacheIndex    = cacheIndex;
-    m_cacheIndexSet = true;
+    m_pCacheElement = pCacheElement;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool LArBranchPlaceholder::CacheIndexSet() const noexcept
+inline std::any *LArBranchPlaceholder::CacheElement() const noexcept
 {
-    return m_cacheIndexSet;
+    return m_pCacheElement;
 }
 
 } // namespace lar_physics_content

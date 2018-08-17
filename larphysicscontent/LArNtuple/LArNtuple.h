@@ -455,19 +455,21 @@ void LArNtuple::PushToBranch(const std::string &branchName, LArBranchPlaceholder
 
     if (m_addressesSet)
     {
-        if (branchPlaceholder.CacheIndex() >= m_cache.size())
+        std::any *const pCacheElement = branchPlaceholder.CacheElement();
+
+        if (!pCacheElement)
         {
-            std::cerr << "LArNtuple: Cache index was out of bounds" << std::endl;
+            std::cerr << "LArNtuple: Cache element address has not been set" << std::endl;
             throw pandora::STATUS_CODE_FAILURE;
         }
 
-        std::any_cast<TOBJ_D &>(m_cache.at(branchPlaceholder.CacheIndex())) = std::forward<T>(object);
+        std::any_cast<TOBJ_D &>(*pCacheElement) = std::forward<T>(object);
     }
 
     else
     {
         TOBJ_D &cachedObject = this->CacheObject(std::forward<T>(object));
-        branchPlaceholder.CacheIndex(m_cache.size() - 1UL);
+        branchPlaceholder.CacheElement(&m_cache.back());
         this->AddBranch<TOBJ_D>(branchName, cachedObject, splitMode);
     }
 }

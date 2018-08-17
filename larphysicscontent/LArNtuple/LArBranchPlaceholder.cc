@@ -48,20 +48,8 @@ LArBranchPlaceholder::LArBranchPlaceholder(const LArNtupleRecord &record) noexce
     m_spNtupleScalarRecord(new LArNtupleRecord(record)),
     m_ntupleVectorRecord(),
     m_valueType(record.ValueType()),
-    m_cacheIndex(0UL),
-    m_cacheIndexSet(false)
+    m_pCacheElement(nullptr)
 {
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-std::size_t LArBranchPlaceholder::CacheIndex() const
-{
-    if (m_cacheIndexSet)
-        return m_cacheIndex;
-
-    std::cerr << "LArBranchPlaceholder: Could not get cache index because it has not been set" << std::endl;
-    throw STATUS_CODE_NOT_FOUND;
 }
 
 } // namespace lar_physics_content
