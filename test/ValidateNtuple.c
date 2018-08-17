@@ -125,10 +125,10 @@ void ValidateNtuple(const TString &filePath, const TString &ntupleName = "Pandor
     // Prepare the reserved values
     TTreeReaderValue<Int_t> fileId(treeReader, "fileId");
     TTreeReaderValue<Int_t> eventNum(treeReader, "eventNum");
-    TTreeReaderValue<UInt_t> numNeutrinos(treeReader, "numNeutrinos");
-    TTreeReaderValue<UInt_t> numCosmicRays(treeReader, "numCosmicRays");
-    TTreeReaderValue<UInt_t> numPrimaries(treeReader, "numPrimaries");
-    TTreeReaderValue<UInt_t> numPfos(treeReader, "numPfos");
+    TTreeReaderValue<UInt_t> numNeutrinos(treeReader, "numNeutrinoEntries");
+    TTreeReaderValue<UInt_t> numCosmicRays(treeReader, "numCosmicRayEntries");
+    TTreeReaderValue<UInt_t> numPrimaries(treeReader, "numPrimaryEntries");
+    TTreeReaderValue<UInt_t> numPfos(treeReader, "numPfoEntries");
     TTreeReaderValue<Bool_t> hasMcInfo(treeReader, "hasMcInfo");
 
     // Prepare the per-event values
