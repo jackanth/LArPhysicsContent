@@ -7,6 +7,7 @@
  */
 
 #include "larphysicscontent/LArAnalysis/DefaultNtupleTool.h"
+
 #include "larphysicscontent/LArHelpers/LArAnalysisHelper.h"
 #include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
 
@@ -24,8 +25,7 @@ DefaultNtupleTool::DefaultNtupleTool() :
     m_fiducialCutLowMargins(10.f, 20.f, 10.f),
     m_fiducialCutHighMargins(10.f, 20.f, 10.f),
     m_minFiducialCoordinates(0.f, 0.f, 0.f),
-    m_maxFiducialCoordinates(0.f, 0.f, 0.f),
-    m_cacheDownstreamThreeDHits()
+    m_maxFiducialCoordinates(0.f, 0.f, 0.f)
 {
 }
 
@@ -154,7 +154,7 @@ std::vector<LArNtupleRecord> DefaultNtupleTool::ProduceGenericPfoRecords(const P
         records.emplace_back("NumberOfCollectionPlaneHits", static_cast<LArNtupleRecord::RUInt>(this->GetAllDownstreamWHits(pPfo).size()));
     }
 
-    else
+    else // null values for size consistency
     {
         records.emplace_back("IsVertexFiducial", static_cast<LArNtupleRecord::RBool>(false));
         records.emplace_back("VertexX", static_cast<LArNtupleRecord::RFloat>(0.f));
@@ -182,50 +182,12 @@ std::vector<LArNtupleRecord> DefaultNtupleTool::ProduceGenericPfoMCRecords(
         records.emplace_back("mc_McParticleUid", reinterpret_cast<LArNtupleRecord::RULong64>(pMCParticle->GetUid()));
     }
 
-    else
+    else // null values for size consistency
     {
         records.emplace_back("mc_McParticleUid", reinterpret_cast<LArNtupleRecord::RULong64>(0ULL));
     }
 
     return records;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-CaloHitList DefaultNtupleTool::GetAllDownstreamTwoDHits(const ParticleFlowObject *const pPfo) const
-{
-    // Get all the (possibly-cached) U-, V-, and W-hits and add them all up.
-    CaloHitList hitsU(this->GetAllDownstreamUHits(pPfo));
-    CaloHitList hitsV(this->GetAllDownstreamVHits(pPfo));
-    CaloHitList hitsW(this->GetAllDownstreamWHits(pPfo));
-
-    CaloHitList hitsTwoD;
-    hitsTwoD.insert(hitsTwoD.end(), std::make_move_iterator(hitsU.begin()), std::make_move_iterator(hitsU.end()));
-    hitsTwoD.insert(hitsTwoD.end(), std::make_move_iterator(hitsV.begin()), std::make_move_iterator(hitsV.end()));
-    hitsTwoD.insert(hitsTwoD.end(), std::make_move_iterator(hitsW.begin()), std::make_move_iterator(hitsW.end()));
-
-    return hitsTwoD;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const CaloHitList &DefaultNtupleTool::GetAllDownstreamHitsImpl(
-    const ParticleFlowObject *const pPfo, const HitType hitType, PfoCache<CaloHitList> &cache) const
-{
-    // Check the cache first
-    const auto findIter = cache.find(pPfo);
-
-    if (findIter != cache.end())
-        return findIter->second;
-
-    // Not in cache, so work it out and cache it
-    PfoList downstreamPfos;
-    LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
-
-    CaloHitList caloHitList;
-    LArPfoHelper::GetCaloHits(downstreamPfos, hitType, caloHitList);
-
-    return cache.emplace(pPfo, std::move(caloHitList)).first->second;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
