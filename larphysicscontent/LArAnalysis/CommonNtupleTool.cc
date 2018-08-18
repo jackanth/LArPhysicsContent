@@ -1,12 +1,12 @@
 /**
- *  @file   larphysicscontent/LArAnalysis/DefaultNtupleTool.cc
+ *  @file   larphysicscontent/LArAnalysis/CommonNtupleTool.cc
  *
- *  @brief  Implementation of the default ntuple tool class.
+ *  @brief  Implementation of the common ntuple tool class.
  *
  *  $Log: $
  */
 
-#include "larphysicscontent/LArAnalysis/DefaultNtupleTool.h"
+#include "larphysicscontent/LArAnalysis/CommonNtupleTool.h"
 
 #include "larphysicscontent/LArHelpers/LArAnalysisHelper.h"
 #include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
@@ -20,7 +20,7 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
-DefaultNtupleTool::DefaultNtupleTool() :
+CommonNtupleTool::CommonNtupleTool() :
     NtupleVariableBaseTool(),
     m_fiducialCutLowMargins(10.f, 20.f, 10.f),
     m_fiducialCutHighMargins(10.f, 20.f, 10.f),
@@ -31,7 +31,7 @@ DefaultNtupleTool::DefaultNtupleTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DefaultNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode CommonNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
@@ -46,7 +46,7 @@ StatusCode DefaultNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> DefaultNtupleTool::ProcessEvent(const PfoList &pfoList, const MCParticleList *const)
+std::vector<LArNtupleRecord> CommonNtupleTool::ProcessEvent(const PfoList &pfoList, const MCParticleList *const)
 {
     std::vector<LArNtupleRecord> records;
     std::size_t                  numPrimaryTracks(0UL), numPrimaryShowers(0UL);
@@ -71,55 +71,46 @@ std::vector<LArNtupleRecord> DefaultNtupleTool::ProcessEvent(const PfoList &pfoL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> DefaultNtupleTool::ProcessNeutrino(const ParticleFlowObject *const pPfo, const PfoList &pfoList,
-    const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
+std::vector<LArNtupleRecord> CommonNtupleTool::ProcessNeutrino(
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const, const MCParticleList *const)
 {
     std::vector<LArNtupleRecord> records;
 
-    std::vector<LArNtupleRecord> genericPfoRecords   = this->ProduceGenericPfoRecords(pPfo, pfoList);
-    std::vector<LArNtupleRecord> genericPfoMCRecords = this->ProduceGenericPfoMCRecords(pPfo, pfoList, pMCParticle, pMCParticleList);
-
+    std::vector<LArNtupleRecord> genericPfoRecords = this->ProduceGenericPfoRecords(pPfo, pfoList);
     records.insert(records.end(), std::make_move_iterator(genericPfoRecords.begin()), std::make_move_iterator(genericPfoRecords.end()));
-    records.insert(records.end(), std::make_move_iterator(genericPfoMCRecords.begin()), std::make_move_iterator(genericPfoMCRecords.end()));
 
     return records;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> DefaultNtupleTool::ProcessPrimary(const ParticleFlowObject *const pPfo, const PfoList &pfoList,
-    const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
+std::vector<LArNtupleRecord> CommonNtupleTool::ProcessPrimary(
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const, const MCParticleList *const)
 {
     std::vector<LArNtupleRecord> records;
 
-    std::vector<LArNtupleRecord> genericPfoRecords   = this->ProduceGenericPfoRecords(pPfo, pfoList);
-    std::vector<LArNtupleRecord> genericPfoMCRecords = this->ProduceGenericPfoMCRecords(pPfo, pfoList, pMCParticle, pMCParticleList);
-
+    std::vector<LArNtupleRecord> genericPfoRecords = this->ProduceGenericPfoRecords(pPfo, pfoList);
     records.insert(records.end(), std::make_move_iterator(genericPfoRecords.begin()), std::make_move_iterator(genericPfoRecords.end()));
-    records.insert(records.end(), std::make_move_iterator(genericPfoMCRecords.begin()), std::make_move_iterator(genericPfoMCRecords.end()));
 
     return records;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> DefaultNtupleTool::ProcessCosmicRay(const ParticleFlowObject *const pPfo, const PfoList &pfoList,
-    const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
+std::vector<LArNtupleRecord> CommonNtupleTool::ProcessCosmicRay(
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const, const MCParticleList *const)
 {
     std::vector<LArNtupleRecord> records;
 
-    std::vector<LArNtupleRecord> genericPfoRecords   = this->ProduceGenericPfoRecords(pPfo, pfoList);
-    std::vector<LArNtupleRecord> genericPfoMCRecords = this->ProduceGenericPfoMCRecords(pPfo, pfoList, pMCParticle, pMCParticleList);
-
+    std::vector<LArNtupleRecord> genericPfoRecords = this->ProduceGenericPfoRecords(pPfo, pfoList);
     records.insert(records.end(), std::make_move_iterator(genericPfoRecords.begin()), std::make_move_iterator(genericPfoRecords.end()));
-    records.insert(records.end(), std::make_move_iterator(genericPfoMCRecords.begin()), std::make_move_iterator(genericPfoMCRecords.end()));
 
     return records;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> DefaultNtupleTool::ProduceGenericPfoRecords(const ParticleFlowObject *const pPfo, const PfoList &) const
+std::vector<LArNtupleRecord> CommonNtupleTool::ProduceGenericPfoRecords(const ParticleFlowObject *const pPfo, const PfoList &) const
 {
     std::vector<LArNtupleRecord> records;
     records.emplace_back("WasReconstructed", static_cast<LArNtupleRecord::RBool>(pPfo));
@@ -130,13 +121,13 @@ std::vector<LArNtupleRecord> DefaultNtupleTool::ProduceGenericPfoRecords(const P
 
         if (vertexList.empty())
         {
-            std::cerr << "DefaultNtupleTool: Could not get vertex because list was empty" << std::endl;
+            std::cerr << "CommonNtupleTool: Could not get vertex because list was empty" << std::endl;
             throw STATUS_CODE_FAILURE;
         }
 
         if (vertexList.size() > 1UL)
         {
-            std::cerr << "DefaultNtupleTool: Could not get vertex because there were more than one" << std::endl;
+            std::cerr << "CommonNtupleTool: Could not get vertex because there were more than one" << std::endl;
             throw STATUS_CODE_FAILURE;
         }
 
@@ -171,28 +162,7 @@ std::vector<LArNtupleRecord> DefaultNtupleTool::ProduceGenericPfoRecords(const P
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> DefaultNtupleTool::ProduceGenericPfoMCRecords(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const pMCParticle, const MCParticleList *const) const
-{
-    std::vector<LArNtupleRecord> records;
-    records.emplace_back("HasMCInfo", static_cast<LArNtupleRecord::RBool>(pMCParticle));
-
-    if (pMCParticle)
-    {
-        records.emplace_back("mc_McParticleUid", reinterpret_cast<LArNtupleRecord::RULong64>(pMCParticle->GetUid()));
-    }
-
-    else // null values for size consistency
-    {
-        records.emplace_back("mc_McParticleUid", reinterpret_cast<LArNtupleRecord::RULong64>(0ULL));
-    }
-
-    return records;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float DefaultNtupleTool::GetFractionOfFiducialThreeDHits(const ParticleFlowObject *const pPfo) const
+float CommonNtupleTool::GetFractionOfFiducialThreeDHits(const ParticleFlowObject *const pPfo) const
 {
     const auto &caloHitList = this->GetAllDownstreamThreeDHits(pPfo);
     std::size_t fiducialHits(0UL);

@@ -11,9 +11,10 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/Pandora.h"
 
-#include "larphysicscontent/LArPhysicsContent.h"
 #include "larphysicscontent/LArAnalysis/AnalysisNtupleAlgorithm.h"
-#include "larphysicscontent/LArAnalysis/DefaultNtupleTool.h"
+#include "larphysicscontent/LArAnalysis/CommonMCNtupleTool.h"
+#include "larphysicscontent/LArAnalysis/CommonNtupleTool.h"
+#include "larphysicscontent/LArPhysicsContent.h"
 
 #include "test/TestNtupleTool.h"
 
@@ -21,9 +22,10 @@
 #define LAR_ALGORITHM_LIST(d)                       \
     d("LArAnalysisNtuple", AnalysisNtupleAlgorithm)
 
-#define LAR_ALGORITHM_TOOL_LIST(d)         \
-    d("LArTestNtupleTool", TestNtupleTool) \
-    d("LArDefaultNtupleTool", DefaultNtupleTool)
+#define LAR_ALGORITHM_TOOL_LIST(d)             \
+    d("LArTestNtupleTool", TestNtupleTool)     \
+    d("LArCommonNtupleTool", CommonNtupleTool) \
+    d("LArCommonMCNtupleTool", CommonMCNtupleTool)
 // clang-format on
 
 #define FACTORY Factory
