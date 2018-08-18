@@ -138,9 +138,9 @@ std::tuple<MCParticleList, MCParticleList, MCParticleList> AnalysisNtupleAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::size_t AnalysisNtupleAlgorithm::RegisterVectorRecords(NtupleVariableBaseTool *const pNtupleTool, const PfoList &particles,
-    const MCParticleList &mcParticleList, const pandora::MCParticleList *const pMCParticleList, const VectorRecordProcessor &processor,
-    const MCParticleRetriever &mcParticleRetriever) const
+std::size_t AnalysisNtupleAlgorithm::RegisterVectorRecords(const PfoList &particles, const MCParticleList &mcParticleList,
+    const pandora::MCParticleList *const pMCParticleList, const LArNtupleHelper::VECTOR_BRANCH_TYPE type,
+    const VectorRecordProcessor &processor, const MCParticleRetriever &mcParticleRetriever) const
 {
     // Run over the reco PFOs, matching to MC particles where possible
     MCParticleSet encounteredMCParticles;
@@ -149,13 +149,16 @@ std::size_t AnalysisNtupleAlgorithm::RegisterVectorRecords(NtupleVariableBaseToo
     {
         const MCParticle *const pMCParticle = pMCParticleList ? mcParticleRetriever(pPfo) : nullptr;
 
-        for (const LArNtupleRecord &record : processor(pNtupleTool, pPfo, pMCParticle))
-            m_spNtuple->AddVectorRecordElement(record);
+        for (NtupleVariableBaseTool *const pNtupleTool : m_ntupleVariableTools)
+        {
+            for (const LArNtupleRecord &record : processor(pNtupleTool, pPfo, pMCParticle))
+                m_spNtuple->AddVectorRecordElement(record, type);
 
-        if (pMCParticle)
-            encounteredMCParticles.insert(pMCParticle);
+            if (pMCParticle)
+                encounteredMCParticles.insert(pMCParticle);
+        }
 
-        m_spNtuple->FillVectors();
+        m_spNtuple->FillVectors(type);
     }
 
     // Find all the MC particles that are in our main classes but not matched to a PFO
@@ -169,14 +172,17 @@ std::size_t AnalysisNtupleAlgorithm::RegisterVectorRecords(NtupleVariableBaseToo
         if (!this->TestMCParticleQuality(pMCParticle))
             continue;
 
-        for (const LArNtupleRecord &record : processor(pNtupleTool, nullptr, pMCParticle))
-            m_spNtuple->AddVectorRecordElement(record);
+        for (NtupleVariableBaseTool *const pNtupleTool : m_ntupleVariableTools)
+        {
+            for (const LArNtupleRecord &record : processor(pNtupleTool, nullptr, pMCParticle))
+                m_spNtuple->AddVectorRecordElement(record, type);
+        }
 
         ++extraMCRecords;
-        m_spNtuple->FillVectors();
+        m_spNtuple->FillVectors(type);
     }
 
-    m_spNtuple->PushVectors();
+    m_spNtuple->PushVectors(type);
     return particles.size() + extraMCRecords;
 }
 
@@ -186,33 +192,47 @@ void AnalysisNtupleAlgorithm::RegisterNtupleRecords(const PfoList &neutrinos, co
     const PfoList &pfoList, const MCParticleList &mcNeutrinos, const MCParticleList &mcCosmicRays, const MCParticleList &mcPrimaries,
     const MCParticleList *const pMCParticleList) const
 {
+    std::cout << "AnalysisNtupleAlgorithm: Registering PFO records" << std::endl;
+
     // Register the vector records for all the particles
-    const std::size_t numPfoEntries = this->CheckAndRegisterVectorRecords(pfoList, pMCParticleList ? *pMCParticleList : MCParticleList(), pMCParticleList,
+    const std::size_t numPfoEntries = this->RegisterVectorRecords(pfoList, pMCParticleList ? *pMCParticleList : MCParticleList(),
+        pMCParticleList, LArNtupleHelper::VECTOR_BRANCH_TYPE::PARTICLE,
         [&](NtupleVariableBaseTool *const pNtupleTool, const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) {
             return pNtupleTool->ProcessParticleWrapper(this, pPfo, pfoList, pMCParticle, pMCParticleList);
         },
         [&](const ParticleFlowObject *const pPfo) { return m_spNtuple->GetMCParticleWrapper(pPfo, pMCParticleList); });
 
+    std::cout << "AnalysisNtupleAlgorithm: Registering cosmic records" << std::endl;
+
     // Register the vector records for all the cosmics
-    const std::size_t numCosmicRayEntries = this->CheckAndRegisterVectorRecords(cosmicRays, mcCosmicRays, pMCParticleList,
-        [&](NtupleVariableBaseTool *const pNtupleTool, const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) {
-            return pNtupleTool->ProcessCosmicRayWrapper(this, pPfo, pfoList, pMCParticle, pMCParticleList);
-        },
-        [&](const ParticleFlowObject *const pPfo) { return m_spNtuple->GetMCCosmicWrapper(pPfo, pMCParticleList); });
+    const std::size_t numCosmicRayEntries =
+        this->RegisterVectorRecords(cosmicRays, mcCosmicRays, pMCParticleList, LArNtupleHelper::VECTOR_BRANCH_TYPE::COSMIC_RAY,
+            [&](NtupleVariableBaseTool *const pNtupleTool, const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) {
+                return pNtupleTool->ProcessCosmicRayWrapper(this, pPfo, pfoList, pMCParticle, pMCParticleList);
+            },
+            [&](const ParticleFlowObject *const pPfo) { return m_spNtuple->GetMCCosmicWrapper(pPfo, pMCParticleList); });
+
+    std::cout << "AnalysisNtupleAlgorithm: Registering primary records" << std::endl;
 
     // Register the vector records for all the primaries
-    const std::size_t numPrimaryEntries = this->CheckAndRegisterVectorRecords(primaries, mcPrimaries, pMCParticleList,
-        [&](NtupleVariableBaseTool *const pNtupleTool, const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) {
-            return pNtupleTool->ProcessPrimaryWrapper(this, pPfo, pfoList, pMCParticle, pMCParticleList);
-        },
-        [&](const ParticleFlowObject *const pPfo) { return m_spNtuple->GetMCPrimaryWrapper(pPfo, pMCParticleList); });
+    const std::size_t numPrimaryEntries =
+        this->RegisterVectorRecords(primaries, mcPrimaries, pMCParticleList, LArNtupleHelper::VECTOR_BRANCH_TYPE::PRIMARY,
+            [&](NtupleVariableBaseTool *const pNtupleTool, const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) {
+                return pNtupleTool->ProcessPrimaryWrapper(this, pPfo, pfoList, pMCParticle, pMCParticleList);
+            },
+            [&](const ParticleFlowObject *const pPfo) { return m_spNtuple->GetMCPrimaryWrapper(pPfo, pMCParticleList); });
+
+    std::cout << "AnalysisNtupleAlgorithm: Registering neutrino records" << std::endl;
 
     // Register the vector records for all the neutrinos
-    const std::size_t numNeutrinoEntries = this->CheckAndRegisterVectorRecords(neutrinos, mcNeutrinos, pMCParticleList,
-        [&](NtupleVariableBaseTool *const pNtupleTool, const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) {
-            return pNtupleTool->ProcessNeutrinoWrapper(this, pPfo, pfoList, pMCParticle, pMCParticleList);
-        },
-        [&](const ParticleFlowObject *const pPfo) { return m_spNtuple->GetMCNeutrinoWrapper(pPfo, pMCParticleList); });
+    const std::size_t numNeutrinoEntries =
+        this->RegisterVectorRecords(neutrinos, mcNeutrinos, pMCParticleList, LArNtupleHelper::VECTOR_BRANCH_TYPE::NEUTRINO,
+            [&](NtupleVariableBaseTool *const pNtupleTool, const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) {
+                return pNtupleTool->ProcessNeutrinoWrapper(this, pPfo, pfoList, pMCParticle, pMCParticleList);
+            },
+            [&](const ParticleFlowObject *const pPfo) { return m_spNtuple->GetMCNeutrinoWrapper(pPfo, pMCParticleList); });
+
+    std::cout << "AnalysisNtupleAlgorithm: Registering event records" << std::endl;
 
     // Register the per-event records
     for (NtupleVariableBaseTool *const pNtupleTool : m_ntupleVariableTools)
@@ -229,30 +249,6 @@ void AnalysisNtupleAlgorithm::RegisterNtupleRecords(const PfoList &neutrinos, co
     m_spNtuple->AddScalarRecord(LArNtupleRecord("numPrimaryEntries", static_cast<LArNtupleRecord::RUInt>(numPrimaryEntries)));
     m_spNtuple->AddScalarRecord(LArNtupleRecord("numPfoEntries", static_cast<LArNtupleRecord::RUInt>(numPfoEntries)));
     m_spNtuple->AddScalarRecord(LArNtupleRecord("hasMcInfo", static_cast<LArNtupleRecord::RBool>(pMCParticleList)));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-std::size_t AnalysisNtupleAlgorithm::CheckAndRegisterVectorRecords(const PfoList &particleList, const MCParticleList &mcParticleList,
-    const MCParticleList *const pMCParticleList, const VectorRecordProcessor &processor, const MCParticleRetriever &mcParticleRetriever) const
-{
-    std::size_t numEntries(0UL);
-
-    for (NtupleVariableBaseTool *const pNtupleTool : m_ntupleVariableTools)
-    {
-        const std::size_t newNumEntries =
-            this->RegisterVectorRecords(pNtupleTool, particleList, mcParticleList, pMCParticleList, processor, mcParticleRetriever);
-
-        if ((numEntries > 0UL) && (numEntries != newNumEntries))
-        {
-            std::cerr << "NtupleVariableBaseTool: There was an inconsistent vector record size due to an internal error" << std::endl;
-            throw STATUS_CODE_FAILURE;
-        }
-
-        numEntries = newNumEntries;
-    }
-
-    return numEntries;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

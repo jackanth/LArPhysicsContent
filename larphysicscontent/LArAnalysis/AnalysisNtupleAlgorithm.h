@@ -8,6 +8,7 @@
 #ifndef LAR_ANALYSIS_NTUPLE_ALGORITHM_H
 #define LAR_ANALYSIS_NTUPLE_ALGORITHM_H 1
 
+#include "larphysicscontent/LArNtuple/LArNtuple.h"
 #include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
 
 #include "Objects/ParticleFlowObject.h"
@@ -98,17 +99,17 @@ private:
     /**
      *  @brief  Register the vector records for a given processor
      *
-     *  @param  pNtupleTool address of the ntuple variable tool
      *  @param  particles the list of all PFOs
      *  @param  mcParticleList the list of all relevant MC particles
      *  @param  pMCParticleList optional address of the list of all MC particles
+     *  @param  type the vector type
      *  @param  processor the PFO processor
      *  @param  mcParticleRetriever the MCParticle retriever
      *
      *  @return the size of the vector records registered
      */
-    std::size_t RegisterVectorRecords(NtupleVariableBaseTool *const pNtupleTool, const pandora::PfoList &particles,
-        const pandora::MCParticleList &mcParticleList, const pandora::MCParticleList *const pMCParticleList,
+    std::size_t RegisterVectorRecords(const pandora::PfoList &particles, const pandora::MCParticleList &mcParticleList,
+        const pandora::MCParticleList *const pMCParticleList, const LArNtupleHelper::VECTOR_BRANCH_TYPE type,
         const VectorRecordProcessor &processor, const MCParticleRetriever &mcParticleRetriever) const;
 
     /**
@@ -126,20 +127,6 @@ private:
     void RegisterNtupleRecords(const pandora::PfoList &neutrinos, const pandora::PfoList &cosmicRays, const pandora::PfoList &primaries,
         const pandora::PfoList &pfoList, const pandora::MCParticleList &mcNeutrinos, const pandora::MCParticleList &mcCosmicRays,
         const pandora::MCParticleList &mcPrimaries, const pandora::MCParticleList *const pMCParticleList) const;
-
-    /**
-     *  @brief  Wrapper for registering the ntuple records and checking the vector sizes are internally consistent
-     *
-     *  @param  particleList the relevant particle list
-     *  @param  mcParticleList the relevant MC particle list
-     *  @param  pMCParticleList optional address of the list of all MC particles
-     *  @param  processor the PFO processor
-     *  @param  mcParticleRetriever the MCParticle retriever
-     *
-     *  @return the size of the vector records registered
-     */
-    std::size_t CheckAndRegisterVectorRecords(const pandora::PfoList &particleList, const pandora::MCParticleList &mcParticleList,
-        const pandora::MCParticleList *const pMCParticleList, const VectorRecordProcessor &processor, const MCParticleRetriever &mcParticleRetriever) const;
 
     /**
      *  @brief  Test the quality of an MC particle

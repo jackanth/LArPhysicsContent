@@ -30,6 +30,17 @@ public:
     };
 
     /**
+     *  @brief  The vector branch type
+     */
+    enum class VECTOR_BRANCH_TYPE : unsigned
+    {
+        NEUTRINO   = 0U, ///< A neutrino-type vector
+        PRIMARY    = 1U, ///< A primary-type vector
+        COSMIC_RAY = 2U, ///< A cosmic-type vector
+        PARTICLE   = 3U  ///< A particle-type vector
+    };
+
+    /**
      *  @brief  Deleted copy constructor
      */
     LArNtupleHelper(const LArNtupleHelper &) = delete;

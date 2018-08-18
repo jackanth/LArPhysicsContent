@@ -122,23 +122,27 @@ protected:
     friend class NtupleVariableBaseTool;
 
 private:
+    using MCParticleMapFn = std::function<const pandora::MCParticle *(const pandora::MCParticle *const)>; ///< Alias for an MC particle map function
+    using BranchMap = std::unordered_map<std::string, LArBranchPlaceholder>; ///< Alias for a map from branch names to branch placeholders
+    using Cache     = std::deque<std::any>; ///< Alias for a generic cache (deque to preserve pointers to elements)
+    using VectorBranchTypeMap =
+        std::unordered_map<LArNtupleHelper::VECTOR_BRANCH_TYPE, BranchMap>; ///< Alias for a map from vector branch types to their branch map
+
     template <typename T>
     using PfoCache =
         std::unordered_map<const pandora::ParticleFlowObject *, std::decay_t<T>>; ///< Alias for a cache from PFO addresses to other objects
 
-    using MCParticleMapFn = std::function<const pandora::MCParticle *(const pandora::MCParticle *const)>; ///< Alias for an MC particle map function
-    using BranchMap = std::unordered_map<std::string, LArBranchPlaceholder>; ///< Alias for a map from branch names to branch placeholders
-    using Cache     = std::deque<std::any>; ///< Alias for a generic cache (deque to preserve pointers to elements)
+    template <typename T>
+    using RecordMapGetter = std::function<LArBranchPlaceholder::NtupleRecordMap<const std::decay_t<T> *>(const LArBranchPlaceholder &)>; ///< Alias for a record map getter function
 
-    TFile *                m_pOutputTFile;            ///< The output TFile
-    TTree *                m_pOutputTree;             ///< The output TTree
-    BranchMap              m_scalarBranchMap;         ///< The scalar branch map
-    BranchMap              m_vectorElementBranchMap;  ///< The vector element branch map
-    std::vector<BranchMap> m_vectorBranchMaps;        ///< The vector branch map
-    std::size_t            m_vectorBranchMapIndex;    ///< The vector branch map index
-    bool                   m_addressesSet;            ///< Whether the addresses have been set
-    bool                   m_ntupleEmpty;             ///< Whether the ntuple is empty
-    bool                   m_areVectorElementsLocked; ///< Whether scalar entries are locked
+    TFile *             m_pOutputTFile;            ///< The output TFile
+    TTree *             m_pOutputTree;             ///< The output TTree
+    BranchMap           m_scalarBranchMap;         ///< The scalar branch map
+    BranchMap           m_vectorElementBranchMap;  ///< The vector element branch map
+    VectorBranchTypeMap m_vectorBranchMaps;        ///< The map from vector branch types to their branch maps
+    bool                m_addressesSet;            ///< Whether the addresses have been set
+    bool                m_ntupleEmpty;             ///< Whether the ntuple is empty
+    bool                m_areVectorElementsLocked; ///< Whether scalar entries are locked
 
     mutable Cache                                 m_cache;                     ///< The cache
     mutable PfoCache<const pandora::MCParticle *> m_cacheMCParticles;          ///< The cached mappings from PFOs to MC particles
@@ -153,26 +157,31 @@ private:
     /**
      *  @brief  Add a scalar record to the cache
      *
-     *  @param  record The record
+     *  @param  record the record
      */
     void AddScalarRecord(const LArNtupleRecord &record);
 
     /**
      *  @brief  Add a vector record element to the cache
      *
-     *  @param  record The record
+     *  @param  record the record
+     *  @param  type the vector type
      */
-    void AddVectorRecordElement(const LArNtupleRecord &record);
+    void AddVectorRecordElement(const LArNtupleRecord &record, const LArNtupleHelper::VECTOR_BRANCH_TYPE type);
 
     /**
      *  @brief  Fill the vectors using the cached elements
+     *
+     *  @param  type the vector type
      */
-    void FillVectors();
+    void FillVectors(const LArNtupleHelper::VECTOR_BRANCH_TYPE type);
 
     /**
      *  @brief  Push the vector records onto the stack
+     *
+     *  @param  type the vector type
      */
-    void PushVectors();
+    void PushVectors(const LArNtupleHelper::VECTOR_BRANCH_TYPE type);
 
     /**
      *  @brief  Fill the TTree using the cache entries and reset the cache
@@ -252,9 +261,11 @@ private:
     /**
      *  @brief  Get the current vector branch map
      *
+     *  @param  type the vector type
+     *
      *  @return the current branch map
      */
-    BranchMap &GetCurrentVectorBranchMap();
+    BranchMap &GetVectorBranchMap(const LArNtupleHelper::VECTOR_BRANCH_TYPE type);
 
     /**
      *  @brief  Add a branch or set the branch address in advance of the first fill
@@ -430,6 +441,73 @@ private:
     template <typename T>
     std::decay_t<T> CacheWrapper(const pandora::ParticleFlowObject *const pPfo, PfoCache<std::decay_t<T>> &cache,
         const std::function<std::decay_t<T>()> &getter) const;
+
+    /**
+     *  @brief  Retrieve a scalar record
+     *
+     *  @param  branchName the branch name
+     *
+     *  @return the record shared pointer
+     */
+    LArBranchPlaceholder::NtupleRecordSPtr GetScalarRecord(const std::string &branchName) const;
+
+    /**
+     *  @brief  Retrieve a vector record element
+     *
+     *  @param  type the vector branch type
+     *  @param  branchName the branch name
+     *  @param  pPfo address of the associated PFO
+     *
+     *  @return the record shared pointer
+     */
+    LArBranchPlaceholder::NtupleRecordSPtr GetVectorRecordElement(
+        const LArNtupleHelper::VECTOR_BRANCH_TYPE type, const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Retrieve a vector record element
+     *
+     *  @param  type the vector branch type
+     *  @param  branchName the branch name
+     *  @param  pMCParticle address of the associated MC particle
+     *
+     *  @return the record shared pointer
+     */
+    LArBranchPlaceholder::NtupleRecordSPtr GetVectorRecordElement(
+        const LArNtupleHelper::VECTOR_BRANCH_TYPE type, const std::string &branchName, const pandora::MCParticle *const pMCParticle) const;
+
+    /**
+     *  @brief  Retrieve a vector record element (implementation method)
+     *
+     *  @param  type the vector branch type
+     *  @param  branchName the branch name
+     *  @param  pParticle address of the associated particle
+     *  @param  recordMapGetter the record map getter function
+     *
+     *  @return the record shared pointer
+     */
+    template <typename TPARTICLE>
+    LArBranchPlaceholder::NtupleRecordSPtr GetVectorRecordElementImpl(const LArNtupleHelper::VECTOR_BRANCH_TYPE type, const std::string &branchName,
+        const std::decay_t<TPARTICLE> *const pParticle, const RecordMapGetter<std::decay_t<TPARTICLE>> &recordMapGetter) const;
+
+    /**
+     *  @brief  Retrieve a branch placeholder
+     *
+     *  @param  type the vector branch type
+     *  @param  branchName the branch name
+     *
+     *  @return the branch placeholder
+     */
+    const LArBranchPlaceholder &GetBranchPlaceholder(const LArNtupleHelper::VECTOR_BRANCH_TYPE type, const std::string &branchName) const;
+
+    /**
+     *  @brief  Retrieve a branch placeholder
+     *
+     *  @param  branchMap the branch map
+     *  @param  branchName the branch name
+     *
+     *  @return the branch placeholder
+     */
+    const LArBranchPlaceholder &GetBranchPlaceholder(const BranchMap &branchMap, const std::string &branchName) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -498,6 +576,13 @@ inline std::decay_t<T> &LArNtuple::CacheObject(T &&obj) const
 {
     m_cache.emplace_back(obj);
     return std::any_cast<std::decay_t<T> &>(m_cache.back());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LArNtuple::BranchMap &LArNtuple::GetVectorBranchMap(const LArNtupleHelper::VECTOR_BRANCH_TYPE type)
+{
+    return m_vectorBranchMaps.emplace(type, BranchMap()).first->second;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -585,7 +670,8 @@ void LArNtuple::PushToBranch(const std::string &branchName, LArBranchPlaceholder
 inline const pandora::MCParticle *LArNtuple::GetMCParticleWrapper(
     const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList)
 {
-    return this->CacheWrapper<const pandora::MCParticle *>(pPfo, m_cacheMCParticles, [&](){ return this->GetMCParticle(pPfo, pMCParticleList); });
+    return this->CacheWrapper<const pandora::MCParticle *>(
+        pPfo, m_cacheMCParticles, [&]() { return this->GetMCParticle(pPfo, pMCParticleList); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -593,7 +679,7 @@ inline const pandora::MCParticle *LArNtuple::GetMCParticleWrapper(
 inline const pandora::MCParticle *LArNtuple::GetMCCosmicWrapper(
     const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList)
 {
-    return this->CacheWrapper<const pandora::MCParticle *>(pPfo, m_cacheMCCosmics, [&](){ return this->GetMCCosmic(pPfo, pMCParticleList); });
+    return this->CacheWrapper<const pandora::MCParticle *>(pPfo, m_cacheMCCosmics, [&]() { return this->GetMCCosmic(pPfo, pMCParticleList); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -601,7 +687,8 @@ inline const pandora::MCParticle *LArNtuple::GetMCCosmicWrapper(
 inline const pandora::MCParticle *LArNtuple::GetMCPrimaryWrapper(
     const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList)
 {
-    return this->CacheWrapper<const pandora::MCParticle *>(pPfo, m_cacheMCPrimaries, [&](){ return this->GetMCPrimary(pPfo, pMCParticleList); });
+    return this->CacheWrapper<const pandora::MCParticle *>(
+        pPfo, m_cacheMCPrimaries, [&]() { return this->GetMCPrimary(pPfo, pMCParticleList); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -609,7 +696,8 @@ inline const pandora::MCParticle *LArNtuple::GetMCPrimaryWrapper(
 inline const pandora::MCParticle *LArNtuple::GetMCNeutrinoWrapper(
     const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList)
 {
-    return this->CacheWrapper<const pandora::MCParticle *>(pPfo, m_cacheMCNeutrinos, [&](){ return this->GetMCNeutrino(pPfo, pMCParticleList); });
+    return this->CacheWrapper<const pandora::MCParticle *>(
+        pPfo, m_cacheMCNeutrinos, [&]() { return this->GetMCNeutrino(pPfo, pMCParticleList); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -626,6 +714,51 @@ std::decay_t<T> LArNtuple::CacheWrapper(
 
     // Not in cache; find it and cache it
     return cache.emplace(pPfo, getter()).first->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LArBranchPlaceholder::NtupleRecordSPtr LArNtuple::GetVectorRecordElement(
+    const LArNtupleHelper::VECTOR_BRANCH_TYPE type, const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const
+{
+    return this->GetVectorRecordElementImpl<pandora::ParticleFlowObject>(
+        type, branchName, pPfo, [](const LArBranchPlaceholder &branchPlaceholder) { return branchPlaceholder.GetPfoRecordMap(); });
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LArBranchPlaceholder::NtupleRecordSPtr LArNtuple::GetVectorRecordElement(
+    const LArNtupleHelper::VECTOR_BRANCH_TYPE type, const std::string &branchName, const pandora::MCParticle *const pMCParticle) const
+{
+    return this->GetVectorRecordElementImpl<pandora::MCParticle>(type, branchName, pMCParticle,
+        [](const LArBranchPlaceholder &branchPlaceholder) { return branchPlaceholder.GetMCParticleRecordMap(); });
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename TPARTICLE>
+LArBranchPlaceholder::NtupleRecordSPtr LArNtuple::GetVectorRecordElementImpl(const LArNtupleHelper::VECTOR_BRANCH_TYPE type,
+    const std::string &branchName, const std::decay_t<TPARTICLE> *const pParticle, const RecordMapGetter<std::decay_t<TPARTICLE>> &recordMapGetter) const
+{
+    const LArBranchPlaceholder &branchPlaceholder = this->GetBranchPlaceholder(type, branchName);
+    const auto &                pfoRecordMap      = recordMapGetter(branchPlaceholder);
+    const auto                  recordMapFindIter = pfoRecordMap.find(pParticle);
+
+    if (recordMapFindIter == pfoRecordMap.end())
+    {
+        std::cerr << "LArNtuple: Could not find PFO amongst vector elements for branch '" << branchName << "'" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    const LArBranchPlaceholder::NtupleRecordSPtr spRecord = recordMapFindIter->second;
+
+    if (!spRecord)
+    {
+        std::cerr << "LArNtuple: Found vector record element by name '" << branchName << "' but it had not yet been filled" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return spRecord;
 }
 
 } // namespace lar_physics_content

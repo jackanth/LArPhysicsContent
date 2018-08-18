@@ -43,16 +43,16 @@ public:
     /**
      *  @brief The different kinds of value type
      */
-    enum class VALUE_TYPE
+    enum class VALUE_TYPE : unsigned
     {
-        R_FLOAT,        ///< The ROOT float type
-        R_INT,          ///< The ROOT int type
-        R_BOOL,         ///< The ROOT bool type
-        R_UINT,         ///< The ROOT uint type
-        R_ULONG64,      ///< The ROOT ulong64 type
-        R_TSTRING,      ///< The ROOT TString type
-        R_FLOAT_VECTOR, ///< A vector of ROOT float types
-        R_INT_VECTOR    ///< A vector of ROOT int types
+        R_FLOAT        = 0U, ///< The ROOT float type
+        R_INT          = 1U, ///< The ROOT int type
+        R_BOOL         = 2U, ///< The ROOT bool type
+        R_UINT         = 3U, ///< The ROOT uint type
+        R_ULONG64      = 4U, ///< The ROOT ulong64 type
+        R_TSTRING      = 5U, ///< The ROOT TString type
+        R_FLOAT_VECTOR = 6U, ///< A vector of ROOT float types
+        R_INT_VECTOR   = 7U  ///< A vector of ROOT int types
     };
 
     using RFloat       = Float_t;              ///< Alias for a ROOT float type
@@ -67,14 +67,15 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  branchName The branch name
-     *  @param  value The value
+     *  @param  branchName the branch name
+     *  @param  value the value
+     *  @param  writeToNtuple whether to write this record to the ntuple
      */
     template <typename TVALUE, typename = std::enable_if_t<std::is_same_v<std::decay_t<TVALUE>, RFloat> || std::is_same_v<std::decay_t<TVALUE>, RInt> ||
                                                            std::is_same_v<std::decay_t<TVALUE>, RBool> || std::is_same_v<std::decay_t<TVALUE>, RUInt> ||
                                                            std::is_same_v<std::decay_t<TVALUE>, RULong64> || std::is_same_v<std::decay_t<TVALUE>, RTString> ||
                                                            std::is_same_v<std::decay_t<TVALUE>, RFloatVector> || std::is_same_v<std::decay_t<TVALUE>, RIntVector>>>
-    LArNtupleRecord(std::string branchName, TVALUE &&value) noexcept;
+    LArNtupleRecord(std::string branchName, TVALUE &&value, const bool writeToNtuple = true) noexcept;
 
     /**
      * @brief  Default copy constructor
@@ -104,7 +105,7 @@ public:
     /**
      *  @brief  Get the branch name
      *
-     *  @return The branch name
+     *  @return the branch name
      */
     const std::string &BranchName() const noexcept;
 
@@ -112,17 +113,17 @@ protected:
     /**
      *  @brief  Get the value type
      *
-     *  @return The value type
+     *  @return the value type
      */
     VALUE_TYPE ValueType() const noexcept;
 
     /**
      *  @brief  Get the value
      *
-     *  @return The value
+     *  @return the value
      */
     template <typename TVALUE>
-    std::decay_t<TVALUE> Value() const;
+    const std::decay_t<TVALUE> &Value() const;
 
     /**
      *  @brief  Add a prefix to the branch name
@@ -131,6 +132,41 @@ protected:
      */
     void AddBranchNamePrefix(const std::string &prefix);
 
+    /**
+     *  @brief  Get the PFO
+     *
+     *  @return address of the PFO if there is one
+     */
+    const pandora::ParticleFlowObject *GetPfo() const noexcept;
+
+    /**
+     *  @brief  Set the PFO
+     *
+     *  @param  pPfo address of the PFO
+     */
+    void SetPfo(const pandora::ParticleFlowObject *const pPfo) noexcept;
+
+    /**
+     *  @brief  Get the MC particle
+     *
+     *  @return address of the MC particle if there is one
+     */
+    const pandora::MCParticle *GetMCParticle() const noexcept;
+
+    /**
+     *  @brief  Set the MC particle
+     *
+     *  @param  pMCParticle address of the MC particle
+     */
+    void SetMCParticle(const pandora::MCParticle *const pMCParticle) noexcept;
+
+    /**
+     *  @brief  Get whether to write this record to the ntuple
+     *
+     *  @return whether to write this to the ntuple
+     */
+    bool WriteToNtuple() const noexcept;
+
     friend class LArNtuple;
     friend class LArBranchPlaceholder;
     friend class NtupleVariableBaseTool;
@@ -138,19 +174,25 @@ protected:
 private:
     using VariantType = std::variant<RFloat, RInt, RBool, RUInt, RULong64, RTString, RFloatVector, RIntVector>; ///< Alias for the variant type
 
-    VALUE_TYPE  m_valueType;  ///< The value type
-    std::string m_branchName; ///< The branch name
-    VariantType m_value;      ///< The value
+    VALUE_TYPE                         m_valueType;     ///< The value type
+    std::string                        m_branchName;    ///< The branch name
+    VariantType                        m_value;         ///< The value
+    const pandora::ParticleFlowObject *m_pPfo;          ///< Address of the associated PFO
+    const pandora::MCParticle *        m_pMCParticle;   ///< Address of the associated MC particle
+    bool                               m_writeToNtuple; ///< Whether to write this record to the ntuple
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TVALUE, typename>
-LArNtupleRecord::LArNtupleRecord(std::string branchName, TVALUE &&value) noexcept :
+LArNtupleRecord::LArNtupleRecord(std::string branchName, TVALUE &&value, const bool writeToNtuple) noexcept :
     m_valueType(VALUE_TYPE::R_FLOAT),
     m_branchName(std::move_if_noexcept(branchName)),
-    m_value(value)
+    m_value(value),
+    m_pPfo(nullptr),
+    m_pMCParticle(nullptr),
+    m_writeToNtuple(writeToNtuple)
 {
     using TVALUE_D = std::decay_t<TVALUE>;
 
@@ -199,7 +241,7 @@ inline LArNtupleRecord::VALUE_TYPE LArNtupleRecord::ValueType() const noexcept
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TVALUE>
-std::decay_t<TVALUE> LArNtupleRecord::Value() const
+const std::decay_t<TVALUE> &LArNtupleRecord::Value() const
 {
     try
     {
@@ -208,13 +250,13 @@ std::decay_t<TVALUE> LArNtupleRecord::Value() const
 
     catch (const std::bad_variant_access &)
     {
-        std::cerr << "LArNtupleRecord: Invalid value type" << std::endl;
+        std::cerr << "LArNtupleRecord: Invalid value type for branch '" << m_branchName << "'" << std::endl;
         throw pandora::STATUS_CODE_INVALID_PARAMETER;
     }
 
     catch (...)
     {
-        std::cerr << "LArNtupleRecord: Failed to get value" << std::endl;
+        std::cerr << "LArNtupleRecord: Failed to get value for branch '" << m_branchName << "'" << std::endl;
         throw pandora::STATUS_CODE_FAILURE;
     }
 }
@@ -229,7 +271,42 @@ inline void LArNtupleRecord::AddBranchNamePrefix(const std::string &prefix)
         throw pandora::STATUS_CODE_NOT_ALLOWED;
     }
 
-    m_branchName = prefix + '_' + m_branchName;
+    m_branchName = prefix + m_branchName;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::ParticleFlowObject *LArNtupleRecord::GetPfo() const noexcept
+{
+    return m_pPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArNtupleRecord::SetPfo(const pandora::ParticleFlowObject *const pPfo) noexcept
+{
+    m_pPfo = pPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::MCParticle *LArNtupleRecord::GetMCParticle() const noexcept
+{
+    return m_pMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArNtupleRecord::SetMCParticle(const pandora::MCParticle *const pMCParticle) noexcept
+{
+    m_pMCParticle = pMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArNtupleRecord::WriteToNtuple() const noexcept
+{
+    return m_writeToNtuple;
 }
 
 } // namespace lar_physics_content

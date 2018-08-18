@@ -37,6 +37,9 @@ LArNtuple::~LArNtuple()
 
 void LArNtuple::AddScalarRecord(const LArNtupleRecord &record)
 {
+    if (!record.WriteToNtuple())
+        return;
+
     if (m_addressesSet)
         this->ValidateAndAddRecord(m_scalarBranchMap, record);
 
@@ -53,9 +56,12 @@ void LArNtuple::AddScalarRecord(const LArNtupleRecord &record)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArNtuple::AddVectorRecordElement(const LArNtupleRecord &record)
+void LArNtuple::AddVectorRecordElement(const LArNtupleRecord &record, const LArNtupleHelper::VECTOR_BRANCH_TYPE type)
 {
-    BranchMap &branchMap = this->GetCurrentVectorBranchMap();
+    if (!record.WriteToNtuple())
+        return;
+
+    BranchMap &branchMap = this->GetVectorBranchMap(type);
 
     // If the vector elements are locked in, reuse the scalar record validation mechanics
     if (m_areVectorElementsLocked || m_addressesSet)
@@ -74,9 +80,9 @@ void LArNtuple::AddVectorRecordElement(const LArNtupleRecord &record)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArNtuple::FillVectors()
+void LArNtuple::FillVectors(const LArNtupleHelper::VECTOR_BRANCH_TYPE type)
 {
-    BranchMap &branchMap = this->GetCurrentVectorBranchMap();
+    BranchMap &branchMap = this->GetVectorBranchMap(type);
 
     for (auto &entry : branchMap)
     {
@@ -97,15 +103,11 @@ void LArNtuple::FillVectors()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArNtuple::PushVectors()
+void LArNtuple::PushVectors(const LArNtupleHelper::VECTOR_BRANCH_TYPE type)
 {
-    // Tick over the vector stack
-    if (m_addressesSet)
-        ++m_vectorBranchMapIndex;
-
-    else
+    if (!m_addressesSet)
     {
-        m_vectorBranchMaps.emplace_back(std::move(m_vectorElementBranchMap));
+        m_vectorBranchMaps.emplace(type, std::move(m_vectorElementBranchMap));
         m_vectorElementBranchMap.clear();
         m_areVectorElementsLocked = false;
     }
@@ -145,7 +147,6 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
     m_scalarBranchMap(),
     m_vectorElementBranchMap(),
     m_vectorBranchMaps(),
-    m_vectorBranchMapIndex(0UL),
     m_addressesSet(false),
     m_ntupleEmpty(true),
     m_areVectorElementsLocked(false),
@@ -204,7 +205,6 @@ void LArNtuple::Reset()
     // Reset the ntuple state to allow recovery from internal errors
     m_vectorElementBranchMap.clear();
     m_areVectorElementsLocked = false;
-    m_vectorBranchMapIndex    = 0UL;
 
     if (m_addressesSet)
     {
@@ -212,9 +212,9 @@ void LArNtuple::Reset()
         for (auto &entry : m_scalarBranchMap)
             entry.second.ClearNtupleRecords();
 
-        for (auto &branchMap : m_vectorBranchMaps)
+        for (auto &mapPair : m_vectorBranchMaps)
         {
-            for (auto &entry : branchMap)
+            for (auto &entry : mapPair.second)
                 entry.second.ClearNtupleRecords();
         }
     }
@@ -226,22 +226,6 @@ void LArNtuple::Reset()
         m_pOutputTree->ResetBranchAddresses();
         m_cache.clear();
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-LArNtuple::BranchMap &LArNtuple::GetCurrentVectorBranchMap()
-{
-    if (!m_addressesSet)
-        return m_vectorElementBranchMap;
-
-    if (m_vectorBranchMapIndex >= m_vectorBranchMaps.size())
-    {
-        std::cerr << "LArNtuple: The vector branch map index exceeded the map size" << std::endl;
-        throw STATUS_CODE_NOT_ALLOWED;
-    }
-
-    return m_vectorBranchMaps.at(m_vectorBranchMapIndex);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -311,9 +295,9 @@ std::size_t LArNtuple::SetVectorBranchAddresses()
 {
     std::size_t numBranches(0UL);
 
-    for (auto &branchMap : m_vectorBranchMaps)
+    for (auto &mapPair : m_vectorBranchMaps)
     {
-        for (auto &entry : branchMap)
+        for (auto &entry : mapPair.second)
         {
             LArBranchPlaceholder &branchPlaceholder = entry.second;
 
@@ -562,6 +546,22 @@ const MCParticle *LArNtuple::GetMCParticleImpl(const CaloHitList &caloHitList, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+LArBranchPlaceholder::NtupleRecordSPtr LArNtuple::GetScalarRecord(const std::string &branchName) const
+{
+    const LArBranchPlaceholder &                 branchPlaceholder = this->GetBranchPlaceholder(m_scalarBranchMap, branchName);
+    const LArBranchPlaceholder::NtupleRecordSPtr spRecord          = branchPlaceholder.GetNtupleScalarRecord();
+
+    if (!spRecord)
+    {
+        std::cerr << "LArNtuple: Found record by name '" << branchName << "' but it had not yet been filled" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return spRecord;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 CaloHitList LArNtuple::GetAllTwoDHits(const ParticleFlowObject *const pPfo) const
 {
     CaloHitList caloHitList;
@@ -570,6 +570,36 @@ CaloHitList LArNtuple::GetAllTwoDHits(const ParticleFlowObject *const pPfo) cons
     LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, caloHitList);
 
     return caloHitList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const LArBranchPlaceholder &LArNtuple::GetBranchPlaceholder(const LArNtupleHelper::VECTOR_BRANCH_TYPE type, const std::string &branchName) const
+{
+    const auto branchMapFindIter = m_vectorBranchMaps.find(type);
+
+    if (branchMapFindIter == m_vectorBranchMaps.end())
+    {
+        std::cerr << "LArNtuple: Could not find vector record set of the requested type for branch '" << branchName << "'" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return this->GetBranchPlaceholder(branchMapFindIter->second, branchName);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const LArBranchPlaceholder &LArNtuple::GetBranchPlaceholder(const BranchMap &branchMap, const std::string &branchName) const
+{
+    const auto findIter = branchMap.find(branchName);
+
+    if (findIter == m_scalarBranchMap.end())
+    {
+        std::cerr << "LArNtuple: Could not find record by name '" << branchName << "'" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return findIter->second;
 }
 
 } // namespace lar_physics_content

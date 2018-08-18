@@ -86,6 +86,9 @@ public:
     NtupleRecordSPtr GetNtupleScalarRecord() const;
 
 protected:
+    template <typename T>
+    using NtupleRecordMap = std::unordered_map<std::decay_t<T>, NtupleRecordSPtr>; ///< Alias for a map to ntuple record shared pointers
+
     /**
      *  @brief  Constructor
      *
@@ -112,13 +115,34 @@ protected:
      */
     void CacheElement(std::any *const pCacheElement) noexcept;
 
+    /**
+     *  @brief  Get the PFO record map
+     *
+     *  @return the record map
+     */
+    const NtupleRecordMap<const pandora::ParticleFlowObject *> &GetPfoRecordMap() const noexcept;
+
+    /**
+     *  @brief  Get the MC particle record map
+     *
+     *  @return the record map
+     */
+    const NtupleRecordMap<const pandora::MCParticle *> &GetMCParticleRecordMap() const noexcept;
+
     friend class LArNtuple;
 
 private:
-    NtupleRecordSPtr              m_spNtupleScalarRecord; ///< Shared pointer to the ntuple scalar record
-    std::vector<NtupleRecordSPtr> m_ntupleVectorRecord;   ///< The vector record shared pointers
-    LArNtupleRecord::VALUE_TYPE   m_valueType;            ///< The branch's value type
-    std::any *                    m_pCacheElement;        ///< The cache element pointer
+    NtupleRecordSPtr                                     m_spNtupleScalarRecord; ///< Shared pointer to the ntuple scalar record
+    std::vector<NtupleRecordSPtr>                        m_ntupleVectorRecord;   ///< The vector record shared pointers
+    LArNtupleRecord::VALUE_TYPE                          m_valueType;            ///< The branch's value type
+    std::any *                                           m_pCacheElement;        ///< The cache element pointer
+    NtupleRecordMap<const pandora::ParticleFlowObject *> m_pfoRecordMap;         ///< The map from PFOs to record shared pointers
+    NtupleRecordMap<const pandora::MCParticle *>         m_mcParticleRecordMap;  ///< The map from MCParticles to record shared pointers
+
+    /**
+     *  @brief  Populate the maps using the vector entries
+     */
+    void PopulateMaps();
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,6 +152,8 @@ inline void LArBranchPlaceholder::ClearNtupleRecords() noexcept
 {
     m_ntupleVectorRecord.clear();
     m_spNtupleScalarRecord = nullptr;
+    m_pfoRecordMap.clear();
+    m_mcParticleRecordMap.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -163,6 +189,20 @@ inline void LArBranchPlaceholder::CacheElement(std::any *const pCacheElement) no
 inline std::any *LArBranchPlaceholder::CacheElement() const noexcept
 {
     return m_pCacheElement;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArBranchPlaceholder::NtupleRecordMap<const pandora::ParticleFlowObject *> &LArBranchPlaceholder::GetPfoRecordMap() const noexcept
+{
+    return m_pfoRecordMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArBranchPlaceholder::NtupleRecordMap<const pandora::MCParticle *> &LArBranchPlaceholder::GetMCParticleRecordMap() const noexcept
+{
+    return m_mcParticleRecordMap;
 }
 
 } // namespace lar_physics_content

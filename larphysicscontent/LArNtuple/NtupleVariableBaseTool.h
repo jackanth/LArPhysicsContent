@@ -10,6 +10,9 @@
 
 #include "larphysicscontent/LArNtuple/LArNtupleRecord.h"
 
+#include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
+#include "larphysicscontent/LArNtuple/LArBranchPlaceholder.h"
+
 #include "Api/PandoraContentApi.h"
 #include "Objects/ParticleFlowObject.h"
 #include "Pandora/AlgorithmHeaders.h"
@@ -83,7 +86,7 @@ protected:
     /**
      *  @brief  Process any particle (including non-primary daughters) - to be overriden
      *
-     *  @param  pPfo address of the PFO
+     *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
      *  @param  pMCParticle optional pointer to the corresponding MC particle
      *  @param  pMCParticleList optional pointer to the MC particle list
@@ -96,7 +99,7 @@ protected:
     /**
      *  @brief  Process a neutrino - to be overriden
      *
-     *  @param  pPfo address of the PFO
+     *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
      *  @param  pMCParticle optional pointer to the corresponding MC particle
      *  @param  pMCParticleList optional pointer to the MC particle list
@@ -109,7 +112,7 @@ protected:
     /**
      *  @brief  Process a primary neutrino daughter - to be overriden
      *
-     *  @param  pPfo address of the PFO
+     *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
      *  @param  pMCParticle optional pointer to the corresponding MC particle
      *  @param  pMCParticleList optional pointer to the MC particle list
@@ -122,7 +125,7 @@ protected:
     /**
      *  @brief  Process a cosmic ray - to be overriden
      *
-     *  @param  pPfo address of the PFO
+     *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
      *  @param  pMCParticle optional pointer to the corresponding MC particle
      *  @param  pMCParticleList optional pointer to the MC particle list
@@ -177,12 +180,115 @@ protected:
      */
     const pandora::CaloHitList &GetAllDownstreamWHits(const pandora::ParticleFlowObject *const pPfo) const;
 
+    /**
+     *  @brief  Retrieve an event record
+     *
+     *  @param  branchName the unprefixed branch name
+     *
+     *  @return the record value
+     */
+    template <typename T>
+    const std::decay_t<T> &GetEventRecord(const std::string &branchName) const;
+
+    /**
+     *  @brief  Retrieve a particle record
+     *
+     *  @param  branchName the unprefixed branch name
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the record value
+     */
+    template <typename T>
+    const std::decay_t<T> &GetParticleRecord(const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Retrieve a particle record
+     *
+     *  @param  branchName the unprefixed branch name
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return the record value
+     */
+    template <typename T>
+    const std::decay_t<T> &GetParticleRecord(const std::string &branchName, const pandora::MCParticle *const pMCParticle) const;
+
+    /**
+     *  @brief  Retrieve a primary record
+     *
+     *  @param  branchName the unprefixed branch name
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the record value
+     */
+    template <typename T>
+    const std::decay_t<T> &GetPrimaryRecord(const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Retrieve a primary record
+     *
+     *  @param  branchName the unprefixed branch name
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return the record value
+     */
+    template <typename T>
+    const std::decay_t<T> &GetPrimaryRecord(const std::string &branchName, const pandora::MCParticle *const pMCParticle) const;
+
+    /**
+     *  @brief  Retrieve a cosmic record
+     *
+     *  @param  branchName the unprefixed branch name
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the record value
+     */
+    template <typename T>
+    const std::decay_t<T> &GetCosmicRecord(const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Retrieve a cosmic record
+     *
+     *  @param  branchName the unprefixed branch name
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return the record value
+     */
+    template <typename T>
+    const std::decay_t<T> &GetCosmicRecord(const std::string &branchName, const pandora::MCParticle *const pMCParticle) const;
+
+    /**
+     *  @brief  Retrieve a neutrino record
+     *
+     *  @param  branchName the unprefixed branch name
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the record value
+     */
+    template <typename T>
+    const std::decay_t<T> &GetNeutrinoRecord(const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Retrieve a neutrino record
+     *
+     *  @param  branchName the unprefixed branch name
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return the record value
+     */
+    template <typename T>
+    const std::decay_t<T> &GetNeutrinoRecord(const std::string &branchName, const pandora::MCParticle *const pMCParticle) const;
+
     friend class AnalysisNtupleAlgorithm;
 
 private:
     using Processor = std::function<std::vector<LArNtupleRecord>()>; ///< Alias for a function to process a PFO
 
-    std::shared_ptr<LArNtuple> m_spNtuple; ///< Shared pointer to the ntuple
+    std::shared_ptr<LArNtuple> m_spNtuple;       ///< Shared pointer to the ntuple
+    std::string                m_eventPrefix;    ///< The event prefix
+    std::string                m_neutrinoPrefix; ///< The neutrino prefix
+    std::string                m_primaryPrefix;  ///< The primary prefix
+    std::string                m_particlePrefix; ///< The particle prefix
+    std::string                m_cosmicPrefix;   ///< The cosmic prefix
 
     /**
      *  @brief  Process an event (wrapper method)
@@ -228,9 +334,9 @@ private:
      *  @brief  Process a primary neutrino daughter (wrapper method)
      *
      *  @param  pAlgorithm address of the calling algorithm
-     *  @param  pPfo address of the PFO
+     *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticle optional addresss of the MC particle
+     *  @param  pMCParticle optional address of the MC particle
      *  @param  pMCParticleList optional pointer to the MC particle list
      *
      *  @return the primary records
@@ -242,9 +348,9 @@ private:
      *  @brief  Process a cosmic ray (wrapper method)
      *
      *  @param  pAlgorithm address of the calling algorithm
-     *  @param  pPfo address of the PFO
+     *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticle optional addresss of the MC particle
+     *  @param  pMCParticle optional address of the MC particle
      *  @param  pMCParticleList optional pointer to the MC particle list
      *
      *  @return the cosmic ray records
@@ -257,11 +363,14 @@ private:
      *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  prefix the prefix to apply to branch names
+     *  @param  pPfo optional address of the PFO
+     *  @param  pMCParticle optional address of the MC particle
      *  @param  processor the PFO processor method
      *
      *  @return the records
      */
-    std::vector<LArNtupleRecord> ProcessImpl(const AnalysisNtupleAlgorithm *const pAlgorithm, const std::string &prefix, const Processor &processor);
+    std::vector<LArNtupleRecord> ProcessImpl(const AnalysisNtupleAlgorithm *const pAlgorithm, const std::string &prefix,
+        const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticle *const pMCParticle, const Processor &processor);
 
     /**
      *  @brief  Set the ntuple shared pointer
@@ -279,6 +388,39 @@ private:
      *  @return address of the corresponding MCParticle, if one can be found
      */
     const pandora::MCParticle *GetMCParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList) const;
+
+    /**
+     *  @brief  Get a scalar record
+     *
+     *  @param  branchName the branch name
+     *
+     *  @return shared pointer to the record
+     */
+    LArBranchPlaceholder::NtupleRecordSPtr GetScalarRecord(const std::string &branchName) const;
+
+    /**
+     *  @brief  Get a vector record element
+     *
+     *  @param  type the vector type
+     *  @param  branchName the branch name
+     *  @param  pPfo address of the PFO
+     *
+     *  @return shared pointer to the record
+     */
+    LArBranchPlaceholder::NtupleRecordSPtr GetVectorRecordElement(
+        LArNtupleHelper::VECTOR_BRANCH_TYPE type, const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get a vector record element
+     *
+     *  @param  type the vector type
+     *  @param  branchName the branch name
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return shared pointer to the record
+     */
+    LArBranchPlaceholder::NtupleRecordSPtr GetVectorRecordElement(
+        LArNtupleHelper::VECTOR_BRANCH_TYPE type, const std::string &branchName, const pandora::MCParticle *const pMCParticle) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -326,6 +468,132 @@ inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessCosmicRay(con
     const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
 {
     return {};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+const std::decay_t<T> &NtupleVariableBaseTool::GetEventRecord(const std::string &branchName) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return this->GetScalarRecord(m_eventPrefix + branchName)->Value<std::decay_t<T>>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+const std::decay_t<T> &NtupleVariableBaseTool::GetParticleRecord(const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return this->GetVectorRecordElement(LArNtupleHelper::VECTOR_BRANCH_TYPE::PARTICLE, m_particlePrefix + branchName, pPfo)->Value<std::decay_t<T>>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+const std::decay_t<T> &NtupleVariableBaseTool::GetParticleRecord(const std::string &branchName, const pandora::MCParticle *const pMCParticle) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return this->GetVectorRecordElement(LArNtupleHelper::VECTOR_BRANCH_TYPE::PARTICLE, m_particlePrefix + branchName, pMCParticle)->Value<std::decay_t<T>>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+const std::decay_t<T> &NtupleVariableBaseTool::GetPrimaryRecord(const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return this->GetVectorRecordElement(LArNtupleHelper::VECTOR_BRANCH_TYPE::PRIMARY, m_primaryPrefix + branchName, pPfo)->Value<std::decay_t<T>>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+const std::decay_t<T> &NtupleVariableBaseTool::GetPrimaryRecord(const std::string &branchName, const pandora::MCParticle *const pMCParticle) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return this->GetVectorRecordElement(LArNtupleHelper::VECTOR_BRANCH_TYPE::PRIMARY, m_primaryPrefix + branchName, pMCParticle)->Value<std::decay_t<T>>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+const std::decay_t<T> &NtupleVariableBaseTool::GetCosmicRecord(const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return this->GetVectorRecordElement(LArNtupleHelper::VECTOR_BRANCH_TYPE::COSMIC_RAY, m_cosmicPrefix + branchName, pPfo)->Value<std::decay_t<T>>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+const std::decay_t<T> &NtupleVariableBaseTool::GetCosmicRecord(const std::string &branchName, const pandora::MCParticle *const pMCParticle) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return this->GetVectorRecordElement(LArNtupleHelper::VECTOR_BRANCH_TYPE::COSMIC_RAY, m_cosmicPrefix + branchName, pMCParticle)->Value<std::decay_t<T>>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+const std::decay_t<T> &NtupleVariableBaseTool::GetNeutrinoRecord(const std::string &branchName, const pandora::ParticleFlowObject *const pPfo) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return this->GetVectorRecordElement(LArNtupleHelper::VECTOR_BRANCH_TYPE::NEUTRINO, m_neutrinoPrefix + branchName, pPfo)->Value<std::decay_t<T>>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+const std::decay_t<T> &NtupleVariableBaseTool::GetNeutrinoRecord(const std::string &branchName, const pandora::MCParticle *const pMCParticle) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw pandora::STATUS_CODE_FAILURE;
+    }
+
+    return this->GetVectorRecordElement(LArNtupleHelper::VECTOR_BRANCH_TYPE::NEUTRINO, m_neutrinoPrefix + branchName, pMCParticle)->Value<std::decay_t<T>>();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

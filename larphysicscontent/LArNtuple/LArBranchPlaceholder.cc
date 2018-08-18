@@ -26,6 +26,7 @@ void LArBranchPlaceholder::SetNtupleScalarRecord(const LArNtupleRecord &record)
     }
 
     m_spNtupleScalarRecord = NtupleRecordSPtr(new LArNtupleRecord(record));
+    this->PopulateMaps();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,8 +49,22 @@ LArBranchPlaceholder::LArBranchPlaceholder(const LArNtupleRecord &record) noexce
     m_spNtupleScalarRecord(new LArNtupleRecord(record)),
     m_ntupleVectorRecord(),
     m_valueType(record.ValueType()),
-    m_pCacheElement(nullptr)
+    m_pCacheElement(nullptr),
+    m_pfoRecordMap(),
+    m_mcParticleRecordMap()
 {
+    this->PopulateMaps();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArBranchPlaceholder::PopulateMaps()
+{
+    if (const ParticleFlowObject *const pPfo = m_spNtupleScalarRecord->GetPfo())
+        m_pfoRecordMap.emplace(pPfo, m_spNtupleScalarRecord);
+
+    if (const MCParticle *const pMCParticle = m_spNtupleScalarRecord->GetMCParticle())
+        m_mcParticleRecordMap.emplace(pMCParticle, m_spNtupleScalarRecord);
 }
 
 } // namespace lar_physics_content
