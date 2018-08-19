@@ -65,6 +65,7 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProcessEvent(const PfoList &pfoLi
 
     records.emplace_back("NumberOfRecoPrimaryTracks", static_cast<LArNtupleRecord::RUInt>(numPrimaryTracks));
     records.emplace_back("NumberOfRecoPrimaryShowers", static_cast<LArNtupleRecord::RUInt>(numPrimaryShowers));
+    records.emplace_back("NumOfRecoPfos", static_cast<LArNtupleRecord::RUInt>(pfoList.size()));
 
     return records;
 }
@@ -138,11 +139,11 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProduceGenericPfoRecords(const Pa
         records.emplace_back("VertexX", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetX()));
         records.emplace_back("VertexY", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetY()));
         records.emplace_back("VertexZ", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetZ()));
-
         records.emplace_back("FiducialThreeDHitFraction", static_cast<LArNtupleRecord::RFloat>(this->GetFractionOfFiducialThreeDHits(pPfo)));
         records.emplace_back("NumberOfThreeDHits", static_cast<LArNtupleRecord::RUInt>(this->GetAllDownstreamThreeDHits(pPfo).size()));
         records.emplace_back("NumberOfTwoDHits", static_cast<LArNtupleRecord::RUInt>(this->GetAllDownstreamTwoDHits(pPfo).size()));
         records.emplace_back("NumberOfCollectionPlaneHits", static_cast<LArNtupleRecord::RUInt>(this->GetAllDownstreamWHits(pPfo).size()));
+        records.emplace_back("NumberOfDownstreamPfos", static_cast<LArNtupleRecord::RUInt>(this->GetAllDownstreamPfos(pPfo).size()));
     }
 
     else // null values for size consistency
@@ -155,6 +156,7 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProduceGenericPfoRecords(const Pa
         records.emplace_back("NumberOfThreeDHits", static_cast<LArNtupleRecord::RUInt>(0U));
         records.emplace_back("NumberOfTwoDHits", static_cast<LArNtupleRecord::RUInt>(0U));
         records.emplace_back("NumberOfCollectionPlaneHits", static_cast<LArNtupleRecord::RUInt>(0U));
+        records.emplace_back("NumberOfDownstreamPfos", static_cast<LArNtupleRecord::RUInt>(0U));
     }
 
     return records;

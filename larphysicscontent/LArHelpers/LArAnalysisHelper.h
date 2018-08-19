@@ -9,7 +9,9 @@
 #define LAR_ANALYSIS_HELPER_H 1
 
 #include "Objects/CartesianVector.h"
+#include "Objects/MCParticle.h"
 #include "Pandora/Pandora.h"
+#include "Pandora/PdgTable.h"
 
 #include <tuple>
 
@@ -69,7 +71,49 @@ public:
      */
     static bool IsPointFiducial(const pandora::CartesianVector &point, const pandora::CartesianVector &minCoordinates,
         const pandora::CartesianVector &maxCoordinates);
+
+    /**
+     *  @brief  Get the true kinetic energy for an MC particle
+     *
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return the true kinetic energy (GeV)
+     */
+    static float GetTrueKineticEnergy(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Get the true mass for an MC particle
+     *
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return the true mass (GeV)
+     */
+    static float GetTrueMass(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Find out whether an MC particle is a true shower
+     *
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return whether it is a true shower
+     */
+    static bool IsTrueShower(const pandora::MCParticle *const pMCParticle);
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisHelper::GetTrueKineticEnergy(const pandora::MCParticle *const pMCParticle)
+{
+    return pMCParticle->GetEnergy() - GetTrueMass(pMCParticle);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArAnalysisHelper::GetTrueMass(const pandora::MCParticle *const pMCParticle)
+{
+    return pandora::PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+}
 
 } // namespace lar_physics_content
 

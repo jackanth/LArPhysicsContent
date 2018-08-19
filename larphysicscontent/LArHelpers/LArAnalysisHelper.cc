@@ -61,4 +61,22 @@ bool LArAnalysisHelper::IsPointFiducial(const CartesianVector &point, const Cart
     return true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArAnalysisHelper::IsTrueShower(const MCParticle *const pMCParticle)
+{
+    switch (pMCParticle->GetParticleId())
+    {
+        case PHOTON:
+        case E_MINUS:
+        case E_PLUS:
+            return true;
+
+        default:
+            break;
+    }
+
+    return false;
+}
+
 } // namespace lar_physics_content

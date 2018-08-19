@@ -99,6 +99,19 @@ const CaloHitList &NtupleVariableBaseTool::GetAllDownstreamWHits(const ParticleF
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const PfoList &NtupleVariableBaseTool::GetAllDownstreamPfos(const ParticleFlowObject *const pPfo) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
+
+    return m_spNtuple->GetAllDownstreamPfos(pPfo);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEventWrapper(
     const AnalysisNtupleAlgorithm *const pAlgorithm, const PfoList &pfoList, const MCParticleList *const pMCParticleList)
 {

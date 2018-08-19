@@ -158,7 +158,8 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
     m_cacheDownstreamThreeDHits(),
     m_cacheDownstreamUHits(),
     m_cacheDownstreamVHits(),
-    m_cacheDownstreamWHits()
+    m_cacheDownstreamWHits(),
+    m_cacheDownstreamPfos()
 {
     this->InstantiateTFile(appendMode, filePath);
     this->InstantiateTTree(appendMode, treeName, treeTitle, filePath); // the TTree will now be 'owned' by the TFile
@@ -496,22 +497,27 @@ CaloHitList LArNtuple::GetAllDownstreamTwoDHits(const ParticleFlowObject *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const PfoList &LArNtuple::GetAllDownstreamPfos(const ParticleFlowObject *const pPfo) const
+{
+    return this->CacheWrapper<PfoList>(pPfo, m_cacheDownstreamPfos, [&]() {
+        PfoList downstreamPfos;
+        LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
+        return downstreamPfos;
+    });
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const CaloHitList &LArNtuple::GetAllDownstreamHitsImpl(const ParticleFlowObject *const pPfo, const HitType hitType, PfoCache<CaloHitList> &cache) const
 {
-    // Check the cache first
-    const auto findIter = cache.find(pPfo);
+    return this->CacheWrapper<CaloHitList>(pPfo, cache, [&]() {
+        const PfoList &downstreamPfos = this->GetAllDownstreamPfos(pPfo);
 
-    if (findIter != cache.end())
-        return findIter->second;
+        CaloHitList caloHitList;
+        LArPfoHelper::GetCaloHits(downstreamPfos, hitType, caloHitList);
 
-    // Not in cache, so work it out and cache it
-    PfoList downstreamPfos;
-    LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
-
-    CaloHitList caloHitList;
-    LArPfoHelper::GetCaloHits(downstreamPfos, hitType, caloHitList);
-
-    return cache.emplace(pPfo, std::move(caloHitList)).first->second;
+        return caloHitList;
+    });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -181,6 +181,15 @@ protected:
     const pandora::CaloHitList &GetAllDownstreamWHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
+     *  @brief  Get all the downstream PFOs of a PFO (from the cache if possible)
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the downstream PFOs
+     */
+    const pandora::PfoList &GetAllDownstreamPfos(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
      *  @brief  Retrieve an event record
      *
      *  @param  branchName the unprefixed branch name

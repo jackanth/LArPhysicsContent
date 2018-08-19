@@ -61,6 +61,11 @@ protected:
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
 
 private:
+    pandora::CartesianVector m_fiducialCutLowMargins;  ///< The low-coordinate margins for the fiducial cut
+    pandora::CartesianVector m_fiducialCutHighMargins; ///< The high-coordinate margins for the fiducial cut
+    pandora::CartesianVector m_minFiducialCoordinates; ///< The minimum fiducial coordinates
+    pandora::CartesianVector m_maxFiducialCoordinates; ///< The maximum fiducial coordinates
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -75,7 +80,55 @@ private:
      */
     std::vector<LArNtupleRecord> ProduceGenericPfoMCRecords(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) const;
+
+    /**
+     *  @brief  Produce MC records generic to every considered particle class except neutrinos
+     *
+     *  @param  pPfo optional address of the PFO
+     *  @param  pfoList the list of all PFOs
+     *  @param  pMCParticle optional address of the MC particle
+     *  @param  pMCParticleList optional list of all MC particles
+     *
+     *  @return the records
+     */
+    std::vector<LArNtupleRecord> ProduceNonNeutrinoPfoMCRecords(const pandora::ParticleFlowObject *const, const pandora::PfoList &,
+        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const) const;
+
+    /**
+     *  @brief  Get the kinetic-energy-weighted contained PFO fraction
+     *
+     *  @param  pMCParticle optional address of the MC particle
+     *
+     *  @return the fraction
+     */
+    float CalculateContainmentFraction(const pandora::MCParticle *const pMCParticle) const;
+
+    /**
+     *  @brief  Recurse through the MC particle hierarchy to get the amount of contained and total visible kinetic energy
+     *
+     *  @param  pMCParticle optional address of the MC particle
+     *  @param  containedEnergy the contained visible kinetic energy (to be populated)
+     *  @param  totalEnergy the total visible kinetic energy (to be populated)
+     */
+    void RecursivelyGetContainedEnergy(const pandora::MCParticle *const pMCParticle, float &containedEnergy, float &totalEnergy) const;
+
+    /**
+     *  @brief  Recurse through the MC particle hierarchy, summing the visible momentum
+     *
+     *  @param  visibleMomentum the visible momentum (to be populated)
+     */
+    void RecursivelySumVisibleMomentum(const pandora::MCParticle *const pMCParticle, pandora::CartesianVector &visibleMomentum) const;
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float CommonMCNtupleTool::CalculateContainmentFraction(const pandora::MCParticle *const pMCParticle) const
+{
+    float containedEnergy(0.f), totalEnergy(0.f);
+    this->RecursivelyGetContainedEnergy(pMCParticle, containedEnergy, totalEnergy);
+    return totalEnergy > std::numeric_limits<float>::epsilon() ? containedEnergy / totalEnergy : 0.f;
+}
 
 } // namespace lar_physics_content
 

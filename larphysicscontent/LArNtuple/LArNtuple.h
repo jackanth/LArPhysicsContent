@@ -153,6 +153,7 @@ private:
     mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamUHits;      ///< The pfo cache of downstream U hits
     mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamVHits;      ///< The pfo cache of downstream V hits
     mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamWHits;      ///< The pfo cache of downstream W hits
+    mutable PfoCache<pandora::PfoList>            m_cacheDownstreamPfos;       ///< The pfo cache of downstream pfos
 
     /**
      *  @brief  Add a scalar record to the cache
@@ -210,6 +211,15 @@ private:
      *  @return the hits
      */
     pandora::CaloHitList GetAllDownstreamTwoDHits(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get all PFOs downstream of a PFO
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the downstream PFOs
+     */
+    const pandora::PfoList &GetAllDownstreamPfos(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
      *  @brief  Get all U hits downstream of a PFO
@@ -439,7 +449,7 @@ private:
      *  @return the object
      */
     template <typename T>
-    std::decay_t<T> CacheWrapper(const pandora::ParticleFlowObject *const pPfo, PfoCache<std::decay_t<T>> &cache,
+    const std::decay_t<T> &CacheWrapper(const pandora::ParticleFlowObject *const pPfo, PfoCache<std::decay_t<T>> &cache,
         const std::function<std::decay_t<T>()> &getter) const;
 
     /**
@@ -703,7 +713,7 @@ inline const pandora::MCParticle *LArNtuple::GetMCNeutrinoWrapper(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-std::decay_t<T> LArNtuple::CacheWrapper(
+const std::decay_t<T> &LArNtuple::CacheWrapper(
     const pandora::ParticleFlowObject *const pPfo, PfoCache<std::decay_t<T>> &cache, const std::function<std::decay_t<T>()> &getter) const
 {
     // Check the cache first (can return nullptr)
