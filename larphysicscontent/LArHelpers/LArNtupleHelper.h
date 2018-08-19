@@ -9,6 +9,9 @@
 #define LAR_NTUPLE_HELPER_H 1
 
 #include "Objects/ParticleFlowObject.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
+
+#include <memory>
 
 namespace lar_physics_content
 {
@@ -18,6 +21,8 @@ namespace lar_physics_content
 class LArNtupleHelper
 {
 public:
+    using TrackFitSharedPtr = std::shared_ptr<lar_content::ThreeDSlidingFitResult>; ///< Alias for a shared pointer to a track fit object
+
     /**
      *  @brief  The particle class
      */

@@ -112,6 +112,19 @@ const PfoList &NtupleVariableBaseTool::GetAllDownstreamPfos(const ParticleFlowOb
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const LArNtupleHelper::TrackFitSharedPtr &NtupleVariableBaseTool::GetTrackFit(const ParticleFlowObject *const pPfo) const
+{
+    if (!m_spNtuple)
+    {
+        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
+
+    return m_spNtuple->GetTrackFit(this->GetPandora(), pPfo);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEventWrapper(
     const AnalysisNtupleAlgorithm *const pAlgorithm, const PfoList &pfoList, const MCParticleList *const pMCParticleList)
 {

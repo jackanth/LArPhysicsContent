@@ -190,6 +190,15 @@ protected:
     const pandora::PfoList &GetAllDownstreamPfos(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
+     *  @brief  Get the track fit for a PFO (from the cache if possible)
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return shared pointer to the track fit, or nullptr if fit is not possible
+     */
+    const LArNtupleHelper::TrackFitSharedPtr &GetTrackFit(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
      *  @brief  Retrieve an event record
      *
      *  @param  branchName the unprefixed branch name

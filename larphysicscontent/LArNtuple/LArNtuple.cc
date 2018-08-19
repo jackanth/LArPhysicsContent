@@ -9,6 +9,8 @@
 #include "larphysicscontent/LArNtuple/LArNtuple.h"
 #include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 using namespace pandora;
@@ -150,6 +152,7 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
     m_addressesSet(false),
     m_ntupleEmpty(true),
     m_areVectorElementsLocked(false),
+    m_trackSlidingFitWindow(25U),
     m_cache(),
     m_cacheMCParticles(),
     m_cacheMCCosmics(),
@@ -159,7 +162,8 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
     m_cacheDownstreamUHits(),
     m_cacheDownstreamVHits(),
     m_cacheDownstreamWHits(),
-    m_cacheDownstreamPfos()
+    m_cacheDownstreamPfos(),
+    m_cacheTrackFits()
 {
     this->InstantiateTFile(appendMode, filePath);
     this->InstantiateTTree(appendMode, treeName, treeTitle, filePath); // the TTree will now be 'owned' by the TFile
@@ -608,4 +612,45 @@ const LArBranchPlaceholder &LArNtuple::GetBranchPlaceholder(const BranchMap &bra
     return findIter->second;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArNtupleHelper::TrackFitSharedPtr LArNtuple::CalculateTrackFit(
+    const Pandora &pandoraInstance, const ParticleFlowObject *const pPfo, const unsigned int slidingFitWindow) const
+{
+    // Get the 3D clusters and make sure there's at least one
+    ClusterList threeDClusterList;
+    LArPfoHelper::GetClusters(pPfo, TPC_3D, threeDClusterList);
+
+    if (threeDClusterList.empty())
+        return nullptr;
+
+    // Get the complete 3D coordinate vector and make sure it's not too small
+    CartesianPointVector coordinateVector;
+
+    for (const Cluster *const pCluster : threeDClusterList)
+    {
+        CartesianPointVector clusterCoordinateVector;
+        LArClusterHelper::GetCoordinateVector(pCluster, clusterCoordinateVector);
+
+        coordinateVector.insert(coordinateVector.end(), std::make_move_iterator(clusterCoordinateVector.begin()),
+            std::make_move_iterator(clusterCoordinateVector.end()));
+    }
+
+    if (coordinateVector.size() < 3UL)
+        return nullptr;
+
+    const float layerPitch(LArGeometryHelper::GetWireZPitch(pandoraInstance));
+
+    // If the fit fails, just return a nullptr
+    try
+    {
+        return LArNtupleHelper::TrackFitSharedPtr(new ThreeDSlidingFitResult(&coordinateVector, slidingFitWindow, layerPitch));
+    }
+
+    catch (...)
+    {
+    }
+
+    return nullptr;
+}
 } // namespace lar_physics_content

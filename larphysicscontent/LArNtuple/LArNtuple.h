@@ -13,6 +13,7 @@
 #include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include "Objects/ParticleFlowObject.h"
 #include "Pandora/Algorithm.h"
@@ -135,25 +136,26 @@ private:
     template <typename T>
     using RecordMapGetter = std::function<LArBranchPlaceholder::NtupleRecordMap<const std::decay_t<T> *>(const LArBranchPlaceholder &)>; ///< Alias for a record map getter function
 
-    TFile *             m_pOutputTFile;            ///< The output TFile
-    TTree *             m_pOutputTree;             ///< The output TTree
-    BranchMap           m_scalarBranchMap;         ///< The scalar branch map
-    BranchMap           m_vectorElementBranchMap;  ///< The vector element branch map
-    VectorBranchTypeMap m_vectorBranchMaps;        ///< The map from vector branch types to their branch maps
-    bool                m_addressesSet;            ///< Whether the addresses have been set
-    bool                m_ntupleEmpty;             ///< Whether the ntuple is empty
-    bool                m_areVectorElementsLocked; ///< Whether scalar entries are locked
-
-    mutable Cache                                 m_cache;                     ///< The cache
-    mutable PfoCache<const pandora::MCParticle *> m_cacheMCParticles;          ///< The cached mappings from PFOs to MC particles
-    mutable PfoCache<const pandora::MCParticle *> m_cacheMCCosmics;            ///< The cached mappings from PFOs to MC cosmics
-    mutable PfoCache<const pandora::MCParticle *> m_cacheMCPrimaries;          ///< The cached mappings from PFOs to MC primaries
-    mutable PfoCache<const pandora::MCParticle *> m_cacheMCNeutrinos;          ///< The cached mappings from PFOs to MC neutrinos
-    mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamThreeDHits; ///< The pfo cache of downstream 3D hits
-    mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamUHits;      ///< The pfo cache of downstream U hits
-    mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamVHits;      ///< The pfo cache of downstream V hits
-    mutable PfoCache<pandora::CaloHitList>        m_cacheDownstreamWHits;      ///< The pfo cache of downstream W hits
-    mutable PfoCache<pandora::PfoList>            m_cacheDownstreamPfos;       ///< The pfo cache of downstream pfos
+    TFile *                                              m_pOutputTFile;           ///< The output TFile
+    TTree *                                              m_pOutputTree;            ///< The output TTree
+    BranchMap                                            m_scalarBranchMap;        ///< The scalar branch map
+    BranchMap                                            m_vectorElementBranchMap; ///< The vector element branch map
+    VectorBranchTypeMap                                  m_vectorBranchMaps; ///< The map from vector branch types to their branch maps
+    bool                                                 m_addressesSet;     ///< Whether the addresses have been set
+    bool                                                 m_ntupleEmpty;      ///< Whether the ntuple is empty
+    bool                                                 m_areVectorElementsLocked;   ///< Whether scalar entries are locked
+    unsigned int                                         m_trackSlidingFitWindow;     ///< The track sliding fit window size
+    mutable Cache                                        m_cache;                     ///< The cache
+    mutable PfoCache<const pandora::MCParticle *>        m_cacheMCParticles;          ///< The cached mappings from PFOs to MC particles
+    mutable PfoCache<const pandora::MCParticle *>        m_cacheMCCosmics;            ///< The cached mappings from PFOs to MC cosmics
+    mutable PfoCache<const pandora::MCParticle *>        m_cacheMCPrimaries;          ///< The cached mappings from PFOs to MC primaries
+    mutable PfoCache<const pandora::MCParticle *>        m_cacheMCNeutrinos;          ///< The cached mappings from PFOs to MC neutrinos
+    mutable PfoCache<pandora::CaloHitList>               m_cacheDownstreamThreeDHits; ///< The pfo cache of downstream 3D hits
+    mutable PfoCache<pandora::CaloHitList>               m_cacheDownstreamUHits;      ///< The pfo cache of downstream U hits
+    mutable PfoCache<pandora::CaloHitList>               m_cacheDownstreamVHits;      ///< The pfo cache of downstream V hits
+    mutable PfoCache<pandora::CaloHitList>               m_cacheDownstreamWHits;      ///< The pfo cache of downstream W hits
+    mutable PfoCache<pandora::PfoList>                   m_cacheDownstreamPfos;       ///< The pfo cache of downstream pfos
+    mutable PfoCache<LArNtupleHelper::TrackFitSharedPtr> m_cacheTrackFits;            ///< The pfo cache of track fits
 
     /**
      *  @brief  Add a scalar record to the cache
@@ -518,6 +520,28 @@ private:
      *  @return the branch placeholder
      */
     const LArBranchPlaceholder &GetBranchPlaceholder(const BranchMap &branchMap, const std::string &branchName) const;
+
+    /**
+     *  @brief  Get a track fit, first trying to use the cache
+     *
+     *  @param  pandoraInstance the instance of Pandora
+     *  @param  pPfo address of the PFO
+     *
+     *  @return shared pointer to the track fit, or nullptr if fit fails
+     */
+    const LArNtupleHelper::TrackFitSharedPtr &GetTrackFit(const pandora::Pandora &pandoraInstance, const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Calculate a track fit
+     *
+     *  @param  pandoraInstance the instance of Pandora
+     *  @param  pPfo address of the PFO
+     *  @param  slidingFitWindow the sliding fit window
+     *
+     *  @return shared pointer to the track fit, or nullptr if fit fails
+     */
+    LArNtupleHelper::TrackFitSharedPtr CalculateTrackFit(
+        const pandora::Pandora &pandoraInstance, const pandora::ParticleFlowObject *const pPfo, const unsigned int slidingFitWindow) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -769,6 +793,15 @@ LArBranchPlaceholder::NtupleRecordSPtr LArNtuple::GetVectorRecordElementImpl(con
     }
 
     return spRecord;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArNtupleHelper::TrackFitSharedPtr &LArNtuple::GetTrackFit(
+    const pandora::Pandora &pandoraInstance, const pandora::ParticleFlowObject *const pPfo) const
+{
+    return this->CacheWrapper<LArNtupleHelper::TrackFitSharedPtr>(
+        pPfo, m_cacheTrackFits, [&]() { return this->CalculateTrackFit(pandoraInstance, pPfo, m_trackSlidingFitWindow); });
 }
 
 } // namespace lar_physics_content
