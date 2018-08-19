@@ -366,12 +366,16 @@ void LArNtuple::ValidateAndAddRecord(BranchMap &branchMap, const LArNtupleRecord
         throw STATUS_CODE_NOT_ALLOWED;
     }
 
-    if (findIter->second.GetNtupleScalarRecord()) // the branch is already filled
+    if (const LArBranchPlaceholder::NtupleRecordSPtr spCurrentRecord = findIter->second.GetNtupleScalarRecord()) // the branch is already filled
     {
-        std::cerr << "LArNtuple: cannot add vector record element with branch name '" << record.BranchName()
-                  << "' as it has already been populated since the last fill" << std::endl;
+        // Allow overwriting of records that aren't to be written to the ntuple
+        if (spCurrentRecord->WriteToNtuple())
+        {
+            std::cerr << "LArNtuple: cannot add vector record element with branch name '" << record.BranchName()
+                    << "' as it has already been populated since the last fill" << std::endl;
 
-        throw STATUS_CODE_NOT_ALLOWED;
+            throw STATUS_CODE_NOT_ALLOWED;
+        }
     }
 
     // Add the record (includes type-checking)
