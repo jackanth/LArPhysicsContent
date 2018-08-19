@@ -8,6 +8,7 @@
 #ifndef LAR_COMMON_NTUPLE_TOOL_H
 #define LAR_COMMON_NTUPLE_TOOL_H 1
 
+#include "larphysicscontent/LArHelpers/LArAnalysisHelper.h"
 #include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
 
 namespace lar_physics_content
@@ -79,6 +80,16 @@ private:
     std::vector<LArNtupleRecord> ProduceGenericPfoRecords(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList) const;
 
     /**
+     *  @brief  Produce records generic to every considered particle class except neutrinos
+     *
+     *  @param  pPfo optional address of the PFO
+     *  @param  pfoList the list of all PFOs
+     *
+     *  @return the records
+     */
+    std::vector<LArNtupleRecord> ProduceNonNeutrinoPfoRecords(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList) const;
+
+    /**
      *  @brief  Get the fraction of fiducial 3D hits
      *
      *  @param  pPfo address of the PFO
@@ -86,7 +97,45 @@ private:
      *  @return the fraction of hits
      */
     float GetFractionOfFiducialThreeDHits(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get the direction at the vertex for a track
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the direction
+     */
+    pandora::CartesianVector GetTrackDirectionAtVertex(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get the direction at the vertex for a shower
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the direction
+     */
+    pandora::CartesianVector GetShowerDirectionAtVertex(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Get the vertex position of a PFO
+     *
+     *  @param  pPfo address of the PFO
+     *
+     *  @return the vertex position
+     */
+    const pandora::CartesianVector &GetVertexPosition(const pandora::ParticleFlowObject *const pPfo) const;
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::CartesianVector CommonNtupleTool::GetTrackDirectionAtVertex(const pandora::ParticleFlowObject *const pPfo) const
+{
+    if (const LArNtupleHelper::TrackFitSharedPtr &spTrackFit = this->GetTrackFit(pPfo))
+        return LArAnalysisHelper::GetFittedDirectionAtPosition(*spTrackFit, this->GetVertexPosition(pPfo));
+
+    return pandora::CartesianVector(0.f, 0.f, 0.f);
+}
 
 } // namespace lar_physics_content
 

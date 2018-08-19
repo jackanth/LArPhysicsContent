@@ -7,10 +7,9 @@
  */
 
 #include "larphysicscontent/LArAnalysis/CommonNtupleTool.h"
-
-#include "larphysicscontent/LArHelpers/LArAnalysisHelper.h"
 #include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
 
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "Pandora/AlgorithmHeaders.h"
@@ -93,6 +92,9 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProcessPrimary(
     std::vector<LArNtupleRecord> genericPfoRecords = this->ProduceGenericPfoRecords(pPfo, pfoList);
     records.insert(records.end(), std::make_move_iterator(genericPfoRecords.begin()), std::make_move_iterator(genericPfoRecords.end()));
 
+    std::vector<LArNtupleRecord> nonNuPfoRecords = this->ProduceNonNeutrinoPfoRecords(pPfo, pfoList);
+    records.insert(records.end(), std::make_move_iterator(nonNuPfoRecords.begin()), std::make_move_iterator(nonNuPfoRecords.end()));
+
     return records;
 }
 
@@ -106,6 +108,9 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProcessCosmicRay(
     std::vector<LArNtupleRecord> genericPfoRecords = this->ProduceGenericPfoRecords(pPfo, pfoList);
     records.insert(records.end(), std::make_move_iterator(genericPfoRecords.begin()), std::make_move_iterator(genericPfoRecords.end()));
 
+    std::vector<LArNtupleRecord> nonNuPfoRecords = this->ProduceNonNeutrinoPfoRecords(pPfo, pfoList);
+    records.insert(records.end(), std::make_move_iterator(nonNuPfoRecords.begin()), std::make_move_iterator(nonNuPfoRecords.end()));
+
     return records;
 }
 
@@ -118,21 +123,7 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProduceGenericPfoRecords(const Pa
 
     if (pPfo)
     {
-        const VertexList &vertexList = pPfo->GetVertexList();
-
-        if (vertexList.empty())
-        {
-            std::cerr << "CommonNtupleTool: Could not get vertex because list was empty" << std::endl;
-            throw STATUS_CODE_FAILURE;
-        }
-
-        if (vertexList.size() > 1UL)
-        {
-            std::cerr << "CommonNtupleTool: Could not get vertex because there were more than one" << std::endl;
-            throw STATUS_CODE_FAILURE;
-        }
-
-        const CartesianVector &vertexPosition(vertexList.front()->GetPosition());
+        const CartesianVector &vertexPosition = this->GetVertexPosition(pPfo);
 
         records.emplace_back("IsVertexFiducial", static_cast<LArNtupleRecord::RBool>(LArAnalysisHelper::IsPointFiducial(
                                                      vertexPosition, m_minFiducialCoordinates, m_maxFiducialCoordinates)));
@@ -164,6 +155,36 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProduceGenericPfoRecords(const Pa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+std::vector<LArNtupleRecord> CommonNtupleTool::ProduceNonNeutrinoPfoRecords(const ParticleFlowObject *const pPfo, const PfoList &) const
+{
+    std::vector<LArNtupleRecord> records;
+
+    if (pPfo)
+    {
+        const bool            isShower         = LArPfoHelper::IsShower(pPfo);
+        const CartesianVector directionCosines = isShower ? this->GetShowerDirectionAtVertex(pPfo) : this->GetTrackDirectionAtVertex(pPfo);
+
+        records.emplace_back("IsShower", static_cast<LArNtupleRecord::RBool>(isShower));
+        records.emplace_back("IsTrack", static_cast<LArNtupleRecord::RBool>(!isShower));
+        records.emplace_back("DirectionCosineX", static_cast<LArNtupleRecord::RFloat>(directionCosines.GetX()));
+        records.emplace_back("DirectionCosineY", static_cast<LArNtupleRecord::RFloat>(directionCosines.GetY()));
+        records.emplace_back("DirectionCosineZ", static_cast<LArNtupleRecord::RFloat>(directionCosines.GetZ()));
+    }
+
+    else // null values for size consistency
+    {
+        records.emplace_back("IsShower", static_cast<LArNtupleRecord::RBool>(false));
+        records.emplace_back("IsTrack", static_cast<LArNtupleRecord::RBool>(false));
+        records.emplace_back("DirectionCosineX", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("DirectionCosineY", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("DirectionCosineZ", static_cast<LArNtupleRecord::RFloat>(0.f));
+    }
+
+    return records;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float CommonNtupleTool::GetFractionOfFiducialThreeDHits(const ParticleFlowObject *const pPfo) const
 {
     const auto &caloHitList = this->GetAllDownstreamThreeDHits(pPfo);
@@ -176,6 +197,54 @@ float CommonNtupleTool::GetFractionOfFiducialThreeDHits(const ParticleFlowObject
     }
 
     return static_cast<float>(fiducialHits) / static_cast<float>(caloHitList.size());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector CommonNtupleTool::GetShowerDirectionAtVertex(const ParticleFlowObject *const pPfo) const
+{
+    const CaloHitList &downstreamThreeDHits = this->GetAllDownstreamThreeDHits(pPfo);
+
+    LArPcaHelper::EigenVectors eigenVectors;
+    LArPcaHelper::EigenValues  eigenValues(0.f, 0.f, 0.f);
+    CartesianVector            centroid(0.f, 0.f, 0.f);
+    LArPcaHelper::RunPca(downstreamThreeDHits, centroid, eigenValues, eigenVectors);
+
+    if (eigenVectors.empty())
+    {
+        std::cout << "AnalysisAlgorithm: PCA eigenvectors were empty" << std::endl;
+        return CartesianVector(0.f, 0.f, 0.f);
+    }
+
+    CartesianVector       fitDirection     = eigenVectors.at(0UL);
+    const CartesianVector vertexToCentroid = centroid - this->GetVertexPosition(pPfo);
+
+    // We want the fit direction to be mostly aligned with the vertex-to-centroid direction.
+    if (vertexToCentroid.GetDotProduct(fitDirection) < 0.f)
+        fitDirection *= -1.f;
+
+    return fitDirection;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const CartesianVector &CommonNtupleTool::GetVertexPosition(const ParticleFlowObject *const pPfo) const
+{
+    const VertexList &vertexList = pPfo->GetVertexList();
+
+    if (vertexList.empty())
+    {
+        std::cerr << "CommonNtupleTool: Could not get vertex because list was empty" << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
+
+    if (vertexList.size() > 1UL)
+    {
+        std::cerr << "CommonNtupleTool: Could not get vertex because there were more than one" << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
+
+    return vertexList.front()->GetPosition();
 }
 
 } // namespace lar_physics_content

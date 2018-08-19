@@ -12,6 +12,7 @@
 #include "Managers/GeometryManager.h"
 
 using namespace pandora;
+using namespace lar_content;
 
 namespace lar_physics_content
 {
@@ -77,6 +78,65 @@ bool LArAnalysisHelper::IsTrueShower(const MCParticle *const pMCParticle)
     }
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArAnalysisHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position)
+{
+    // Get the extremal fit parameters
+    const CartesianVector &minPosition = trackFit.GetGlobalMinLayerPosition();
+    const CartesianVector &maxPosition = trackFit.GetGlobalMaxLayerPosition();
+
+    const float minCoordinate = trackFit.GetLongitudinalDisplacement(minPosition);
+    const float maxCoordinate = trackFit.GetLongitudinalDisplacement(maxPosition);
+
+    const CartesianVector &minDirection = trackFit.GetGlobalMinLayerDirection();
+    const CartesianVector &maxDirection = trackFit.GetGlobalMaxLayerDirection();
+
+    // Get the fit direction at the fit position closest to the point
+    CartesianVector fitDirection(0.f, 0.f, 0.f);
+    const float     displacementAlongFittedTrack = trackFit.GetLongitudinalDisplacement(position);
+
+    if (trackFit.GetGlobalFitDirection(displacementAlongFittedTrack, fitDirection) != STATUS_CODE_SUCCESS)
+    {
+        if (displacementAlongFittedTrack <= minCoordinate)
+            fitDirection = minDirection;
+
+        else if (displacementAlongFittedTrack >= maxCoordinate)
+            fitDirection = maxDirection;
+
+        else
+        {
+            const float distanceToMinPosition = (position - minPosition).GetMagnitude();
+            const float distanceToMaxPosition = (position - maxPosition).GetMagnitude();
+
+            if (distanceToMinPosition < distanceToMaxPosition)
+                fitDirection = minDirection;
+
+            else
+                fitDirection = maxDirection;
+        }
+    }
+
+    // Make sure the fit direction points more towards the fit centre
+    const CartesianVector &minToMaxVector = maxPosition - minPosition;
+
+    if (std::fabs(maxCoordinate - displacementAlongFittedTrack) < std::fabs(displacementAlongFittedTrack - minCoordinate))
+    {
+        // If closer to the maximum coordinate, we want the fit direction and the min-to-max vector to be more anti-aligned
+        if (minToMaxVector.GetDotProduct(fitDirection) > 0.f)
+            fitDirection *= -1.f;
+    }
+
+    else
+    {
+        // If closer to the minimum coordinate, we want the fit direction and the min-to-max vector to be more aligned
+        if (minToMaxVector.GetDotProduct(fitDirection) < 0.f)
+            fitDirection *= -1.f;
+    }
+
+    return fitDirection;
 }
 
 } // namespace lar_physics_content

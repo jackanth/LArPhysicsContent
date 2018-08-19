@@ -91,8 +91,8 @@ private:
      *
      *  @return the records
      */
-    std::vector<LArNtupleRecord> ProduceNonNeutrinoPfoMCRecords(const pandora::ParticleFlowObject *const, const pandora::PfoList &,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const) const;
+    std::vector<LArNtupleRecord> ProduceNonNeutrinoPfoMCRecords(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
+        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) const;
 
     /**
      *  @brief  Get the kinetic-energy-weighted contained PFO fraction

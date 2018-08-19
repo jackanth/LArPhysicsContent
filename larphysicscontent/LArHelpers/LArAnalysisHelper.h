@@ -8,6 +8,8 @@
 #ifndef LAR_ANALYSIS_HELPER_H
 #define LAR_ANALYSIS_HELPER_H 1
 
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
+
 #include "Objects/CartesianVector.h"
 #include "Objects/MCParticle.h"
 #include "Pandora/Pandora.h"
@@ -98,6 +100,17 @@ public:
      *  @return whether it is a true shower
      */
     static bool IsTrueShower(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Get the fitted track direction at a given position
+     *
+     *  @param  trackFit the track fit object
+     *  @param  position the position
+     *
+     *  @return the track fit direction
+     */
+    static pandora::CartesianVector GetFittedDirectionAtPosition(
+        const lar_content::ThreeDSlidingFitResult &trackFit, const pandora::CartesianVector &position);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
