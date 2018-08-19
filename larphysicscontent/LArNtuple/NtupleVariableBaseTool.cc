@@ -28,7 +28,9 @@ NtupleVariableBaseTool::NtupleVariableBaseTool() noexcept :
     m_neutrinoPrefix("nu_"),
     m_primaryPrefix("primary_"),
     m_particlePrefix("pfo_"),
-    m_cosmicPrefix("cr_")
+    m_cosmicPrefix("cr_"),
+    m_minFiducialCoordinates(0.f, 0.f, 0.f),
+    m_maxFiducialCoordinates(0.f, 0.f, 0.f)
 {
 }
 

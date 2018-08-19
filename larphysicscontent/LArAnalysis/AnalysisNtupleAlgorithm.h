@@ -76,6 +76,10 @@ private:
     int                                   m_eventNumber;                  ///< The event number
     bool                                  m_appendNtuple;                 ///< Whether to append to an existing ntuple
     float                                 m_minUnmatchedMcParticleEnergy; ///< The minimum unmatched MCParticle energy that passes the cut
+    pandora::CartesianVector              m_fiducialCutLowMargins;        ///< The low-coordinate margins for the fiducial cut
+    pandora::CartesianVector              m_fiducialCutHighMargins;       ///< The high-coordinate margins for the fiducial cut
+    pandora::CartesianVector              m_minFiducialCoordinates;       ///< The minimum fiducial coordinates
+    pandora::CartesianVector              m_maxFiducialCoordinates;       ///< The maximum fiducial coordinates
 
     /**
      *  @brief  Get the particle lists

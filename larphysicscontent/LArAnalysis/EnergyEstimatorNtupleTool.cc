@@ -13,7 +13,11 @@ using namespace pandora;
 
 namespace lar_physics_content
 {
-EnergyEstimatorNtupleTool::EnergyEstimatorNtupleTool() : NtupleVariableBaseTool()
+EnergyEstimatorNtupleTool::EnergyEstimatorNtupleTool() :
+    NtupleVariableBaseTool(),
+    m_writeEnergiesToNtuple(true),
+    m_useParticleId(true),
+    m_trainingSetMode(false)
 {
 }
 
@@ -21,6 +25,11 @@ EnergyEstimatorNtupleTool::EnergyEstimatorNtupleTool() : NtupleVariableBaseTool(
 
 StatusCode EnergyEstimatorNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteEnergiesToNtuple", m_writeEnergiesToNtuple));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseParticleId", m_useParticleId));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingSetMode", m_trainingSetMode));
+
     return NtupleVariableBaseTool::ReadSettings(xmlHandle);
 }
 

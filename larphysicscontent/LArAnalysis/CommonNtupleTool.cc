@@ -19,12 +19,7 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
-CommonNtupleTool::CommonNtupleTool() :
-    NtupleVariableBaseTool(),
-    m_fiducialCutLowMargins(10.f, 20.f, 10.f),
-    m_fiducialCutHighMargins(10.f, 20.f, 10.f),
-    m_minFiducialCoordinates(0.f, 0.f, 0.f),
-    m_maxFiducialCoordinates(0.f, 0.f, 0.f)
+CommonNtupleTool::CommonNtupleTool() : NtupleVariableBaseTool()
 {
 }
 
@@ -32,14 +27,6 @@ CommonNtupleTool::CommonNtupleTool() :
 
 StatusCode CommonNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighMargins", m_fiducialCutHighMargins));
-
-    std::tie(m_minFiducialCoordinates, m_maxFiducialCoordinates) =
-        LArAnalysisHelper::GetFiducialCutCoordinates(this->GetPandora(), m_fiducialCutLowMargins, m_fiducialCutHighMargins);
-
     return NtupleVariableBaseTool::ReadSettings(xmlHandle);
 }
 
@@ -125,8 +112,7 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProduceGenericPfoRecords(const Pa
     {
         const CartesianVector &vertexPosition = this->GetVertexPosition(pPfo);
 
-        records.emplace_back("IsVertexFiducial", static_cast<LArNtupleRecord::RBool>(LArAnalysisHelper::IsPointFiducial(
-                                                     vertexPosition, m_minFiducialCoordinates, m_maxFiducialCoordinates)));
+        records.emplace_back("IsVertexFiducial", static_cast<LArNtupleRecord::RBool>(this->IsPointFiducial(vertexPosition)));
         records.emplace_back("VertexX", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetX()));
         records.emplace_back("VertexY", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetY()));
         records.emplace_back("VertexZ", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetZ()));
@@ -192,7 +178,7 @@ float CommonNtupleTool::GetFractionOfFiducialThreeDHits(const ParticleFlowObject
 
     for (const CaloHit *const pCaloHit : caloHitList)
     {
-        if (LArAnalysisHelper::IsPointFiducial(pCaloHit->GetPositionVector(), m_minFiducialCoordinates, m_maxFiducialCoordinates))
+        if (this->IsPointFiducial(pCaloHit->GetPositionVector()))
             ++fiducialHits;
     }
 

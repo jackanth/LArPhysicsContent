@@ -11,6 +11,7 @@
 #include "larphysicscontent/LArNtuple/LArNtupleRecord.h"
 
 #include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
+#include "larphysicscontent/LArHelpers/LArAnalysisHelper.h"
 #include "larphysicscontent/LArNtuple/LArBranchPlaceholder.h"
 
 #include "Api/PandoraContentApi.h"
@@ -296,17 +297,35 @@ protected:
     template <typename T>
     const std::decay_t<T> &GetNeutrinoRecord(const std::string &branchName, const pandora::MCParticle *const pMCParticle) const;
 
+    /**
+     *  @brief  Check whether a point is fiducial
+     *
+     *  @param  point the point
+     *
+     *  @return whether it is fiducial
+     */
+    bool IsPointFiducial(const pandora::CartesianVector &point) const;
+
+    /**
+     *  @brief  Get the extremal fiducial coordinates
+     *
+     *  @return the coordinates
+     */
+    std::tuple<pandora::CartesianVector, pandora::CartesianVector> GetExtremalFiducialCoordinates() const noexcept;
+
     friend class AnalysisNtupleAlgorithm;
 
 private:
     using Processor = std::function<std::vector<LArNtupleRecord>()>; ///< Alias for a function to process a PFO
 
-    std::shared_ptr<LArNtuple> m_spNtuple;       ///< Shared pointer to the ntuple
-    std::string                m_eventPrefix;    ///< The event prefix
-    std::string                m_neutrinoPrefix; ///< The neutrino prefix
-    std::string                m_primaryPrefix;  ///< The primary prefix
-    std::string                m_particlePrefix; ///< The particle prefix
-    std::string                m_cosmicPrefix;   ///< The cosmic prefix
+    std::shared_ptr<LArNtuple> m_spNtuple;               ///< Shared pointer to the ntuple
+    std::string                m_eventPrefix;            ///< The event prefix
+    std::string                m_neutrinoPrefix;         ///< The neutrino prefix
+    std::string                m_primaryPrefix;          ///< The primary prefix
+    std::string                m_particlePrefix;         ///< The particle prefix
+    std::string                m_cosmicPrefix;           ///< The cosmic prefix
+    pandora::CartesianVector   m_minFiducialCoordinates; ///< The minimum fiducial coordinates
+    pandora::CartesianVector   m_maxFiducialCoordinates; ///< The maximum fiducial coordinates
 
     /**
      *  @brief  Process an event (wrapper method)
@@ -396,6 +415,14 @@ private:
      *  @param  spNtuple shared pointer to the ntuple
      */
     void SetNtuple(std::shared_ptr<LArNtuple> spNtuple) noexcept;
+
+    /**
+     *  @brief  Set the fiducial region
+     *
+     *  @param  minFiducialCoordinates the minimum fiducial coordinates
+     *  @param  maxFiducialCoordinates the maximum fiducial coordinates
+     */
+    void SetFiducialRegion(pandora::CartesianVector minFiducialCoordinates, pandora::CartesianVector maxFiducialCoordinates) noexcept;
 
     /**
      *  @brief  Get an MC particle
@@ -616,10 +643,33 @@ const std::decay_t<T> &NtupleVariableBaseTool::GetNeutrinoRecord(const std::stri
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline bool NtupleVariableBaseTool::IsPointFiducial(const pandora::CartesianVector &point) const
+{
+    return LArAnalysisHelper::IsPointFiducial(point, m_minFiducialCoordinates, m_maxFiducialCoordinates);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline std::tuple<pandora::CartesianVector, pandora::CartesianVector> NtupleVariableBaseTool::GetExtremalFiducialCoordinates() const noexcept
+{
+    return {m_minFiducialCoordinates, m_maxFiducialCoordinates};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline void NtupleVariableBaseTool::SetNtuple(std::shared_ptr<LArNtuple> spNtuple) noexcept
 {
     m_spNtuple = std::move_if_noexcept(spNtuple);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void NtupleVariableBaseTool::SetFiducialRegion(pandora::CartesianVector minFiducialCoordinates, pandora::CartesianVector maxFiducialCoordinates) noexcept
+{
+    m_minFiducialCoordinates = std::move_if_noexcept(minFiducialCoordinates);
+    m_maxFiducialCoordinates = std::move_if_noexcept(maxFiducialCoordinates);
+}
+
 } // namespace lar_physics_content
 
 #endif // #ifndef LAR_NTUPLE_VARIABLE_BASE_TOOL_H

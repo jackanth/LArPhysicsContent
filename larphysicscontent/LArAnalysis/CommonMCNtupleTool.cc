@@ -18,12 +18,7 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
-CommonMCNtupleTool::CommonMCNtupleTool() :
-    NtupleVariableBaseTool(),
-    m_fiducialCutLowMargins(10.f, 20.f, 10.f),
-    m_fiducialCutHighMargins(10.f, 20.f, 10.f),
-    m_minFiducialCoordinates(0.f, 0.f, 0.f),
-    m_maxFiducialCoordinates(0.f, 0.f, 0.f)
+CommonMCNtupleTool::CommonMCNtupleTool() : NtupleVariableBaseTool()
 {
 }
 
@@ -31,14 +26,6 @@ CommonMCNtupleTool::CommonMCNtupleTool() :
 
 StatusCode CommonMCNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighMargins", m_fiducialCutHighMargins));
-
-    std::tie(m_minFiducialCoordinates, m_maxFiducialCoordinates) =
-        LArAnalysisHelper::GetFiducialCutCoordinates(this->GetPandora(), m_fiducialCutLowMargins, m_fiducialCutHighMargins);
-
     return NtupleVariableBaseTool::ReadSettings(xmlHandle);
 }
 
@@ -85,7 +72,7 @@ std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessNeutrino(const ParticleF
         records.emplace_back("mc_VisibleInitialDirectionX", static_cast<LArNtupleRecord::RFloat>(visibleInitialDirection.GetX()));
         records.emplace_back("mc_VisibleInitialDirectionY", static_cast<LArNtupleRecord::RFloat>(visibleInitialDirection.GetY()));
         records.emplace_back("mc_VisibleInitialDirectionZ", static_cast<LArNtupleRecord::RFloat>(visibleInitialDirection.GetZ()));
-        }
+    }
 
     else // null values for size consistency
     {
@@ -153,8 +140,7 @@ std::vector<LArNtupleRecord> CommonMCNtupleTool::ProduceGenericPfoMCRecords(
         records.emplace_back("mc_VertexX", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetX()));
         records.emplace_back("mc_VertexY", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetY()));
         records.emplace_back("mc_VertexZ", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetZ()));
-        records.emplace_back("mc_IsVertexFiducial", static_cast<LArNtupleRecord::RBool>(LArAnalysisHelper::IsPointFiducial(
-                                                        vertexPosition, m_minFiducialCoordinates, m_maxFiducialCoordinates)));
+        records.emplace_back("mc_IsVertexFiducial", static_cast<LArNtupleRecord::RBool>(this->IsPointFiducial(vertexPosition)));
         records.emplace_back("mc_PdgCode", static_cast<LArNtupleRecord::RInt>(pMCParticle->GetParticleId()));
         records.emplace_back("mc_NuanceCode", static_cast<LArNtupleRecord::RUInt>(LArMCParticleHelper::GetNuanceCode(pMCParticle)));
         records.emplace_back("mc_MomentumX", static_cast<LArNtupleRecord::RFloat>(momentum.GetX()));
@@ -233,9 +219,8 @@ void CommonMCNtupleTool::RecursivelyGetContainedEnergy(const MCParticle *const p
         totalEnergy += kineticEnergy;
 
         // Approximate strict containment as both the vertex and endpoint being fiducial
-        const bool isVertexFiducial = LArAnalysisHelper::IsPointFiducial(pMCParticle->GetVertex(), m_minFiducialCoordinates, m_maxFiducialCoordinates);
-        const bool isEndpointFiducial =
-            LArAnalysisHelper::IsPointFiducial(pMCParticle->GetEndpoint(), m_minFiducialCoordinates, m_maxFiducialCoordinates);
+        const bool isVertexFiducial   = this->IsPointFiducial(pMCParticle->GetVertex());
+        const bool isEndpointFiducial = this->IsPointFiducial(pMCParticle->GetEndpoint());
 
         if (isVertexFiducial && isEndpointFiducial)
             containedEnergy += kineticEnergy;

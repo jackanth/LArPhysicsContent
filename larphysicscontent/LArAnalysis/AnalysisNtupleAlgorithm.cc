@@ -8,6 +8,7 @@
 
 #include "larphysicscontent/LArAnalysis/AnalysisNtupleAlgorithm.h"
 
+#include "larphysicscontent/LArHelpers/LArAnalysisHelper.h"
 #include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
 #include "larphysicscontent/LArNtuple/LArNtuple.h"
 
@@ -28,7 +29,11 @@ AnalysisNtupleAlgorithm::AnalysisNtupleAlgorithm() :
     m_fileIdentifier(0),
     m_eventNumber(0),
     m_appendNtuple(false),
-    m_minUnmatchedMcParticleEnergy(0.f)
+    m_minUnmatchedMcParticleEnergy(0.f),
+    m_fiducialCutLowMargins(10.f, 20.f, 10.f),
+    m_fiducialCutHighMargins(10.f, 20.f, 10.f),
+    m_minFiducialCoordinates(0.f, 0.f, 0.f),
+    m_maxFiducialCoordinates(0.f, 0.f, 0.f)
 {
 }
 
@@ -267,6 +272,15 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinUnmatchedMcParticleEnergy", m_minUnmatchedMcParticleEnergy));
 
+    // Get the minimum and maximum fiducial coordinates
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighMargins", m_fiducialCutHighMargins));
+
+    std::tie(m_minFiducialCoordinates, m_maxFiducialCoordinates) =
+        LArAnalysisHelper::GetFiducialCutCoordinates(this->GetPandora(), m_fiducialCutLowMargins, m_fiducialCutHighMargins);
+
     m_spNtuple = std::shared_ptr<LArNtuple>(new LArNtuple(m_ntupleOutputFile, m_ntupleTreeName, m_ntupleTreeTitle, m_appendNtuple));
 
     // Downcast and store the algorithm tools
@@ -278,6 +292,7 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         if (NtupleVariableBaseTool *const pNtupleTool = dynamic_cast<NtupleVariableBaseTool *const>(pAlgorithmTool))
         {
             pNtupleTool->SetNtuple(m_spNtuple);
+            pNtupleTool->SetFiducialRegion(m_minFiducialCoordinates, m_maxFiducialCoordinates);
             m_ntupleVariableTools.push_back(pNtupleTool);
         }
 

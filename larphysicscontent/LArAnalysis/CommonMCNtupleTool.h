@@ -61,11 +61,6 @@ protected:
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
 
 private:
-    pandora::CartesianVector m_fiducialCutLowMargins;  ///< The low-coordinate margins for the fiducial cut
-    pandora::CartesianVector m_fiducialCutHighMargins; ///< The high-coordinate margins for the fiducial cut
-    pandora::CartesianVector m_minFiducialCoordinates; ///< The minimum fiducial coordinates
-    pandora::CartesianVector m_maxFiducialCoordinates; ///< The maximum fiducial coordinates
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**

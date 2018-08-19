@@ -61,6 +61,10 @@ protected:
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
 
 private:
+    bool m_writeEnergiesToNtuple; ///< Whether to write the energies to the ntuple
+    bool m_useParticleId;         ///< Whether to use particle ID
+    bool m_trainingSetMode;       ///< Whether to run in training set mode
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 
