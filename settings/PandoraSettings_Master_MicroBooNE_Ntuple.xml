@@ -67,14 +67,22 @@
         <FileIdentifier>0</FileIdentifier>
         <AppendNtuple>false</AppendNtuple>
         <MinUnmatchedMcParticleEnergy>0.f</MinUnmatchedMcParticleEnergy>
+        <FiducialCutLowMargins>10.f 20.f 10.f</FiducialCutLowMargins>
+        <FiducialCutHighMargins>10.f 20.f 10.f</FiducialCutHighMargins>
         <NtupleTools>
             <tool type = "LArCommonNtupleTool">
-                <FiducialCutLowMargins>10.f 20.f 10.f</FiducialCutLowMargins>
-                <FiducialCutHighMargins>10.f 20.f 10.f</FiducialCutHighMargins>
+            <tool type = "LArCommonMCNtupleTool"> 
+            <tool type = "LArEnergyEstimatorNtupleTool">
+                <WriteEnergiesToNtuple>false</WriteEnergiesToNtuple>
+                <UseParticleId>false</UseParticleId>
+                <TrainingSetMode>false</TrainingSetMode>
             </tool>
-            <tool type = "LArCommonMCNtupleTool"/>
             <tool type = "LArParticleIdNtupleTool"/>
-            <tool type = "LArEnergyEstimatorNtupleTool"/>
+            <tool type = "LArEnergyEstimatorNtupleTool">
+                <WriteEnergiesToNtuple>true</WriteEnergiesToNtuple>
+                <UseParticleId>true</UseParticleId>
+                <TrainingSetMode>false</TrainingSetMode>
+            </tool>
             <tool type = "LArEventValidationNtupleTool"/>
             <tool type = "LArLeeAnalysisNtupleTool"/>
         </NtupleTools>
