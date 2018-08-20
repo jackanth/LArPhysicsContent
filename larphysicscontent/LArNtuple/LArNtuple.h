@@ -197,7 +197,7 @@ private:
     void Reset();
 
     /**
-     *  @brief  Get all 3D hits downstream of a PFO
+     *  @brief  Get all 3D hits downstream of a PFO, including from the PFO itself
      *
      *  @param  pPfo address of the PFO
      *
@@ -206,7 +206,7 @@ private:
     const pandora::CaloHitList &GetAllDownstreamThreeDHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Get all 2D hits downstream of a PFO
+     *  @brief  Get all 2D hits downstream of a PFO, including from the PFO itself
      *
      *  @param  pPfo address of the PFO
      *
@@ -215,7 +215,7 @@ private:
     pandora::CaloHitList GetAllDownstreamTwoDHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Get all PFOs downstream of a PFO
+     *  @brief  Get all PFOs downstream of a PFO, including the PFO itself
      *
      *  @param  pPfo address of the PFO
      *
@@ -224,7 +224,7 @@ private:
     const pandora::PfoList &GetAllDownstreamPfos(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Get all U hits downstream of a PFO
+     *  @brief  Get all U hits downstream of a PFO, including from the PFO itself
      *
      *  @param  pPfo address of the PFO
      *
@@ -233,7 +233,7 @@ private:
     const pandora::CaloHitList &GetAllDownstreamUHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Get all V hits downstream of a PFO
+     *  @brief  Get all V hits downstream of a PFO, including from the PFO itself
      *
      *  @param  pPfo address of the PFO
      *
@@ -242,7 +242,7 @@ private:
     const pandora::CaloHitList &GetAllDownstreamVHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Get all W hits downstream of a PFO
+     *  @brief  Get all W hits downstream of a PFO, including from the PFO itself
      *
      *  @param  pPfo address of the PFO
      *

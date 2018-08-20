@@ -10,8 +10,8 @@
 
 #include "larphysicscontent/LArNtuple/LArNtupleRecord.h"
 
-#include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
 #include "larphysicscontent/LArHelpers/LArAnalysisHelper.h"
+#include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
 #include "larphysicscontent/LArNtuple/LArBranchPlaceholder.h"
 
 #include "Api/PandoraContentApi.h"
@@ -73,6 +73,16 @@ public:
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle);
+
+    /**
+     *  @brief  Prepare an event - to be overriden
+     *
+     *  @param  pfoList the list of all PFOs
+     *  @param  pMCParticleList optional pointer to the MC particle list
+     *
+     *  @return the event records
+     */
+    virtual void PrepareEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process an event - to be overriden
@@ -137,7 +147,7 @@ protected:
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
 
     /**
-     *  @brief  Get all the downstream 3D hits of a PFO (from the cache if possible)
+     *  @brief  Get all the downstream 3D hits of a PFO, including from the PFO itself (from the cache if possible)
      *
      *  @param  pPfo address of the PFO
      *
@@ -146,7 +156,7 @@ protected:
     const pandora::CaloHitList &GetAllDownstreamThreeDHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Get all the downstream 2D hits of a PFO (from the cache if possible)
+     *  @brief  Get all the downstream 2D hits of a PFO, including from the PFO itself (from the cache if possible)
      *
      *  @param  pPfo address of the PFO
      *
@@ -155,7 +165,7 @@ protected:
     pandora::CaloHitList GetAllDownstreamTwoDHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Get all the downstream U hits of a PFO (from the cache if possible)
+     *  @brief  Get all the downstream U hits of a PFO, including from the PFO itself (from the cache if possible)
      *
      *  @param  pPfo address of the PFO
      *
@@ -164,7 +174,7 @@ protected:
     const pandora::CaloHitList &GetAllDownstreamUHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Get all the downstream V hits of a PFO (from the cache if possible)
+     *  @brief  Get all the downstream V hits of a PFO, including from the PFO itself (from the cache if possible)
      *
      *  @param  pPfo address of the PFO
      *
@@ -173,7 +183,7 @@ protected:
     const pandora::CaloHitList &GetAllDownstreamVHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Get all the downstream W hits of a PFO (from the cache if possible)
+     *  @brief  Get all the downstream W hits of a PFO, including from the PFO itself (from the cache if possible)
      *
      *  @param  pPfo address of the PFO
      *
@@ -182,7 +192,7 @@ protected:
     const pandora::CaloHitList &GetAllDownstreamWHits(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Get all the downstream PFOs of a PFO (from the cache if possible)
+     *  @brief  Get all the downstream PFOs of a PFO, including the PFO itself (from the cache if possible)
      *
      *  @param  pPfo address of the PFO
      *
@@ -313,6 +323,13 @@ protected:
      */
     std::tuple<pandora::CartesianVector, pandora::CartesianVector> GetExtremalFiducialCoordinates() const noexcept;
 
+    /**
+     *  @brief  Get the algorithm address
+     *
+     *  @return the algorithm address
+     */
+    const pandora::Algorithm *GetAlgorithm() const noexcept;
+
     friend class AnalysisNtupleAlgorithm;
 
 private:
@@ -326,6 +343,17 @@ private:
     std::string                m_cosmicPrefix;           ///< The cosmic prefix
     pandora::CartesianVector   m_minFiducialCoordinates; ///< The minimum fiducial coordinates
     pandora::CartesianVector   m_maxFiducialCoordinates; ///< The maximum fiducial coordinates
+    const pandora::Algorithm * m_pAlgorithm;             ///< The address of the calling algorithm
+
+    /**
+     *  @brief  Prepare an event (wrapper method)
+     *
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  pfoList the list of all PFOs
+     *  @param  pMCParticleList optional pointer to the MC particle list
+     */
+    void PrepareEventWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::PfoList &pfoList,
+        const pandora::MCParticleList *const pMCParticleList);
 
     /**
      *  @brief  Process an event (wrapper method)
@@ -417,6 +445,13 @@ private:
     void SetNtuple(std::shared_ptr<LArNtuple> spNtuple) noexcept;
 
     /**
+     *  @brief  Set the algorithm address
+     *
+     *  @param  pAlgorithm the algorithm address
+     */
+    void SetAlgorithm(const pandora::Algorithm *const pAlgorithm) noexcept;
+
+    /**
      *  @brief  Set the fiducial region
      *
      *  @param  minFiducialCoordinates the minimum fiducial coordinates
@@ -474,6 +509,12 @@ private:
 inline pandora::StatusCode NtupleVariableBaseTool::ReadSettings(const pandora::TiXmlHandle)
 {
     return pandora::STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void NtupleVariableBaseTool::PrepareEvent(const pandora::PfoList &, const pandora::MCParticleList *const)
+{
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -657,9 +698,23 @@ inline std::tuple<pandora::CartesianVector, pandora::CartesianVector> NtupleVari
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline const pandora::Algorithm *NtupleVariableBaseTool::GetAlgorithm() const noexcept
+{
+    return m_pAlgorithm;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline void NtupleVariableBaseTool::SetNtuple(std::shared_ptr<LArNtuple> spNtuple) noexcept
 {
     m_spNtuple = std::move_if_noexcept(spNtuple);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void NtupleVariableBaseTool::SetAlgorithm(const pandora::Algorithm *const pAlgorithm) noexcept
+{
+    m_pAlgorithm = pAlgorithm;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

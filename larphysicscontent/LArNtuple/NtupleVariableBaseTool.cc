@@ -30,7 +30,8 @@ NtupleVariableBaseTool::NtupleVariableBaseTool() noexcept :
     m_particlePrefix("pfo_"),
     m_cosmicPrefix("cr_"),
     m_minFiducialCoordinates(0.f, 0.f, 0.f),
-    m_maxFiducialCoordinates(0.f, 0.f, 0.f)
+    m_maxFiducialCoordinates(0.f, 0.f, 0.f),
+    m_pAlgorithm(nullptr)
 {
 }
 
@@ -127,13 +128,24 @@ const LArNtupleHelper::TrackFitSharedPtr &NtupleVariableBaseTool::GetTrackFit(co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void NtupleVariableBaseTool::PrepareEventWrapper(
+    const AnalysisNtupleAlgorithm *const pAlgorithm, const PfoList &pfoList, const MCParticleList *const pMCParticleList)
+{
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+
+    this->PrepareEvent(pfoList, pMCParticleList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEventWrapper(
     const AnalysisNtupleAlgorithm *const pAlgorithm, const PfoList &pfoList, const MCParticleList *const pMCParticleList)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    std::vector<LArNtupleRecord> records = ProcessEvent(pfoList, pMCParticleList);
+    std::vector<LArNtupleRecord> records = this->ProcessEvent(pfoList, pMCParticleList);
 
     for (LArNtupleRecord &record : records)
         record.AddBranchNamePrefix(m_eventPrefix);
