@@ -49,6 +49,8 @@ public:
     ~CommonMCNtupleTool() = default;
 
 protected:
+    void PrepareEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) override;
+
     std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) override;
 
     std::vector<LArNtupleRecord> ProcessNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
@@ -61,6 +63,12 @@ protected:
         const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
 
 private:
+    using HitSelector = std::function<bool(const pandora::CaloHit *const)>; ///< Alias for a hit selector function
+    using HitGetter   = std::function<pandora::CaloHitList()>;              ///< Alias for a hit getter function
+
+    std::string                 m_twoDCaloHitListName; ///< The 2D CaloHit list name
+    const pandora::CaloHitList *m_pTwoDCaloHitList;    ///< Address of the 2D CaloHit list
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -113,6 +121,49 @@ private:
      *  @param  visibleMomentum the visible momentum (to be populated)
      */
     void RecursivelySumVisibleMomentum(const pandora::MCParticle *const pMCParticle, pandora::CartesianVector &visibleMomentum) const;
+
+    /**
+     *  @brief  Get the reco/MC match quality parameters
+     *
+     *  @param  pPfo address of the PFO
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return the match purity and the match completeness
+     */
+    std::tuple<float, float> GetRecoMcMatchQuality(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticle *const pMCParticle) const;
+
+    /**
+     *  @brief  Get the reco/MC match quality parameters for collection-plane hits only
+     *
+     *  @param  pPfo address of the PFO
+     *  @param  pMCParticle address of the MC particle
+     *
+     *  @return the match purity and the match completeness
+     */
+    std::tuple<float, float> GetCollectionPlaneRecoMcMatchQuality(
+        const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticle *const pMCParticle) const;
+
+    /**
+     *  @brief  Get the reco/MC match quality parameters (implementation method)
+     *
+     *  @param  pMCParticle address of the MC particle
+     *  @param  pfoHitGetter the PFO-associated hit-getter function
+     *  @parma  hitSelector the hit-selector function
+     *
+     *  @return the match purity and the match completeness
+     */
+    std::tuple<float, float> GetRecoMcMatchQualityImpl(
+        const pandora::MCParticle *const pMCParticle, const HitGetter &pfoHitGetter, const HitSelector &hitSelector) const;
+
+    /**
+     *  @brief  Get the hit weight associated with a given MC particle
+     *
+     *  @param  pMCParticle address of the MC particle
+     *  @parma  hitSelector the hit-selector function
+     *
+     *  @return the hit weight associated with the MC particle
+     */
+    float GetHitWeightAssociatedWithMcParticle(const pandora::MCParticle *const pMCParticle, const HitSelector &hitSelector) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

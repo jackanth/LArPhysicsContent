@@ -97,37 +97,40 @@ private:
      *  @brief  Get the direction at the vertex for a track
      *
      *  @param  pPfo address of the PFO
+     *  @param  pVertex address of the vertex
      *
      *  @return the direction
      */
-    pandora::CartesianVector GetTrackDirectionAtVertex(const pandora::ParticleFlowObject *const pPfo) const;
+    pandora::CartesianVector GetTrackDirectionAtVertex(const pandora::ParticleFlowObject *const pPfo, const pandora::Vertex *const pVertex) const;
 
     /**
      *  @brief  Get the direction at the vertex for a shower
      *
      *  @param  pPfo address of the PFO
+     *  @param  pVertex address of the vertex
      *
      *  @return the direction
      */
-    pandora::CartesianVector GetShowerDirectionAtVertex(const pandora::ParticleFlowObject *const pPfo) const;
+    pandora::CartesianVector GetShowerDirectionAtVertex(const pandora::ParticleFlowObject *const pPfo, const pandora::Vertex *const pVertex) const;
 
     /**
-     *  @brief  Get the vertex position of a PFO
+     *  @brief  Get the single vertex of a PFO, otherwise return nullptr
      *
      *  @param  pPfo address of the PFO
      *
-     *  @return the vertex position
+     *  @return the vertex
      */
-    const pandora::CartesianVector &GetVertexPosition(const pandora::ParticleFlowObject *const pPfo) const;
+    const pandora::Vertex *GetSingleVertex(const pandora::ParticleFlowObject *const pPfo) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianVector CommonNtupleTool::GetTrackDirectionAtVertex(const pandora::ParticleFlowObject *const pPfo) const
+inline pandora::CartesianVector CommonNtupleTool::GetTrackDirectionAtVertex(
+    const pandora::ParticleFlowObject *const pPfo, const pandora::Vertex *const pVertex) const
 {
     if (const LArNtupleHelper::TrackFitSharedPtr &spTrackFit = this->GetTrackFit(pPfo))
-        return LArAnalysisHelper::GetFittedDirectionAtPosition(*spTrackFit, this->GetVertexPosition(pPfo));
+        return LArAnalysisHelper::GetFittedDirectionAtPosition(*spTrackFit, pVertex->GetPosition());
 
     return pandora::CartesianVector(0.f, 0.f, 0.f);
 }

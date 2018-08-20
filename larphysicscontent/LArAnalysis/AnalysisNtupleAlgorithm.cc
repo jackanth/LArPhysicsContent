@@ -197,6 +197,12 @@ void AnalysisNtupleAlgorithm::RegisterNtupleRecords(const PfoList &neutrinos, co
     const PfoList &pfoList, const MCParticleList &mcNeutrinos, const MCParticleList &mcCosmicRays, const MCParticleList &mcPrimaries,
     const MCParticleList *const pMCParticleList) const
 {
+    std::cout << "AnalysisNtupleAlgorithm: Preparing ntuple tools for new event" << std::endl;
+
+    // Prepare the tools
+    for (NtupleVariableBaseTool *const pNtupleTool : m_ntupleVariableTools)
+        pNtupleTool->PrepareEventWrapper(this, pfoList, pMCParticleList);
+
     std::cout << "AnalysisNtupleAlgorithm: Registering PFO records" << std::endl;
 
     // Register the vector records for all the particles
@@ -292,6 +298,7 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         if (NtupleVariableBaseTool *const pNtupleTool = dynamic_cast<NtupleVariableBaseTool *const>(pAlgorithmTool))
         {
             pNtupleTool->SetNtuple(m_spNtuple);
+            pNtupleTool->SetAlgorithm(this);
             pNtupleTool->SetFiducialRegion(m_minFiducialCoordinates, m_maxFiducialCoordinates);
             m_ntupleVariableTools.push_back(pNtupleTool);
         }

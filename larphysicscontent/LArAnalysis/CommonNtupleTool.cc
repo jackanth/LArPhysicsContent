@@ -106,11 +106,12 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProcessCosmicRay(
 std::vector<LArNtupleRecord> CommonNtupleTool::ProduceGenericPfoRecords(const ParticleFlowObject *const pPfo, const PfoList &) const
 {
     std::vector<LArNtupleRecord> records;
-    records.emplace_back("WasReconstructed", static_cast<LArNtupleRecord::RBool>(pPfo));
+    const Vertex *const          pVertex = pPfo ? this->GetSingleVertex(pPfo) : nullptr;
+    records.emplace_back("WasReconstructedWithVertex", static_cast<LArNtupleRecord::RBool>(pVertex));
 
-    if (pPfo)
+    if (pVertex)
     {
-        const CartesianVector &vertexPosition = this->GetVertexPosition(pPfo);
+        const CartesianVector &vertexPosition = pVertex->GetPosition();
 
         records.emplace_back("IsVertexFiducial", static_cast<LArNtupleRecord::RBool>(this->IsPointFiducial(vertexPosition)));
         records.emplace_back("VertexX", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetX()));
@@ -120,7 +121,7 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProduceGenericPfoRecords(const Pa
         records.emplace_back("NumberOfThreeDHits", static_cast<LArNtupleRecord::RUInt>(this->GetAllDownstreamThreeDHits(pPfo).size()));
         records.emplace_back("NumberOfTwoDHits", static_cast<LArNtupleRecord::RUInt>(this->GetAllDownstreamTwoDHits(pPfo).size()));
         records.emplace_back("NumberOfCollectionPlaneHits", static_cast<LArNtupleRecord::RUInt>(this->GetAllDownstreamWHits(pPfo).size()));
-        records.emplace_back("NumberOfDownstreamPfos", static_cast<LArNtupleRecord::RUInt>(this->GetAllDownstreamPfos(pPfo).size()));
+        records.emplace_back("NumberOfPfos", static_cast<LArNtupleRecord::RUInt>(this->GetAllDownstreamPfos(pPfo).size()));
     }
 
     else // null values for size consistency
@@ -133,7 +134,7 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProduceGenericPfoRecords(const Pa
         records.emplace_back("NumberOfThreeDHits", static_cast<LArNtupleRecord::RUInt>(0U));
         records.emplace_back("NumberOfTwoDHits", static_cast<LArNtupleRecord::RUInt>(0U));
         records.emplace_back("NumberOfCollectionPlaneHits", static_cast<LArNtupleRecord::RUInt>(0U));
-        records.emplace_back("NumberOfDownstreamPfos", static_cast<LArNtupleRecord::RUInt>(0U));
+        records.emplace_back("NumberOfPfos", static_cast<LArNtupleRecord::RUInt>(0U));
     }
 
     return records;
@@ -144,11 +145,13 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProduceGenericPfoRecords(const Pa
 std::vector<LArNtupleRecord> CommonNtupleTool::ProduceNonNeutrinoPfoRecords(const ParticleFlowObject *const pPfo, const PfoList &) const
 {
     std::vector<LArNtupleRecord> records;
+    const Vertex *const          pVertex = pPfo ? this->GetSingleVertex(pPfo) : nullptr;
 
-    if (pPfo)
+    if (pVertex)
     {
-        const bool            isShower         = LArPfoHelper::IsShower(pPfo);
-        const CartesianVector directionCosines = isShower ? this->GetShowerDirectionAtVertex(pPfo) : this->GetTrackDirectionAtVertex(pPfo);
+        const bool            isShower = LArPfoHelper::IsShower(pPfo);
+        const CartesianVector directionCosines =
+            isShower ? this->GetShowerDirectionAtVertex(pPfo, pVertex) : this->GetTrackDirectionAtVertex(pPfo, pVertex);
 
         records.emplace_back("IsShower", static_cast<LArNtupleRecord::RBool>(isShower));
         records.emplace_back("IsTrack", static_cast<LArNtupleRecord::RBool>(!isShower));
@@ -187,14 +190,26 @@ float CommonNtupleTool::GetFractionOfFiducialThreeDHits(const ParticleFlowObject
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector CommonNtupleTool::GetShowerDirectionAtVertex(const ParticleFlowObject *const pPfo) const
+CartesianVector CommonNtupleTool::GetShowerDirectionAtVertex(const ParticleFlowObject *const pPfo, const Vertex *const pVertex) const
 {
     const CaloHitList &downstreamThreeDHits = this->GetAllDownstreamThreeDHits(pPfo);
+
+    if (downstreamThreeDHits.size() < 2UL)
+        return CartesianVector(0.f, 0.f, 0.f);
 
     LArPcaHelper::EigenVectors eigenVectors;
     LArPcaHelper::EigenValues  eigenValues(0.f, 0.f, 0.f);
     CartesianVector            centroid(0.f, 0.f, 0.f);
-    LArPcaHelper::RunPca(downstreamThreeDHits, centroid, eigenValues, eigenVectors);
+
+    try
+    {
+        LArPcaHelper::RunPca(downstreamThreeDHits, centroid, eigenValues, eigenVectors);
+    }
+
+    catch (...)
+    {
+        return CartesianVector(0.f, 0.f, 0.f);
+    }
 
     if (eigenVectors.empty())
     {
@@ -203,7 +218,7 @@ CartesianVector CommonNtupleTool::GetShowerDirectionAtVertex(const ParticleFlowO
     }
 
     CartesianVector       fitDirection     = eigenVectors.at(0UL);
-    const CartesianVector vertexToCentroid = centroid - this->GetVertexPosition(pPfo);
+    const CartesianVector vertexToCentroid = centroid - pVertex->GetPosition();
 
     // We want the fit direction to be mostly aligned with the vertex-to-centroid direction.
     if (vertexToCentroid.GetDotProduct(fitDirection) < 0.f)
@@ -214,23 +229,14 @@ CartesianVector CommonNtupleTool::GetShowerDirectionAtVertex(const ParticleFlowO
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const CartesianVector &CommonNtupleTool::GetVertexPosition(const ParticleFlowObject *const pPfo) const
+const Vertex *CommonNtupleTool::GetSingleVertex(const ParticleFlowObject *const pPfo) const
 {
     const VertexList &vertexList = pPfo->GetVertexList();
 
-    if (vertexList.empty())
-    {
-        std::cerr << "CommonNtupleTool: Could not get vertex because list was empty" << std::endl;
-        throw STATUS_CODE_FAILURE;
-    }
+    if (vertexList.size() == 1UL)
+        return vertexList.front();
 
-    if (vertexList.size() > 1UL)
-    {
-        std::cerr << "CommonNtupleTool: Could not get vertex because there were more than one" << std::endl;
-        throw STATUS_CODE_FAILURE;
-    }
-
-    return vertexList.front()->GetPosition();
+    return nullptr;
 }
 
 } // namespace lar_physics_content
