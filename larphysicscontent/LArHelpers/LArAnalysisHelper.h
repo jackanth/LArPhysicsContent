@@ -102,15 +102,58 @@ public:
     static bool IsTrueShower(const pandora::MCParticle *const pMCParticle);
 
     /**
-     *  @brief  Get the fitted track direction at a given position
+     *  @brief  Project a 2D position to a 3D position using a track fit
+     *
+     *  @param  pandoraInstance the instance of Pandora
+     *  @param  trackFit the track fit object
+     *  @param  twoDPosition the 2D position
+     *  @param  hitType the hit type
+     *  @param  linearlyProjectEnds whether to linearly project the ends of the fit
+     *  @param  threeDPosition the 3D position (to populate)
+     *  @param  projectionError the projection error (to populate)
+     *
+     *  @return the status code
+     */
+    static pandora::StatusCode ProjectTwoDPositionOntoTrackFit(const pandora::Pandora &pandoraInstance,
+        const lar_content::ThreeDSlidingFitResult &trackFit, const pandora::CartesianVector &twoDPosition, const pandora::HitType hitType,
+        const bool linearlyProjectEnds, pandora::CartesianVector &threeDPosition, float &projectionError);
+
+    /**
+     *  @brief  Get the fitted track direction at a given 2D position
+     *
+     *  @param  pandoraInstance the instance of Pandora
+     *  @param  trackFit the track fit object
+     *  @param  twoDPosition the 2D position
+     *  @param  hitType the hit type
+     *  @param  linearlyProjectEnds whether to linearly project the ends of the fit
+     *  @param  direction the direction (to populate)
+     *  @param  projectionError the projection error (to populate)
+     *
+     *  @return the status code
+     */
+    static pandora::StatusCode GetFittedDirectionAtTwoDPosition(const pandora::Pandora &pandoraInstance,
+        const lar_content::ThreeDSlidingFitResult &trackFit, const pandora::CartesianVector &twoDPosition, const pandora::HitType hitType,
+        const bool linearlyProjectEnds, pandora::CartesianVector &direction, float &projectionError);
+
+    /**
+     *  @brief  Get the fitted track direction at a given 3D position
      *
      *  @param  trackFit the track fit object
-     *  @param  position the position
+     *  @param  threeDPosition the 3D position
+     *  @param  snapToEnds whether to snap to the ends of the fit if the point is out of bounds
+     *  @param  direction the direction (to populate)
      *
-     *  @return the track fit direction
+     *  @return the status code
      */
-    static pandora::CartesianVector GetFittedDirectionAtPosition(
-        const lar_content::ThreeDSlidingFitResult &trackFit, const pandora::CartesianVector &position);
+    static pandora::StatusCode GetFittedDirectionAtThreeDPosition(const lar_content::ThreeDSlidingFitResult &trackFit,
+        const pandora::CartesianVector &threeDPosition, const bool snapToEnds, pandora::CartesianVector &direction);
+
+private:
+    static pandora::CartesianVector AlignVectorWithFit(
+        const lar_content::ThreeDSlidingFitResult &trackFit, const pandora::CartesianVector &threeDPosition, const bool antiAlign);
+
+    static pandora::StatusCode LinearlyExtrapolateVectorFromFitEnd(const lar_content::ThreeDSlidingFitResult &trackFit,
+        const float longCoord, const bool maxLayer, pandora::CartesianVector &extrapolatedVector);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -118,7 +161,7 @@ public:
 
 inline float LArAnalysisHelper::GetTrueKineticEnergy(const pandora::MCParticle *const pMCParticle)
 {
-    return pMCParticle->GetEnergy() - GetTrueMass(pMCParticle);
+    return pMCParticle->GetEnergy() - LArAnalysisHelper::GetTrueMass(pMCParticle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -126,6 +169,23 @@ inline float LArAnalysisHelper::GetTrueKineticEnergy(const pandora::MCParticle *
 inline float LArAnalysisHelper::GetTrueMass(const pandora::MCParticle *const pMCParticle)
 {
     return pandora::PdgTable::GetParticleMass(pMCParticle->GetParticleId());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::StatusCode LArAnalysisHelper::GetFittedDirectionAtTwoDPosition(const pandora::Pandora &pandoraInstance,
+    const lar_content::ThreeDSlidingFitResult &trackFit, const pandora::CartesianVector &twoDPosition, const pandora::HitType hitType,
+    const bool linearlyProjectEnds, pandora::CartesianVector &fittedDirection, float &projectionError)
+{
+    pandora::CartesianVector threeDPosition(0.f, 0.f, 0.f);
+
+    const pandora::StatusCode status = LArAnalysisHelper::ProjectTwoDPositionOntoTrackFit(
+        pandoraInstance, trackFit, twoDPosition, hitType, linearlyProjectEnds, threeDPosition, projectionError);
+
+    if (status == pandora::STATUS_CODE_SUCCESS)
+        return LArAnalysisHelper::GetFittedDirectionAtThreeDPosition(trackFit, threeDPosition, linearlyProjectEnds, fittedDirection);
+
+    return status;
 }
 
 } // namespace lar_physics_content

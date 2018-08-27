@@ -129,8 +129,13 @@ private:
 inline pandora::CartesianVector CommonNtupleTool::GetTrackDirectionAtVertex(
     const pandora::ParticleFlowObject *const pPfo, const pandora::Vertex *const pVertex) const
 {
+    pandora::CartesianVector direction(0.f, 0.f, 0.f);
+    
     if (const LArNtupleHelper::TrackFitSharedPtr &spTrackFit = this->GetTrackFit(pPfo))
-        return LArAnalysisHelper::GetFittedDirectionAtPosition(*spTrackFit, pVertex->GetPosition());
+    {
+        if (pandora::STATUS_CODE_SUCCESS == LArAnalysisHelper::GetFittedDirectionAtThreeDPosition(*spTrackFit, pVertex->GetPosition(), true, direction))
+            return direction;
+    }
 
     return pandora::CartesianVector(0.f, 0.f, 0.f);
 }

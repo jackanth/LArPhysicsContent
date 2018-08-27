@@ -7,6 +7,7 @@
  */
 
 #include "larphysicscontent/LArHelpers/LArAnalysisHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "Geometry/LArTPC.h"
 #include "Managers/GeometryManager.h"
@@ -82,61 +83,130 @@ bool LArAnalysisHelper::IsTrueShower(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector LArAnalysisHelper::GetFittedDirectionAtPosition(const ThreeDSlidingFitResult &trackFit, const CartesianVector &position)
+StatusCode LArAnalysisHelper::ProjectTwoDPositionOntoTrackFit(const Pandora &pandoraInstance, const ThreeDSlidingFitResult &trackFit,
+    const CartesianVector &twoDPosition, const HitType hitType, const bool linearlyProjectEnds, CartesianVector &threeDPosition, float &projectionError)
+{
+    // Calculate the effective longitudinal coordinate along the 3D fit
+    const float longCoordScalingFactor = LArGeometryHelper::ProjectDirection(pandoraInstance, trackFit.GetAxisDirection(), hitType).GetDotProduct(trackFit.GetAxisDirection());
+
+    if (longCoordScalingFactor <= std::numeric_limits<float>::epsilon())
+        return STATUS_CODE_FAILURE;
+
+    const CartesianVector &projectedIntercept = LArGeometryHelper::ProjectPosition(pandoraInstance, trackFit.GetAxisIntercept(), hitType);
+    const CartesianVector &projectedDirection = LArGeometryHelper::ProjectDirection(pandoraInstance, trackFit.GetAxisDirection(), hitType);
+
+    const float projectedLongCoord = (twoDPosition - projectedIntercept).GetDotProduct(projectedDirection);
+    const float longCoord          = projectedLongCoord / longCoordScalingFactor;
+
+    // If this is within bounds, then get the fit position
+    if (STATUS_CODE_SUCCESS == trackFit.GetGlobalFitPosition(longCoord, threeDPosition))
+    {
+        projectionError = (LArGeometryHelper::ProjectPosition(pandoraInstance, threeDPosition, hitType) - twoDPosition).GetMagnitude();
+        return STATUS_CODE_SUCCESS;
+    }
+
+    // If out of bounds and we're not willing to try to project the ends, this is a failure
+    if (!linearlyProjectEnds)
+        return STATUS_CODE_FAILURE;
+
+    const CartesianVector &minPosition = trackFit.GetGlobalMinLayerPosition();
+    const CartesianVector &maxPosition = trackFit.GetGlobalMaxLayerPosition();
+
+    const CartesianVector projectedMinPosition = LArGeometryHelper::ProjectPosition(pandoraInstance, minPosition, hitType);
+    const CartesianVector projectedMaxPosition = LArGeometryHelper::ProjectPosition(pandoraInstance, maxPosition, hitType);
+
+    const bool closerToMax = ((twoDPosition - projectedMinPosition).GetMagnitude() > (twoDPosition - projectedMaxPosition).GetMagnitude());
+
+    // Check the quality
+    if (STATUS_CODE_SUCCESS == LArAnalysisHelper::LinearlyExtrapolateVectorFromFitEnd(trackFit, longCoord, closerToMax, threeDPosition))
+    {
+        projectionError = (LArGeometryHelper::ProjectPosition(pandoraInstance, threeDPosition, hitType) - twoDPosition).GetMagnitude();
+        return STATUS_CODE_SUCCESS;
+    }
+
+    return STATUS_CODE_FAILURE;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode LArAnalysisHelper::GetFittedDirectionAtThreeDPosition(
+    const ThreeDSlidingFitResult &trackFit, const CartesianVector &threeDPosition, const bool snapToEnds, CartesianVector &direction)
 {
     // Get the extremal fit parameters
     const CartesianVector &minPosition = trackFit.GetGlobalMinLayerPosition();
     const CartesianVector &maxPosition = trackFit.GetGlobalMaxLayerPosition();
 
-    const float minCoordinate = trackFit.GetLongitudinalDisplacement(minPosition);
-    const float maxCoordinate = trackFit.GetLongitudinalDisplacement(maxPosition);
+    const float longCoord   = trackFit.GetLongitudinalDisplacement(threeDPosition);
+    const bool  closerToMin = ((threeDPosition - minPosition).GetMagnitude() < (threeDPosition - maxPosition).GetMagnitude());
 
-    const CartesianVector &minDirection = trackFit.GetGlobalMinLayerDirection();
-    const CartesianVector &maxDirection = trackFit.GetGlobalMaxLayerDirection();
-
-    // Get the fit direction at the fit position closest to the point
-    CartesianVector fitDirection(0.f, 0.f, 0.f);
-    const float     displacementAlongFittedTrack = trackFit.GetLongitudinalDisplacement(position);
-
-    if (trackFit.GetGlobalFitDirection(displacementAlongFittedTrack, fitDirection) != STATUS_CODE_SUCCESS)
+    if (trackFit.GetGlobalFitDirection(longCoord, direction) != STATUS_CODE_SUCCESS)
     {
-        if (displacementAlongFittedTrack <= minCoordinate)
-            fitDirection = minDirection;
-
-        else if (displacementAlongFittedTrack >= maxCoordinate)
-            fitDirection = maxDirection;
-
-        else
+        if (!snapToEnds)
         {
-            const float distanceToMinPosition = (position - minPosition).GetMagnitude();
-            const float distanceToMaxPosition = (position - maxPosition).GetMagnitude();
-
-            if (distanceToMinPosition < distanceToMaxPosition)
-                fitDirection = minDirection;
-
-            else
-                fitDirection = maxDirection;
+            std::cerr << "LArAnalysisHelper: Could not get fitted direction because position was not within fit" << std::endl;
+            return STATUS_CODE_FAILURE;
         }
+
+        // Get the fit direction at the fit position closest to the point
+        // ATTN snapping to ends isn't ideal for multivalued end values: would rather find the point on the fit closest to the desired point
+        direction = closerToMin ? trackFit.GetGlobalMinLayerDirection() : trackFit.GetGlobalMaxLayerDirection();
     }
 
     // Make sure the fit direction points more towards the fit centre
-    const CartesianVector &minToMaxVector = maxPosition - minPosition;
+    direction = LArAnalysisHelper::AlignVectorWithFit(trackFit, direction, closerToMin);
+    return STATUS_CODE_SUCCESS;
+}
 
-    if (std::fabs(maxCoordinate - displacementAlongFittedTrack) < std::fabs(displacementAlongFittedTrack - minCoordinate))
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArAnalysisHelper::AlignVectorWithFit(const ThreeDSlidingFitResult &trackFit, const CartesianVector &threeDPosition, const bool antiAlign)
+{
+    // Get the extremal fit parameters
+    const CartesianVector &minPosition  = trackFit.GetGlobalMinLayerPosition();
+    const CartesianVector &maxPosition  = trackFit.GetGlobalMaxLayerPosition();
+    const CartesianVector  fitDirection = (maxPosition - minPosition).GetUnitVector();
+
+    if (antiAlign)
     {
-        // If closer to the maximum coordinate, we want the fit direction and the min-to-max vector to be more anti-aligned
-        if (minToMaxVector.GetDotProduct(fitDirection) > 0.f)
-            fitDirection *= -1.f;
+        if (threeDPosition.GetDotProduct(fitDirection) < 0.f)
+            return threeDPosition;
+
+        return threeDPosition * -1.f;
     }
 
-    else
-    {
-        // If closer to the minimum coordinate, we want the fit direction and the min-to-max vector to be more aligned
-        if (minToMaxVector.GetDotProduct(fitDirection) < 0.f)
-            fitDirection *= -1.f;
-    }
+    if (threeDPosition.GetDotProduct(fitDirection) > 0.f)
+        return threeDPosition;
 
-    return fitDirection;
+    return threeDPosition * -1.f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode LArAnalysisHelper::LinearlyExtrapolateVectorFromFitEnd(
+    const ThreeDSlidingFitResult &trackFit, const float longCoord, const bool maxLayer, CartesianVector &extrapolatedVector)
+{
+    const CartesianVector &endPosition      = maxLayer ? trackFit.GetGlobalMaxLayerPosition() : trackFit.GetGlobalMinLayerPosition();
+    const CartesianVector &endDirection     = maxLayer ? trackFit.GetGlobalMaxLayerDirection() : trackFit.GetGlobalMinLayerDirection();
+    const float            coordinateAtEnd  = trackFit.GetLongitudinalDisplacement(endDirection);
+    const float            excessCoordinate = maxLayer ? longCoord - coordinateAtEnd : coordinateAtEnd - longCoord;
+
+    if ((excessCoordinate < 0.f) || (endDirection.GetDotProduct(trackFit.GetAxisDirection()) < 0.f))
+        return STATUS_CODE_FAILURE;
+
+    // Check if the fit end direction points the wrong way
+    if (maxLayer && (endDirection.GetDotProduct(trackFit.GetAxisDirection()) < 0.f))
+        return STATUS_CODE_FAILURE;
+
+    if (!maxLayer && (endDirection.GetDotProduct(trackFit.GetAxisDirection()) > 0.f))
+        return STATUS_CODE_FAILURE;
+
+    const float excessCoordinateScalingFactor = std::fabs(endDirection.GetDotProduct(trackFit.GetAxisDirection()));
+
+    if (excessCoordinateScalingFactor <= std::numeric_limits<float>::epsilon())
+        return STATUS_CODE_FAILURE;
+
+    extrapolatedVector = endPosition + endDirection * (excessCoordinate / excessCoordinateScalingFactor);
+    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar_physics_content

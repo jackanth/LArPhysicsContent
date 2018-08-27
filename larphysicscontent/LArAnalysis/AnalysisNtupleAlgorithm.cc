@@ -66,8 +66,8 @@ StatusCode AnalysisNtupleAlgorithm::Run()
     const auto [mcNeutrinos, mcCosmicRays, mcPrimaries] = this->GetMCParticleLists(pMCParticleList);
 
     this->RegisterNtupleRecords(neutrinos, cosmicRays, primaries, pfoList, mcNeutrinos, mcCosmicRays, mcPrimaries, pMCParticleList);
-    m_spNtuple->Fill();
 
+    m_spNtuple->Fill();
     return STATUS_CODE_SUCCESS;
 }
 
