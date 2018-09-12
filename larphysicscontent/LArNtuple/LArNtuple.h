@@ -11,6 +11,7 @@
 #include "larphysicscontent/LArNtuple/LArBranchPlaceholder.h"
 #include "larphysicscontent/LArNtuple/LArNtupleRecord.h"
 #include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
+#include "larphysicscontent/LArObjects/LArRootRegistry.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
@@ -156,6 +157,7 @@ private:
     mutable PfoCache<pandora::CaloHitList>               m_cacheDownstreamWHits;      ///< The pfo cache of downstream W hits
     mutable PfoCache<pandora::PfoList>                   m_cacheDownstreamPfos;       ///< The pfo cache of downstream pfos
     mutable PfoCache<LArNtupleHelper::TrackFitSharedPtr> m_cacheTrackFits;            ///< The pfo cache of track fits
+    std::shared_ptr<LArRootRegistry>                     m_spRegistry;                ///< The ROOT registry
 
     /**
      *  @brief  Add a scalar record to the cache

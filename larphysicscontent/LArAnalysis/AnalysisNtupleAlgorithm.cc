@@ -14,6 +14,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "TROOT.h"
+
 using namespace pandora;
 
 namespace lar_physics_content
@@ -25,6 +27,8 @@ AnalysisNtupleAlgorithm::AnalysisNtupleAlgorithm() :
     m_ntupleOutputFile(),
     m_ntupleTreeName("PandoraNtuple"),
     m_ntupleTreeTitle("Pandora Ntuple"),
+    m_plotsOutputFile(),
+    m_tmpOutputFile(),
     m_spNtuple(nullptr),
     m_fileIdentifier(0),
     m_eventNumber(0),
@@ -33,7 +37,9 @@ AnalysisNtupleAlgorithm::AnalysisNtupleAlgorithm() :
     m_fiducialCutLowMargins(10.f, 20.f, 10.f),
     m_fiducialCutHighMargins(10.f, 20.f, 10.f),
     m_minFiducialCoordinates(0.f, 0.f, 0.f),
-    m_maxFiducialCoordinates(0.f, 0.f, 0.f)
+    m_maxFiducialCoordinates(0.f, 0.f, 0.f),
+    m_spTmpRegistry(nullptr),
+    m_spPlotsRegistry(nullptr)
 {
 }
 
@@ -42,7 +48,7 @@ AnalysisNtupleAlgorithm::AnalysisNtupleAlgorithm() :
 StatusCode AnalysisNtupleAlgorithm::Run()
 {
     ++m_eventNumber;
-
+    
     // Get input PFO list
     const PfoList *pPfoList(nullptr);
 
@@ -68,6 +74,8 @@ StatusCode AnalysisNtupleAlgorithm::Run()
     this->RegisterNtupleRecords(neutrinos, cosmicRays, primaries, pfoList, mcNeutrinos, mcCosmicRays, mcPrimaries, pMCParticleList);
 
     m_spNtuple->Fill();
+    m_spTmpRegistry->Clear();
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -278,6 +286,13 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinUnmatchedMcParticleEnergy", m_minUnmatchedMcParticleEnergy));
 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PlotsOutputFile", m_plotsOutputFile));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TmpOutputFile", m_tmpOutputFile));
+
+    gROOT->SetBatch(kTRUE);
+    m_spTmpRegistry  = std::shared_ptr<LArRootRegistry>(new LArRootRegistry(m_tmpOutputFile, LArRootRegistry::FILE_MODE::OVERWRITE));
+    m_spPlotsRegistry = std::shared_ptr<LArRootRegistry>(new LArRootRegistry(m_plotsOutputFile, LArRootRegistry::FILE_MODE::APPEND));
+
     // Get the minimum and maximum fiducial coordinates
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
@@ -297,9 +312,7 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         if (NtupleVariableBaseTool *const pNtupleTool = dynamic_cast<NtupleVariableBaseTool *const>(pAlgorithmTool))
         {
-            pNtupleTool->SetNtuple(m_spNtuple);
-            pNtupleTool->SetAlgorithm(this);
-            pNtupleTool->SetFiducialRegion(m_minFiducialCoordinates, m_maxFiducialCoordinates);
+            pNtupleTool->Setup(m_spNtuple, this, m_minFiducialCoordinates, m_maxFiducialCoordinates, m_spPlotsRegistry, m_spTmpRegistry);
             m_ntupleVariableTools.push_back(pNtupleTool);
         }
 

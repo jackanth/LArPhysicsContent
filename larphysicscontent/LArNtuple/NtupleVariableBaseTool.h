@@ -13,6 +13,7 @@
 #include "larphysicscontent/LArHelpers/LArAnalysisHelper.h"
 #include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
 #include "larphysicscontent/LArNtuple/LArBranchPlaceholder.h"
+#include "larphysicscontent/LArObjects/LArRootRegistry.h"
 
 #include "Api/PandoraContentApi.h"
 #include "Objects/ParticleFlowObject.h"
@@ -69,7 +70,7 @@ public:
     /**
      * @brief  Default virtual destructor
      */
-    virtual ~NtupleVariableBaseTool() = default;
+    virtual ~NtupleVariableBaseTool() { std::cerr << "Destroying NtupleVariableBaseTool" << std::endl; }
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle);
@@ -330,6 +331,20 @@ protected:
      */
     const pandora::Algorithm *GetAlgorithm() const noexcept;
 
+    /**
+     *  @brief  Get the plots ROOT registry.
+     *
+     *  @return the plots ROOT registry
+     */
+    const std::shared_ptr<LArRootRegistry> &GetPlotsRegistry() const noexcept;
+
+    /**
+     *  @brief  Get the tmp ROOT registry.
+     *
+     *  @return the tmp ROOT registry
+     */
+    const std::shared_ptr<LArRootRegistry> &GetTmpRegistry() const noexcept;
+
     friend class AnalysisNtupleAlgorithm;
 
 private:
@@ -344,6 +359,9 @@ private:
     pandora::CartesianVector   m_minFiducialCoordinates; ///< The minimum fiducial coordinates
     pandora::CartesianVector   m_maxFiducialCoordinates; ///< The maximum fiducial coordinates
     const pandora::Algorithm * m_pAlgorithm;             ///< The address of the calling algorithm
+    std::shared_ptr<LArRootRegistry>                m_spPlotsRegistry;        ///< The plots ROOT registry
+    std::shared_ptr<LArRootRegistry>                m_spTmpRegistry;          ///< The tmp ROOT registry
+    bool                       m_isSetup;                ///< Whether the tool has been set up.
 
     /**
      *  @brief  Prepare an event (wrapper method)
@@ -441,23 +459,14 @@ private:
      *  @brief  Set the ntuple shared pointer
      *
      *  @param  spNtuple shared pointer to the ntuple
-     */
-    void SetNtuple(std::shared_ptr<LArNtuple> spNtuple) noexcept;
-
-    /**
-     *  @brief  Set the algorithm address
-     *
      *  @param  pAlgorithm the algorithm address
-     */
-    void SetAlgorithm(const pandora::Algorithm *const pAlgorithm) noexcept;
-
-    /**
-     *  @brief  Set the fiducial region
-     *
      *  @param  minFiducialCoordinates the minimum fiducial coordinates
      *  @param  maxFiducialCoordinates the maximum fiducial coordinates
+     *  @param  spPlotsRegistry shared pointer to the plots ROOT registry
+     *  @param  spTmpRegistry shared pointer to the tmp ROOT registry
      */
-    void SetFiducialRegion(pandora::CartesianVector minFiducialCoordinates, pandora::CartesianVector maxFiducialCoordinates) noexcept;
+    void Setup(std::shared_ptr<LArNtuple> spNtuple, const pandora::Algorithm *const pAlgorithm, pandora::CartesianVector minFiducialCoordinates,
+        pandora::CartesianVector maxFiducialCoordinates, std::shared_ptr<LArRootRegistry> spPlotsRegistry, std::shared_ptr<LArRootRegistry> spTmpRegistry);
 
     /**
      *  @brief  Get an MC particle
@@ -705,24 +714,16 @@ inline const pandora::Algorithm *NtupleVariableBaseTool::GetAlgorithm() const no
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void NtupleVariableBaseTool::SetNtuple(std::shared_ptr<LArNtuple> spNtuple) noexcept
+inline const std::shared_ptr<LArRootRegistry> &NtupleVariableBaseTool::GetPlotsRegistry() const noexcept
 {
-    m_spNtuple = std::move_if_noexcept(spNtuple);
+    return m_spPlotsRegistry;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void NtupleVariableBaseTool::SetAlgorithm(const pandora::Algorithm *const pAlgorithm) noexcept
+inline const std::shared_ptr<LArRootRegistry> &NtupleVariableBaseTool::GetTmpRegistry() const noexcept
 {
-    m_pAlgorithm = pAlgorithm;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void NtupleVariableBaseTool::SetFiducialRegion(pandora::CartesianVector minFiducialCoordinates, pandora::CartesianVector maxFiducialCoordinates) noexcept
-{
-    m_minFiducialCoordinates = std::move_if_noexcept(minFiducialCoordinates);
-    m_maxFiducialCoordinates = std::move_if_noexcept(maxFiducialCoordinates);
+    return m_spTmpRegistry;
 }
 
 } // namespace lar_physics_content

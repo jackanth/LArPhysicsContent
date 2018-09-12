@@ -56,15 +56,28 @@ LArRootRegistry::LArRootRegistry(const std::string &filePath, const FILE_MODE fi
 
 LArRootRegistry::~LArRootRegistry()
 {
+    std::cerr << "Destroying LArRootRegistry 1" << std::endl;
+
     if (m_pFile)
     {
-        m_pFile->Write();
+        this->DoAsRegistry([&](){
+            std::cerr << "Destroying LArRootRegistry 2: " << m_pFile->GetName() << " / " << m_pFile->GetTitle() << std::endl;
+            m_pFile->Write();
 
-        if (m_pFile->IsOpen())
-            m_pFile->Close();
+            std::cerr << "Destroying LArRootRegistry 3" << std::endl;
 
-        delete m_pFile;
+            if (m_pFile->IsOpen())
+                m_pFile->Close();
+
+            std::cerr << "Destroying LArRootRegistry 4" << std::endl;
+
+            delete m_pFile;
+
+            std::cerr << "Destroying LArRootRegistry 5" << std::endl;
+        });
     }
+
+    std::cerr << "Destroying LArRootRegistry 6" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

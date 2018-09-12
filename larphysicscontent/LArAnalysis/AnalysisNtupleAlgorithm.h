@@ -10,6 +10,7 @@
 
 #include "larphysicscontent/LArNtuple/LArNtuple.h"
 #include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
+#include "larphysicscontent/LArObjects/LArRootRegistry.h"
 
 #include "Objects/ParticleFlowObject.h"
 #include "Pandora/Algorithm.h"
@@ -53,7 +54,7 @@ public:
     /**
      *  @brief  Default destructor
      */
-    ~AnalysisNtupleAlgorithm() = default;
+    ~AnalysisNtupleAlgorithm() { std::cerr << "Destroying AnalysisNtupleAlgorithm" << std::endl; }
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -71,6 +72,8 @@ private:
     std::string                           m_ntupleOutputFile;             ///< The ntuple ROOT tree output file
     std::string                           m_ntupleTreeName;               ///< The ntuple ROOT tree name
     std::string                           m_ntupleTreeTitle;              ///< The ntuple ROOT tree title
+    std::string                           m_plotsOutputFile;              ///< The plots ROOT output file
+    std::string                           m_tmpOutputFile;                ///< The tmp ROOT output file
     std::shared_ptr<LArNtuple>            m_spNtuple;                     ///< Shared pointer to the ntuple
     int                                   m_fileIdentifier;               ///< The input file identifier
     int                                   m_eventNumber;                  ///< The event number
@@ -80,6 +83,8 @@ private:
     pandora::CartesianVector              m_fiducialCutHighMargins;       ///< The high-coordinate margins for the fiducial cut
     pandora::CartesianVector              m_minFiducialCoordinates;       ///< The minimum fiducial coordinates
     pandora::CartesianVector              m_maxFiducialCoordinates;       ///< The maximum fiducial coordinates
+    std::shared_ptr<LArRootRegistry>      m_spTmpRegistry;                ///< Shared pointer to the tmp ROOT registry
+    std::shared_ptr<LArRootRegistry>      m_spPlotsRegistry;              ///< Shared pointer to the plots ROOT registry
 
     /**
      *  @brief  Get the particle lists

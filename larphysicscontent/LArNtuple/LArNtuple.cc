@@ -21,18 +21,7 @@ namespace lar_physics_content
 
 LArNtuple::~LArNtuple()
 {
-    // Write any remaining data in the TTree
-    if (m_pOutputTree)
-        m_pOutputTree->Write();
-
-    // If we have a TFile, close and delete it - the TTree is then deleted by its owning TFile
-    if (m_pOutputTFile)
-    {
-        if (m_pOutputTFile->IsOpen())
-            m_pOutputTFile->Close();
-
-        delete m_pOutputTFile;
-    }
+    std::cerr << "Destroying LArNtuple" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -163,10 +152,10 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
     m_cacheDownstreamVHits(),
     m_cacheDownstreamWHits(),
     m_cacheDownstreamPfos(),
-    m_cacheTrackFits()
+    m_cacheTrackFits(),
+    m_spRegistry(new LArRootRegistry(filePath, appendMode ? LArRootRegistry::FILE_MODE::APPEND : LArRootRegistry::FILE_MODE::NEW))
 {
-    this->InstantiateTFile(appendMode, filePath);
-    this->InstantiateTTree(appendMode, treeName, treeTitle, filePath); // the TTree will now be 'owned' by the TFile
+    this->InstantiateTTree(appendMode, treeName, treeTitle, filePath);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -231,6 +220,18 @@ void LArNtuple::Reset()
         m_pOutputTree->ResetBranchAddresses();
         m_cache.clear();
     }
+
+    // Clear the transient caches.
+    m_cacheMCParticles.clear();
+    m_cacheMCCosmics.clear();
+    m_cacheMCPrimaries.clear();
+    m_cacheMCNeutrinos.clear();
+    m_cacheDownstreamThreeDHits.clear();
+    m_cacheDownstreamUHits.clear();
+    m_cacheDownstreamVHits.clear();
+    m_cacheDownstreamWHits.clear();
+    m_cacheDownstreamPfos.clear();
+    m_cacheTrackFits.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -372,7 +373,7 @@ void LArNtuple::ValidateAndAddRecord(BranchMap &branchMap, const LArNtupleRecord
         if (spCurrentRecord->WriteToNtuple())
         {
             std::cerr << "LArNtuple: cannot add vector record element with branch name '" << record.BranchName()
-                    << "' as it has already been populated since the last fill" << std::endl;
+                      << "' as it has already been populated since the last fill" << std::endl;
 
             throw STATUS_CODE_NOT_ALLOWED;
         }
@@ -410,27 +411,29 @@ void LArNtuple::InstantiateTTree(const bool appendMode, const std::string &treeN
 {
     try
     {
-        // For our branch mechanics to work, we need to know if the TTree exists and whether it's empty or not
-        if (appendMode && m_pOutputTFile->GetListOfKeys()->Contains(treeName.c_str()))
-        {
-            m_pOutputTree     = dynamic_cast<TTree *>(m_pOutputTFile->Get(treeName.c_str()));
-            TObjArray *pArray = m_pOutputTree->GetListOfBranches();
-
-            if (pArray && pArray->GetEntries() > 0)
+        m_spRegistry->DoAsRegistry([&](){
+            // For our branch mechanics to work, we need to know if the TTree exists and whether it's empty or not
+            if (appendMode && m_pOutputTFile->GetListOfKeys()->Contains(treeName.c_str()))
             {
-                m_ntupleEmpty = false;
-                std::cout << "LArNtuple: Appending new data to non-empty TTree '" << treeName << "' at " << filePath << std::endl;
+                m_pOutputTree     = dynamic_cast<TTree *>(m_pOutputTFile->Get(treeName.c_str()));
+                TObjArray *pArray = m_pOutputTree->GetListOfBranches();
+
+                if (pArray && pArray->GetEntries() > 0)
+                {
+                    m_ntupleEmpty = false;
+                    std::cout << "LArNtuple: Appending new data to non-empty TTree '" << treeName << "' at " << filePath << std::endl;
+                }
+
+                else
+                    std::cout << "LArNtuple: Appending new data to empty TTree '" << treeName << "' at " << filePath << std::endl;
             }
 
             else
-                std::cout << "LArNtuple: Appending new data to empty TTree '" << treeName << "' at " << filePath << std::endl;
-        }
-
-        else
-        {
-            m_pOutputTree = new TTree(treeName.c_str(), treeTitle.c_str());
-            std::cout << "LArNtuple: Writing data to new TTree '" << treeName << "' at " << filePath << std::endl;
-        }
+            {
+                m_pOutputTree = new TTree(treeName.c_str(), treeTitle.c_str());
+                std::cout << "LArNtuple: Writing data to new TTree '" << treeName << "' at " << filePath << std::endl;
+            }
+        });
     }
 
     catch (...)

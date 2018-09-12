@@ -96,6 +96,11 @@ public:
     template <typename T, typename... TARGS>
     std::decay_t<T> *Create(TARGS &&... args) const;
 
+    /**
+     *  @brief  Delete all objects created by the registry.
+     */
+    void Clear() const;
+
 private:
     TFile *            m_pFile;           ///< Address of this registry's TFile
     static std::size_t m_objectNameCount; ///< The object name count for creating unique names
@@ -125,6 +130,14 @@ inline std::decay_t<T> *LArRootRegistry::Create(TARGS &&... args) const
     std::decay_t<T> *pObj(nullptr);
     this->DoAsRegistry([&]() { pObj = new std::decay_t<T>(std::forward<TARGS>(args)...); });
     return pObj;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArRootRegistry::Clear() const
+{
+    if (m_pFile && m_pFile->IsOpen())
+        m_pFile->Delete("*;*");
 }
 } // namespace lar_physics_content
 

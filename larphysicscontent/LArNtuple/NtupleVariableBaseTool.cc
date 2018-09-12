@@ -31,7 +31,10 @@ NtupleVariableBaseTool::NtupleVariableBaseTool() noexcept :
     m_cosmicPrefix("cr_"),
     m_minFiducialCoordinates(0.f, 0.f, 0.f),
     m_maxFiducialCoordinates(0.f, 0.f, 0.f),
-    m_pAlgorithm(nullptr)
+    m_pAlgorithm(nullptr),
+    m_spPlotsRegistry(nullptr),
+    m_spTmpRegistry(nullptr),
+    m_isSetup(false)
 {
 }
 
@@ -131,6 +134,12 @@ const LArNtupleHelper::TrackFitSharedPtr &NtupleVariableBaseTool::GetTrackFit(co
 void NtupleVariableBaseTool::PrepareEventWrapper(
     const AnalysisNtupleAlgorithm *const pAlgorithm, const PfoList &pfoList, const MCParticleList *const pMCParticleList)
 {
+    if (!m_isSetup)
+    {
+        std::cerr << "NtupleVariableBaseTool: Tool was not setup" << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
+
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
@@ -212,6 +221,27 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessImpl(const AnalysisN
     }
 
     return records;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NtupleVariableBaseTool::Setup(std::shared_ptr<LArNtuple> spNtuple, const pandora::Algorithm *const pAlgorithm,
+    pandora::CartesianVector minFiducialCoordinates, pandora::CartesianVector maxFiducialCoordinates,
+    std::shared_ptr<LArRootRegistry> spPlotsRegistry, std::shared_ptr<LArRootRegistry> spTmpRegistry)
+{
+    if (!pAlgorithm || !spNtuple || !spPlotsRegistry || !spTmpRegistry)
+    {
+        std::cerr << "NtupleVariableBaseTool: Failed to perform setup" << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
+
+    m_spNtuple               = std::move(spNtuple);
+    m_pAlgorithm             = pAlgorithm;
+    m_minFiducialCoordinates = std::move(minFiducialCoordinates);
+    m_maxFiducialCoordinates = std::move(maxFiducialCoordinates);
+    m_spPlotsRegistry        = std::move(spPlotsRegistry);
+    m_spTmpRegistry          = std::move(spTmpRegistry);
+    m_isSetup                = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

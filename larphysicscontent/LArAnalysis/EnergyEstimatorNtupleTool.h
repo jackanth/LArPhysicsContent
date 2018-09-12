@@ -98,8 +98,6 @@ private:
     bool                             m_useParticleId;         ///< Whether to use particle ID
     bool                             m_trainingSetMode;       ///< Whether to run in training set mode
     bool                             m_makePlots;             ///< Make plots
-    std::shared_ptr<LArRootRegistry> m_spTmpRegistry;         ///< Shared pointer to the tmp registry
-    std::shared_ptr<LArRootRegistry> m_spPlotRegistry;        ///< Shared pointer to the plot registry
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -148,10 +146,14 @@ private:
     std::vector<LArNtupleRecord> ProduceTrainingRecords(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &,
         const pandora::MCParticle *const pMcParticle, const pandora::MCParticleList *const);
 
-    std::tuple<pandora::CaloHitList, pandora::CaloHitList> SelectNoisyHits(const lar_content::ThreeDSlidingFitResult &trackFit,
+    std::tuple<pandora::FloatVector, float> SelectNoisyHits(const lar_content::ThreeDSlidingFitResult &trackFit,
         pandora::CaloHitList caloHitList, const pandora::MCParticle *const pMCParticle) const;
 
     TF1 *FitHitGenerationFunction(const pandora::CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap) const;
+
+    void IdentifyNoisyUnprojectedHits(const HitCalorimetryInfoMap &hitInfoMap) const;
+
+    float SumNoisyCharge(const HitCalorimetryInfoMap &hitInfoMap, const bool useAllHits) const;
 
     HitCalorimetryInfoMap CalculateHitCalorimetryInfo(const lar_content::ThreeDSlidingFitResult &trackFit, const pandora::CaloHitList &caloHitList) const;
 
@@ -162,6 +164,9 @@ private:
 
     TF1 *FitdQdXFunction(const pandora::CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap,
         const std::size_t iteration) const;
+
+    std::tuple<float, float, float, float> GetGapParameters(
+    const lar_content::ThreeDSlidingFitResult &trackFit, pandora::CaloHitList &caloHitList, HitCalorimetryInfoMap &hitInfoMap) const;
 
     void GenerateNewHits(const lar_content::ThreeDSlidingFitResult &trackFit,
         pandora::CaloHitList &caloHitList, HitCalorimetryInfoMap &hitInfoMap, TF1 *pHitGenerationFunction) const;
