@@ -13,8 +13,9 @@
 #include "TFile.h"
 #include "TSystem.h"
 
-#include <iostream>
 #include <functional>
+#include <iostream>
+#include <unordered_set>
 
 namespace lar_physics_content
 {
@@ -84,7 +85,7 @@ public:
      *  @return pointer to the object
      */
     template <typename T, typename... TARGS>
-    std::decay_t<T> *CreateWithUniqueName(const std::string &name, TARGS &&... args) const;
+    std::decay_t<T> *CreateWithUniqueName(const std::string &name, TARGS &&... args);
 
     /**
      *  @brief  Create a ROOT object in this registry
@@ -94,16 +95,27 @@ public:
      *  @return pointer to the object
      */
     template <typename T, typename... TARGS>
-    std::decay_t<T> *Create(TARGS &&... args) const;
+    std::decay_t<T> *Create(TARGS &&... args);
 
     /**
-     *  @brief  Delete all objects created by the registry.
+     *  @brief  Delete all objects created by the registry - in memory and on file.
      */
-    void Clear() const;
+    void Clear();
+
+    /**
+     *  @brief  Delete all in-memory objects created by the registry.
+     */
+    void ClearMemory();
+
+    /**
+     *  @brief  Write all in-memory objects to the file.
+     */
+    void Write() const;
 
 private:
-    TFile *            m_pFile;           ///< Address of this registry's TFile
-    static std::size_t m_objectNameCount; ///< The object name count for creating unique names
+    TFile *                       m_pFile;           ///< Address of this registry's TFile
+    static std::size_t            m_objectNameCount; ///< The object name count for creating unique names
+    std::unordered_set<TObject *> m_objectList;      ///< The list of objects
 
     /**
      *  @brief  Change directory if the pointer is not null
@@ -117,7 +129,7 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T, typename... TARGS>
-inline std::decay_t<T> *LArRootRegistry::CreateWithUniqueName(const std::string &name, TARGS &&... args) const
+inline std::decay_t<T> *LArRootRegistry::CreateWithUniqueName(const std::string &name, TARGS &&... args)
 {
     return this->Create<std::decay_t<T>>((std::to_string(m_objectNameCount++) + "_" + name).c_str(), std::forward<TARGS>(args)...);
 }
@@ -125,19 +137,63 @@ inline std::decay_t<T> *LArRootRegistry::CreateWithUniqueName(const std::string 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T, typename... TARGS>
-inline std::decay_t<T> *LArRootRegistry::Create(TARGS &&... args) const
+inline std::decay_t<T> *LArRootRegistry::Create(TARGS &&... args)
 {
     std::decay_t<T> *pObj(nullptr);
     this->DoAsRegistry([&]() { pObj = new std::decay_t<T>(std::forward<TARGS>(args)...); });
+
+    m_objectList.insert(static_cast<TObject *>(pObj));
     return pObj;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void LArRootRegistry::Clear() const
+inline void LArRootRegistry::Clear()
 {
     if (m_pFile && m_pFile->IsOpen())
+    {
+        for (TObject *pObject : m_objectList)
+        {
+            if (pObject)
+            {
+                delete pObject;
+                pObject = nullptr;
+            }
+        }
+
+        m_objectList.clear();
         m_pFile->Delete("*;*");
+        m_pFile->DeleteAll();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArRootRegistry::ClearMemory()
+{
+    if (m_pFile && m_pFile->IsOpen())
+    {
+        for (TObject *pObject : m_objectList)
+        {
+            if (pObject)
+            {
+                delete pObject;
+                pObject = nullptr;
+            }
+        }
+
+        m_objectList.clear();
+        m_pFile->Delete("*");
+        m_pFile->DeleteAll();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArRootRegistry::Write() const
+{
+    if (m_pFile && m_pFile->IsOpen())
+        m_pFile->Write();
 }
 } // namespace lar_physics_content
 

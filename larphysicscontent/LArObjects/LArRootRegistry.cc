@@ -7,6 +7,7 @@
  */
 
 #include "larphysicscontent/LArObjects/LArRootRegistry.h"
+#include "TROOT.h"
 
 using namespace pandora;
 
@@ -49,6 +50,7 @@ LArRootRegistry::LArRootRegistry(const std::string &filePath, const FILE_MODE fi
         throw STATUS_CODE_FAILURE;
     }
 
+    m_pFile->SetBit(TFile::kDevNull);
     this->ChangeDirectory(pOriginalDir);
 }
 
@@ -56,28 +58,18 @@ LArRootRegistry::LArRootRegistry(const std::string &filePath, const FILE_MODE fi
 
 LArRootRegistry::~LArRootRegistry()
 {
-    std::cerr << "Destroying LArRootRegistry 1" << std::endl;
-
     if (m_pFile)
     {
-        this->DoAsRegistry([&](){
-            std::cerr << "Destroying LArRootRegistry 2: " << m_pFile->GetName() << " / " << m_pFile->GetTitle() << std::endl;
+        if (m_pFile->IsOpen())
+        {
             m_pFile->Write();
+            this->ClearMemory();
+            m_pFile->Close();
+        }
 
-            std::cerr << "Destroying LArRootRegistry 3" << std::endl;
-
-            if (m_pFile->IsOpen())
-                m_pFile->Close();
-
-            std::cerr << "Destroying LArRootRegistry 4" << std::endl;
-
-            delete m_pFile;
-
-            std::cerr << "Destroying LArRootRegistry 5" << std::endl;
-        });
+        gROOT->GetListOfFiles()->Remove(m_pFile);
+        delete m_pFile;
     }
-
-    std::cerr << "Destroying LArRootRegistry 6" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -89,7 +81,7 @@ void LArRootRegistry::DoAsRegistry(const std::function<void(void)> &fn) const
         std::cerr << "LArRootRegistry: Failed to access internal TFile" << std::endl;
         throw pandora::STATUS_CODE_FAILURE;
     }
-    
+
     // Change to this registry's directory if required
     TDirectory *pOriginalDir = TDirectory::CurrentDirectory();
     const bool  changeDir    = (pOriginalDir != m_pFile);

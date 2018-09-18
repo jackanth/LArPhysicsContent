@@ -62,9 +62,9 @@ public:
     LArNtuple &operator=(LArNtuple &&) = default;
 
     /**
-     * @brief  Virtual destructor
+     * @brief  Default virtual destructor
      */
-    virtual ~LArNtuple();
+    virtual ~LArNtuple() = default;
 
 protected:
     /**
@@ -629,7 +629,7 @@ inline void LArNtuple::AddBranch(const std::string &branchName, std::decay_t<TOB
     using TOBJECT_D = std::decay_t<TOBJECT>;
 
     if (m_ntupleEmpty)
-        m_pOutputTree->Branch(branchName.c_str(), &obj, 32000, splitMode ? 99 : -1);
+        m_pOutputTree->Branch(branchName.c_str(), &obj, 32000, splitMode ? 0 : -1);
 
     else // we have loaded this non-empty TTree from a file and now need to tie up all the branches with new addresses
     {

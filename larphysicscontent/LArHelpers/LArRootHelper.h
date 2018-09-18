@@ -70,9 +70,9 @@ public:
      */
     ~LArRootHelper() = delete;
 
-    static TH1F *CreateOneDHistogram(const LArRootRegistry &registry, const FloatVector &vector, const PlotOptions &options);
+    static TH1F *CreateOneDHistogram(LArRootRegistry &registry, const FloatVector &vector, const PlotOptions &options);
 
-    static TH2F *CreateTwoDHistogram(const LArRootRegistry &registry, const FloatVector &xVector, const FloatVector &yVector, const PlotOptions &options);
+    static TH2F *CreateTwoDHistogram(LArRootRegistry &registry, const FloatVector &xVector, const FloatVector &yVector, const PlotOptions &options);
 };
 
 } // namespace lar_physics_content

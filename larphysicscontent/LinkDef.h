@@ -10,24 +10,24 @@
 #define LAR_LINK_DEF_H 1
 
 #include "TString.h"
+#include "Rtypes.h"
 #include <vector>
 
-#ifdef __CINT__
+#ifdef __MAKECINT__
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
 #pragma link C++ nestedclasses;
 
-#pragma link C++ class vector<int>+;
-#pragma link C++ class vector<float>+;
-#pragma link C++ class vector<unsigned int>+;
-#pragma link C++ class vector<unsigned long>+;
-#pragma link C++ class vector<unsigned long long>+;
-#pragma link C++ class vector<bool>+;
-#pragma link C++ class vector<TString>+;
+#pragma link C++ class std::vector<Int_t>+;
+#pragma link C++ class std::vector<Float_t>+;
+#pragma link C++ class std::vector<UInt_t>+;
+#pragma link C++ class std::vector<UInt64_t>+;
+#pragma link C++ class std::vector<Bool_t>+;
+#pragma link C++ class std::vector<TString>+;
 
-#pragma link C++ class vector<vector<int>>+;
-#pragma link C++ class vector<vector<float>>+;
-#endif
+#pragma link C++ class std::vector<std::vector<Int_t>>+;
+#pragma link C++ class std::vector<std::vector<Float_t>>+;
+#endif // #ifdef __MAKECINT__
 
 #endif // #ifndef LAR_LINK_DEF_H

@@ -18,14 +18,6 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
-
-LArNtuple::~LArNtuple()
-{
-    std::cerr << "Destroying LArNtuple" << std::endl;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void LArNtuple::AddScalarRecord(const LArNtupleRecord &record)
 {
     if (!record.WriteToNtuple())
@@ -253,35 +245,35 @@ std::size_t LArNtuple::SetScalarBranchAddresses()
         switch (spRecord->ValueType())
         {
             case LArNtupleRecord::VALUE_TYPE::R_FLOAT:
-                this->PushScalarToBranch<LArNtupleRecord::RFloat>(entry.first, entry.second, true);
+                this->PushScalarToBranch<LArNtupleRecord::RFloat>(entry.first, entry.second, false);
                 break;
 
             case LArNtupleRecord::VALUE_TYPE::R_INT:
-                this->PushScalarToBranch<LArNtupleRecord::RInt>(entry.first, entry.second, true);
+                this->PushScalarToBranch<LArNtupleRecord::RInt>(entry.first, entry.second, false);
                 break;
 
             case LArNtupleRecord::VALUE_TYPE::R_BOOL:
-                this->PushScalarToBranch<LArNtupleRecord::RBool>(entry.first, entry.second, true);
+                this->PushScalarToBranch<LArNtupleRecord::RBool>(entry.first, entry.second, false);
                 break;
 
             case LArNtupleRecord::VALUE_TYPE::R_UINT:
-                this->PushScalarToBranch<LArNtupleRecord::RUInt>(entry.first, entry.second, true);
+                this->PushScalarToBranch<LArNtupleRecord::RUInt>(entry.first, entry.second, false);
                 break;
 
             case LArNtupleRecord::VALUE_TYPE::R_ULONG64:
-                this->PushScalarToBranch<LArNtupleRecord::RULong64>(entry.first, entry.second, true);
+                this->PushScalarToBranch<LArNtupleRecord::RULong64>(entry.first, entry.second, false);
                 break;
 
             case LArNtupleRecord::VALUE_TYPE::R_TSTRING:
-                this->PushScalarToBranch<LArNtupleRecord::RTString>(entry.first, entry.second, true);
+                this->PushScalarToBranch<LArNtupleRecord::RTString>(entry.first, entry.second, false);
                 break;
 
             case LArNtupleRecord::VALUE_TYPE::R_FLOAT_VECTOR:
-                this->PushScalarToBranch<LArNtupleRecord::RFloatVector>(entry.first, entry.second, true);
+                this->PushScalarToBranch<LArNtupleRecord::RFloatVector>(entry.first, entry.second, false);
                 break;
 
             case LArNtupleRecord::VALUE_TYPE::R_INT_VECTOR:
-                this->PushScalarToBranch<LArNtupleRecord::RIntVector>(entry.first, entry.second, true);
+                this->PushScalarToBranch<LArNtupleRecord::RIntVector>(entry.first, entry.second, false);
                 break;
 
             default:
@@ -310,23 +302,23 @@ std::size_t LArNtuple::SetVectorBranchAddresses()
             switch (branchPlaceholder.ValueType())
             {
                 case LArNtupleRecord::VALUE_TYPE::R_FLOAT:
-                    this->PushVectorToBranch<LArNtupleRecord::RFloat>(entry.first, branchPlaceholder, true);
+                    this->PushVectorToBranch<LArNtupleRecord::RFloat>(entry.first, branchPlaceholder, false);
                     break;
 
                 case LArNtupleRecord::VALUE_TYPE::R_INT:
-                    this->PushVectorToBranch<LArNtupleRecord::RInt>(entry.first, branchPlaceholder, true);
+                    this->PushVectorToBranch<LArNtupleRecord::RInt>(entry.first, branchPlaceholder, false);
                     break;
 
                 case LArNtupleRecord::VALUE_TYPE::R_BOOL:
-                    this->PushVectorToBranch<LArNtupleRecord::RBool>(entry.first, branchPlaceholder, true);
+                    this->PushVectorToBranch<LArNtupleRecord::RBool>(entry.first, branchPlaceholder, false);
                     break;
 
                 case LArNtupleRecord::VALUE_TYPE::R_UINT:
-                    this->PushVectorToBranch<LArNtupleRecord::RUInt>(entry.first, branchPlaceholder, true);
+                    this->PushVectorToBranch<LArNtupleRecord::RUInt>(entry.first, branchPlaceholder, false);
                     break;
 
                 case LArNtupleRecord::VALUE_TYPE::R_ULONG64:
-                    this->PushVectorToBranch<LArNtupleRecord::RULong64>(entry.first, branchPlaceholder, true);
+                    this->PushVectorToBranch<LArNtupleRecord::RULong64>(entry.first, branchPlaceholder, false);
                     break;
 
                 case LArNtupleRecord::VALUE_TYPE::R_TSTRING:
@@ -334,11 +326,11 @@ std::size_t LArNtuple::SetVectorBranchAddresses()
                     break;
 
                 case LArNtupleRecord::VALUE_TYPE::R_FLOAT_VECTOR:
-                    this->PushVectorToBranch<LArNtupleRecord::RFloatVector>(entry.first, branchPlaceholder, true);
+                    this->PushVectorToBranch<LArNtupleRecord::RFloatVector>(entry.first, branchPlaceholder, false);
                     break;
 
                 case LArNtupleRecord::VALUE_TYPE::R_INT_VECTOR:
-                    this->PushVectorToBranch<LArNtupleRecord::RIntVector>(entry.first, branchPlaceholder, true);
+                    this->PushVectorToBranch<LArNtupleRecord::RIntVector>(entry.first, branchPlaceholder, false);
                     break;
 
                 default:

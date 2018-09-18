@@ -70,7 +70,7 @@ public:
     /**
      * @brief  Default virtual destructor
      */
-    virtual ~NtupleVariableBaseTool() { std::cerr << "Destroying NtupleVariableBaseTool" << std::endl; }
+    virtual ~NtupleVariableBaseTool() = default;
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle);

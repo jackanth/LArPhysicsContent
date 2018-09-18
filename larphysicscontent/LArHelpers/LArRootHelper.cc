@@ -35,7 +35,7 @@ LArRootHelper::PlotOptions::PlotOptions() noexcept :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TH1F *LArRootHelper::CreateOneDHistogram(const LArRootRegistry &registry, const FloatVector &vector, const PlotOptions &options)
+TH1F *LArRootHelper::CreateOneDHistogram(LArRootRegistry &registry, const FloatVector &vector, const PlotOptions &options)
 {
     if (vector.empty())
     {
@@ -59,7 +59,7 @@ TH1F *LArRootHelper::CreateOneDHistogram(const LArRootRegistry &registry, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TH2F *LArRootHelper::CreateTwoDHistogram(const LArRootRegistry &registry, const FloatVector &xVector, const FloatVector &yVector, const PlotOptions &options)
+TH2F *LArRootHelper::CreateTwoDHistogram(LArRootRegistry &registry, const FloatVector &xVector, const FloatVector &yVector, const PlotOptions &options)
 {
     if (xVector.empty())
     {

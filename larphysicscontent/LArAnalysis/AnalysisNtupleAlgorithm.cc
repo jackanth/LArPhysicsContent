@@ -15,6 +15,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "TROOT.h"
+#include "TF1.h"
 
 using namespace pandora;
 
@@ -48,6 +49,7 @@ AnalysisNtupleAlgorithm::AnalysisNtupleAlgorithm() :
 StatusCode AnalysisNtupleAlgorithm::Run()
 {
     ++m_eventNumber;
+    gROOT->Reset();
     
     // Get input PFO list
     const PfoList *pPfoList(nullptr);
@@ -73,8 +75,11 @@ StatusCode AnalysisNtupleAlgorithm::Run()
 
     this->RegisterNtupleRecords(neutrinos, cosmicRays, primaries, pfoList, mcNeutrinos, mcCosmicRays, mcPrimaries, pMCParticleList);
 
+    gSystem->ProcessEvents();
     m_spNtuple->Fill();
     m_spTmpRegistry->Clear();
+    m_spPlotsRegistry->Write();
+    m_spPlotsRegistry->ClearMemory();
 
     return STATUS_CODE_SUCCESS;
 }
@@ -290,6 +295,8 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TmpOutputFile", m_tmpOutputFile));
 
     gROOT->SetBatch(kTRUE);
+    TF1::DefaultAddToGlobalList(false);
+
     m_spTmpRegistry  = std::shared_ptr<LArRootRegistry>(new LArRootRegistry(m_tmpOutputFile, LArRootRegistry::FILE_MODE::OVERWRITE));
     m_spPlotsRegistry = std::shared_ptr<LArRootRegistry>(new LArRootRegistry(m_plotsOutputFile, LArRootRegistry::FILE_MODE::APPEND));
 
