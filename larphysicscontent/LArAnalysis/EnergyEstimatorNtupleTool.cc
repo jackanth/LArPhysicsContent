@@ -96,7 +96,7 @@ StatusCode EnergyEstimatorNtupleTool::CaloHitToThreeDDistance(
         threeDDistance = this->CellToThreeDDistance(hitWidth, wirePitch, fitDirection);
     }
 
-    catch(...)
+    catch (...)
     {
         return STATUS_CODE_FAILURE;
     }
@@ -157,8 +157,8 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
 
     if (pPfo && pMcParticle)
     {
-        LArNtupleRecord::RFloatVector dQdXVector;
-        LArNtupleRecord::RFloat       showerAdcCount(0.f);
+        LArNtupleRecord::RFloatVector dQdXVector, dXVector;
+        LArNtupleRecord::RFloat       showerCharge(0.f);
 
         for (const ParticleFlowObject *const pDownstreamPfo : this->GetAllDownstreamPfos(pPfo))
         {
@@ -168,18 +168,35 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
             if (LArPfoHelper::IsShower(pDownstreamPfo) || !this->GetTrackFit(pDownstreamPfo))
             {
                 for (const CaloHit *const pCaloHit : collectionPlaneHits)
-                    showerAdcCount += pCaloHit->GetInputEnergy();
+                    showerCharge += pCaloHit->GetInputEnergy();
             }
 
             else
             {
+
+                CaloHitList threeDCaloHits;
+                LArPfoHelper::GetCaloHits(pDownstreamPfo, TPC_3D, threeDCaloHits);
+                CaloHitMap caloHitMap;
+
+                for (const CaloHit *const pThreeDHit : threeDCaloHits)
+                {
+                    if (const CaloHit *const pTwoDHit = reinterpret_cast<const CaloHit *const>(pThreeDHit->GetParentAddress()))
+                    {
+                        if (pTwoDHit->GetHitType() != TPC_VIEW_W)
+                            continue;
+
+                        caloHitMap.emplace(pTwoDHit, pThreeDHit);
+                    }
+                }
+
                 try
                 {
                     const LArNtupleHelper::TrackFitSharedPtr &spTrackFit = this->GetTrackFit(pDownstreamPfo);
-                    auto [pfodQdX, pfoShowerAdc] = this->SelectNoisyHits(*spTrackFit, collectionPlaneHits, pMcParticle);
+                    auto [pfodQdX, pfodX, pfoShowerCharge] = this->SelectNoisyHits(*spTrackFit, collectionPlaneHits, pMcParticle, caloHitMap);
 
-                    showerAdcCount += pfoShowerAdc;
+                    showerCharge += pfoShowerCharge;
                     dQdXVector.insert(dQdXVector.end(), pfodQdX.begin(), pfodQdX.end());
+                    dXVector.insert(dXVector.end(), pfodX.begin(), pfodX.end());
                 }
 
                 catch (...)
@@ -189,15 +206,23 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
             }
         }
 
+        if (dQdXVector.size() != dXVector.size())
+        {
+            std::cerr << "EnergyEstimatorNtupleTool: The size of the dQ/dx vector (" << dQdXVector.size() << ") did not match the size of the dx vector (" << dXVector.size() << ")" << std::endl;
+            throw STATUS_CODE_FAILURE;
+        }
+
         records.emplace_back("dQdX", dQdXVector);
-        records.emplace_back("ShowerAdcCount", showerAdcCount);
+        records.emplace_back("dX", dXVector);
+        records.emplace_back("ShowerCharge", showerCharge);
         records.emplace_back("NumVectorEntries", static_cast<LArNtupleRecord::RUInt>(dQdXVector.size()));
     }
 
     else
     {
         records.emplace_back("dQdX", LArNtupleRecord::RFloatVector());
-        records.emplace_back("ShowerAdcCount", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("dX", LArNtupleRecord::RFloatVector());
+        records.emplace_back("ShowerCharge", static_cast<LArNtupleRecord::RFloat>(0.f));
         records.emplace_back("NumVectorEntries", static_cast<LArNtupleRecord::RUInt>(0U));
     }
 
@@ -206,16 +231,16 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::tuple<FloatVector, float> EnergyEstimatorNtupleTool::SelectNoisyHits(
-    const ThreeDSlidingFitResult &trackFit, CaloHitList caloHitList, const MCParticle *const pMCParticle) const
+std::tuple<FloatVector, FloatVector, float> EnergyEstimatorNtupleTool::SelectNoisyHits(
+    const ThreeDSlidingFitResult &trackFit, CaloHitList caloHitList, const MCParticle *const pMCParticle, const CaloHitMap &caloHitMap) const
 {
     if (caloHitList.empty())
-        return {FloatVector{}, 0.f};
+        return {FloatVector{}, FloatVector{}, 0.f};
 
-    HitCalorimetryInfoMap hitInfoMap = this->CalculateHitCalorimetryInfo(trackFit, caloHitList);
+    HitCalorimetryInfoMap hitInfoMap = this->CalculateHitCalorimetryInfo(trackFit, caloHitList, caloHitMap);
 
     if (this->GetNumGoodHits(hitInfoMap) < 5UL)
-        return {FloatVector{}, this->SumNoisyCharge(hitInfoMap, true)};
+        return {FloatVector{}, FloatVector{}, this->SumNoisyCharge(hitInfoMap, true)};
 
     if (m_makePlots)
     {
@@ -224,9 +249,6 @@ std::tuple<FloatVector, float> EnergyEstimatorNtupleTool::SelectNoisyHits(
         this->PlotHitdQdX(caloHitList, hitInfoMap);
         this->PlotTrueMatchedHitdQdX(caloHitList, hitInfoMap, pMCParticle);
     }
-
-    // if (TF1 *pHitGenerationFunction = this->FitHitGenerationFunction(caloHitList, hitInfoMap))
-    //    this->GenerateNewHits(trackFit, caloHitList, hitInfoMap, pHitGenerationFunction);
 
     TF1 *pdQdXFunction = this->FitdQdXFunction(caloHitList, hitInfoMap, 0UL);
 
@@ -239,7 +261,7 @@ std::tuple<FloatVector, float> EnergyEstimatorNtupleTool::SelectNoisyHits(
         changeMade    = this->IdentifyNoisyHits(caloHitList, hitInfoMap, pdQdXFunction);
 
         if (this->GetNumGoodHits(hitInfoMap) < 5UL)
-            return {FloatVector{}, this->SumNoisyCharge(hitInfoMap, true)};
+            return {FloatVector{}, FloatVector{}, this->SumNoisyCharge(hitInfoMap, true)};
     }
 
     this->IdentifyNoisyUnprojectedHits(hitInfoMap);
@@ -254,7 +276,7 @@ std::tuple<FloatVector, float> EnergyEstimatorNtupleTool::SelectNoisyHits(
 
     float scaledAdjustedNoisyCharge = this->SumNoisyCharge(hitInfoMap, false) * (liveLength + deadLength) / liveLength;
 
-    FloatVector dQdXVector;
+    FloatVector dQdXVector, dXVector;
     std::size_t numNonNoisyHits(0UL);
 
     for (const auto &mapPair : hitInfoMap)
@@ -273,36 +295,38 @@ std::tuple<FloatVector, float> EnergyEstimatorNtupleTool::SelectNoisyHits(
         }
 
         dQdXVector.push_back(hitInfo.m_dQ / hitInfo.m_dX);
+        dXVector.push_back(hitInfo.m_dX);
     }
 
     if (pdQdXFunction && numNonNoisyHits > 0UL)
     {
-        const float lengthPerHit = liveLength / static_cast<float>(numNonNoisyHits);
+        const float integrationdX = 0.05;
 
-        for (float coord = minCoordinate; coord <= maxCoordinate; coord += lengthPerHit)
+        for (float coord = minCoordinate; coord <= maxCoordinate; coord += integrationdX)
         {
             CartesianVector threeDTrackPosition(0.f, 0.f, 0.f);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, trackFit.GetGlobalFitPosition(coord, threeDTrackPosition));
             const CartesianVector twoDTrackPosition = LArGeometryHelper::ProjectPosition(this->GetPandora(), threeDTrackPosition, TPC_VIEW_W);
 
-            if (!LArGeometryHelper::IsInGap(this->GetPandora(), twoDTrackPosition, TPC_VIEW_W, lengthPerHit / 2.f))
+            if (!LArGeometryHelper::IsInGap(this->GetPandora(), twoDTrackPosition, TPC_VIEW_W, integrationdX / 2.f))
                 continue;
 
-             dQdXVector.push_back(pdQdXFunction->Eval(coord));
+            dQdXVector.push_back(pdQdXFunction->Eval(coord));
+            dXVector.push_back(integrationdX);
         }
     }
 
     if (m_makePlots)
         this->MakeColourCodedHitPlot("Identifying noisy hits (final iteration)", caloHitList, hitInfoMap, pdQdXFunction);
 
-    return {dQdXVector, scaledAdjustedNoisyCharge};
+    return {dQdXVector, dXVector, scaledAdjustedNoisyCharge};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EnergyEstimatorNtupleTool::IdentifyNoisyUnprojectedHits(const HitCalorimetryInfoMap &hitInfoMap) const
 {
-    float averageNoisedQ(0.f), averageNonNoisedQ(0.f);
+    float       averageNoisedQ(0.f), averageNonNoisedQ(0.f);
     std::size_t numNoiseHits(0UL), numNonNoiseHits(0UL);
 
     for (const auto &mapPair : hitInfoMap)
@@ -366,7 +390,7 @@ void EnergyEstimatorNtupleTool::IdentifyNoisyUnprojectedHits(const HitCalorimetr
     averageNonNoisedQ /= static_cast<float>(numNonNoiseHits);
 
     const float noiseBoundary = (averageNoisedQ + averageNonNoisedQ) / 2.f;
-    const bool noiseIsHigher(averageNoisedQ > averageNonNoisedQ);
+    const bool  noiseIsHigher(averageNoisedQ > averageNonNoisedQ);
 
     for (const auto &mapPair : hitInfoMap)
     {
@@ -405,35 +429,50 @@ float EnergyEstimatorNtupleTool::SumNoisyCharge(const HitCalorimetryInfoMap &hit
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 EnergyEstimatorNtupleTool::HitCalorimetryInfoMap EnergyEstimatorNtupleTool::CalculateHitCalorimetryInfo(
-    const ThreeDSlidingFitResult &trackFit, const CaloHitList &caloHitList) const
+    const ThreeDSlidingFitResult &trackFit, const CaloHitList &caloHitList, const CaloHitMap &caloHitMap) const
 {
     HitCalorimetryInfoMap hitInfoMap;
 
     for (const CaloHit *const pCaloHit : caloHitList)
-        hitInfoMap.emplace(pCaloHit,
-            this->CalculateHitCalorimetryInfo(trackFit, pCaloHit->GetPositionVector(), pCaloHit->GetInputEnergy(), pCaloHit->GetCellSize1()));
+        hitInfoMap.emplace(pCaloHit, this->CalculateHitCalorimetryInfo(trackFit, pCaloHit->GetPositionVector(), pCaloHit->GetInputEnergy(),
+                                         pCaloHit->GetCellSize1(), caloHitMap, pCaloHit));
 
     return hitInfoMap;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-EnergyEstimatorNtupleTool::HitCalorimetryInfoPtr EnergyEstimatorNtupleTool::CalculateHitCalorimetryInfo(
-    const ThreeDSlidingFitResult &trackFit, const CartesianVector &twoDPositionVector, const float dQ, const float hitWidth) const
+EnergyEstimatorNtupleTool::HitCalorimetryInfoPtr EnergyEstimatorNtupleTool::CalculateHitCalorimetryInfo(const ThreeDSlidingFitResult &trackFit,
+    const CartesianVector &twoDPositionVector, const float dQ, const float hitWidth, const CaloHitMap &caloHitMap, const CaloHit *const pCaloHit) const
 {
     const HitCalorimetryInfoPtr spHitInfo = HitCalorimetryInfoPtr(new HitCalorimetryInfo());
 
-    CartesianVector threeDPosition(0.f, 0.f, 0.f);
-    float           projectionError(0.f), dX(0.f);
+    CartesianVector threeDHitPosition(0.f, 0.f, 0.f);
+    float           threeDHitProjectionError(std::numeric_limits<float>::max());
 
-    if (STATUS_CODE_SUCCESS != LArAnalysisHelper::ProjectTwoDPositionOntoTrackFit(
-                                   this->GetPandora(), trackFit, twoDPositionVector, TPC_VIEW_W, true, threeDPosition, projectionError))
+    const auto findIter = caloHitMap.find(pCaloHit);
+
+    if (findIter != caloHitMap.end())
     {
-        return spHitInfo;
+        threeDHitPosition = findIter->second->GetPositionVector();
+        threeDHitProjectionError =
+            (LArGeometryHelper::ProjectPosition(this->GetPandora(), threeDHitPosition, TPC_VIEW_W) - twoDPositionVector).GetMagnitude();
     }
 
-    if (projectionError > 5.f)
+    CartesianVector inferredThreeDPosition(0.f, 0.f, 0.f);
+    float           inferredThreeDProjectionError(std::numeric_limits<float>::max()), dX(0.f);
+
+    if (STATUS_CODE_SUCCESS != LArAnalysisHelper::ProjectTwoDPositionOntoTrackFit(this->GetPandora(), trackFit, twoDPositionVector,
+                                   TPC_VIEW_W, true, inferredThreeDPosition, inferredThreeDProjectionError))
+    {
+        inferredThreeDProjectionError = std::numeric_limits<float>::max();
+    }
+
+    if (inferredThreeDProjectionError > 5.f && threeDHitProjectionError > 5.f)
         return spHitInfo;
+
+    const CartesianVector threeDPosition = (threeDHitProjectionError < inferredThreeDProjectionError) ? threeDHitPosition : inferredThreeDPosition;
+    const float           projectionError = std::min(threeDHitProjectionError, inferredThreeDProjectionError);
 
     if (STATUS_CODE_SUCCESS != this->CaloHitToThreeDDistance(hitWidth, trackFit, threeDPosition, dX))
         return spHitInfo;
@@ -604,7 +643,8 @@ TF1 *EnergyEstimatorNtupleTool::FitdQdXFunction(const CaloHitList &caloHitList, 
             return std::make_pair(hitInfo.m_coordinate, hitInfo.m_dQ / hitInfo.m_dX);
         });
 
-    TF1 *pFunctionForwards = this->GetTmpRegistry()->CreateWithUniqueName<TF1>("fdQdX", "x < [1] ? min([0]/(1.0 - x / [1]) + [2], 1000.0) : 0.0", 0.f, 1000.f);
+    TF1 *pFunctionForwards =
+        this->GetTmpRegistry()->CreateWithUniqueName<TF1>("fdQdX", "x < [1] ? min([0]/(1.0 - x / [1]) + [2], 1000.0) : 0.0", 0.f, 1000.f);
 
     pFunctionForwards->SetParameter(0, 12.5f);
     pFunctionForwards->SetParLimits(0, 0.f, 25.f);
@@ -615,13 +655,14 @@ TF1 *EnergyEstimatorNtupleTool::FitdQdXFunction(const CaloHitList &caloHitList, 
     pFunctionForwards->SetParameter(2, 200.f);
     pFunctionForwards->SetParLimits(2, 0.f, 1000.f);
 
-    TF1 *pFunctionBackwards = this->GetTmpRegistry()->CreateWithUniqueName<TF1>("fdQdX", "x < - [1] ? min([0]/(1.0 + x / [1]) + [2], 1000.0) : 0.0", 0.f, 1000.f);
+    TF1 *pFunctionBackwards =
+        this->GetTmpRegistry()->CreateWithUniqueName<TF1>("fdQdX", "x > [1] ? min([0]/(1.0 + x / [1]) + [2], 1000.0) : 0.0", 0.f, 1000.f);
 
-    pFunctionBackwards->SetParameter(0, 12.5f);
-    pFunctionBackwards->SetParLimits(0, 0.f, 25.f);
+    pFunctionBackwards->SetParameter(0, 1250.f);
+    pFunctionBackwards->SetParLimits(0, 0.f, 2500.f);
 
-    pFunctionBackwards->SetParameter(1, 400.f);
-    pFunctionBackwards->SetParLimits(1, 20.f, 1000.f);
+    pFunctionBackwards->SetParameter(1, 6.f);
+    pFunctionBackwards->SetParLimits(1, 0.3f, 15.f);
 
     pFunctionBackwards->SetParameter(2, 200.f);
     pFunctionBackwards->SetParLimits(2, 0.f, 1000.f);
@@ -630,11 +671,11 @@ TF1 *EnergyEstimatorNtupleTool::FitdQdXFunction(const CaloHitList &caloHitList, 
 
     try
     {
-        const int forwardsFitStatus = static_cast<Int_t>(pHistogram->Fit(pFunctionForwards, "V"));
+        const int forwardsFitStatus  = static_cast<Int_t>(pHistogram->Fit(pFunctionForwards, "V"));
         const int backwardsFitStatus = static_cast<Int_t>(pHistogram->Fit(pFunctionBackwards, "V"));
 
-        const bool forwardsFitSuccess = (forwardsFitStatus == 0 ) && (pFunctionForwards->GetChisquare() > 0.);
-        const bool backwardsFitSuccess = (backwardsFitStatus == 0 ) && (pFunctionBackwards->GetChisquare() > 0.);
+        const bool forwardsFitSuccess  = (forwardsFitStatus == 0) && (pFunctionForwards->GetChisquare() > 0.);
+        const bool backwardsFitSuccess = (backwardsFitStatus == 0) && (pFunctionBackwards->GetChisquare() > 0.);
 
         if (!forwardsFitSuccess && !backwardsFitSuccess)
         {
@@ -670,8 +711,8 @@ TF1 *EnergyEstimatorNtupleTool::FitdQdXFunction(const CaloHitList &caloHitList, 
         try
         {
             const std::string fitName("expo");
-            const int fitStatus = static_cast<Int_t>(pHistogram->Fit(fitName.c_str(), "V"));
-            TF1 *pExpFunction = pHistogram->GetFunction(fitName.c_str());
+            const int         fitStatus    = static_cast<Int_t>(pHistogram->Fit(fitName.c_str(), "V"));
+            TF1 *             pExpFunction = pHistogram->GetFunction(fitName.c_str());
 
             const bool fitSuccess = (fitStatus == 0) && (pExpFunction->GetChisquare() > 0.);
 
@@ -697,8 +738,8 @@ TF1 *EnergyEstimatorNtupleTool::FitdQdXFunction(const CaloHitList &caloHitList, 
         try
         {
             const std::string fitName("pol1");
-            const int fitStatus = static_cast<Int_t>(pHistogram->Fit(fitName.c_str(), "V"));
-            TF1 *pLinearFunction = pHistogram->GetFunction(fitName.c_str());
+            const int         fitStatus       = static_cast<Int_t>(pHistogram->Fit(fitName.c_str(), "V"));
+            TF1 *             pLinearFunction = pHistogram->GetFunction(fitName.c_str());
 
             const bool fitSuccess = (fitStatus == 0) && (pLinearFunction->GetChisquare() > 0.);
 
@@ -785,126 +826,6 @@ std::tuple<float, float, float, float> EnergyEstimatorNtupleTool::GetGapParamete
 
     const float deadLength = coordinateSpan > liveLength ? coordinateSpan - liveLength : 0.f;
     return {liveLength, deadLength, minCoordinate, maxCoordinate};
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void EnergyEstimatorNtupleTool::GenerateNewHits(
-    const ThreeDSlidingFitResult &trackFit, CaloHitList &caloHitList, HitCalorimetryInfoMap &hitInfoMap, TF1 *pHitGenerationFunction) const
-{
-    // Work out the hit density per unit 3D distance
-    std::size_t numDataPoints(0UL);
-    float       averageWidth(0.f);
-
-    for (const CaloHit *const pCaloHit : caloHitList)
-    {
-        const auto findIter = hitInfoMap.find(pCaloHit);
-
-        if (findIter == hitInfoMap.end())
-        {
-            std::cerr << "EnergyEstimatorNtupleTool: Failed to find hit in calorimetry hit info map" << std::endl;
-            throw STATUS_CODE_FAILURE;
-        }
-
-        const HitCalorimetryInfo &hitInfo = *findIter->second;
-
-        if (!hitInfo.m_projectionSuccessful)
-            continue;
-
-        averageWidth += pCaloHit->GetCellSize1();
-        ++numDataPoints;
-    }
-
-    float minCoordinate(0.f), maxCoordinate(0.f);
-
-    if ((numDataPoints == 0UL) || (STATUS_CODE_SUCCESS != this->CalculateCoordinateRange(caloHitList, hitInfoMap, minCoordinate, maxCoordinate)))
-    {
-        std::cerr << "EnergyEstimatorNtupleTool: Failed to generate new hits because could not get range" << std::endl;
-        return;
-    }
-
-    averageWidth /= static_cast<float>(numDataPoints);
-    const float dLength = (maxCoordinate - minCoordinate) / static_cast<float>(numDataPoints);
-    float       liveLength(0.f);
-
-    for (float coord = minCoordinate, maxBound = maxCoordinate + dLength / 2.f; coord < maxBound; coord += dLength)
-    {
-        CartesianVector threeDTrackPosition(0.f, 0.f, 0.f);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, trackFit.GetGlobalFitPosition(coord, threeDTrackPosition));
-        const CartesianVector twoDTrackPosition = LArGeometryHelper::ProjectPosition(this->GetPandora(), threeDTrackPosition, TPC_VIEW_W);
-
-        if (!LArGeometryHelper::IsInGap(this->GetPandora(), twoDTrackPosition, TPC_VIEW_W, dLength / 4.f))
-            liveLength += dLength;
-    }
-
-    if (liveLength <= std::numeric_limits<float>::epsilon())
-    {
-        std::cerr << "EnergyEstimatorNtupleTool: Failed to generate new hits because the live length was too small" << std::endl;
-        return;
-    }
-
-    const float           lengthPerHit = liveLength / static_cast<float>(numDataPoints);
-    CaloHitList           newHits;
-    HitCalorimetryInfoMap newHitInfoMap;
-
-    for (float coord = minCoordinate, maxBound = maxCoordinate + lengthPerHit / 2.f; coord < maxBound; coord += lengthPerHit)
-    {
-        CartesianVector threeDTrackPosition(0.f, 0.f, 0.f);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, trackFit.GetGlobalFitPosition(coord, threeDTrackPosition));
-        const CartesianVector twoDTrackPosition = LArGeometryHelper::ProjectPosition(this->GetPandora(), threeDTrackPosition, TPC_VIEW_W);
-
-        if (!LArGeometryHelper::IsInGap(this->GetPandora(), twoDTrackPosition, TPC_VIEW_W, lengthPerHit / 4.f))
-            continue;
-
-        // We're in a gap
-        if (const HitCalorimetryInfoPtr spHitInfo = this->CalculateHitCalorimetryInfo(trackFit, twoDTrackPosition, 0.f, averageWidth)) // dummy dQ for now
-        {
-            float dQ = -1.f;
-
-            while (dQ < 0.f)
-                dQ = spHitInfo->m_dX * pHitGenerationFunction->GetRandom();
-
-            spHitInfo->m_dQ     = dQ;
-            spHitInfo->m_isFake = true;
-
-            const CaloHit *const pModelHit = caloHitList.front();
-
-            PandoraApi::CaloHit::Parameters parameters;
-            parameters.m_positionVector = twoDTrackPosition;
-            parameters.m_cellSize1      = averageWidth;
-            parameters.m_inputEnergy    = spHitInfo->m_dQ;
-            parameters.m_hitType        = TPC_VIEW_W;
-
-            parameters.m_cellSize0               = pModelHit->GetCellSize0();
-            parameters.m_expectedDirection       = pModelHit->GetExpectedDirection();
-            parameters.m_cellNormalVector        = pModelHit->GetCellNormalVector();
-            parameters.m_cellGeometry            = pModelHit->GetCellGeometry();
-            parameters.m_cellThickness           = pModelHit->GetCellThickness();
-            parameters.m_nCellRadiationLengths   = pModelHit->GetNCellRadiationLengths();
-            parameters.m_nCellInteractionLengths = pModelHit->GetNCellInteractionLengths();
-            parameters.m_time                    = pModelHit->GetTime();
-            parameters.m_mipEquivalentEnergy     = pModelHit->GetMipEquivalentEnergy();
-            parameters.m_electromagneticEnergy   = pModelHit->GetElectromagneticEnergy();
-            parameters.m_hadronicEnergy          = pModelHit->GetHadronicEnergy();
-            parameters.m_isDigital               = pModelHit->IsDigital();
-            parameters.m_hitRegion               = pModelHit->GetHitRegion();
-            parameters.m_layer                   = pModelHit->GetLayer();
-            parameters.m_isInOuterSamplingLayer  = pModelHit->IsInOuterSamplingLayer();
-            parameters.m_pParentAddress          = nullptr;
-
-            const CaloHit *pNewHit(nullptr);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*this->GetAlgorithm(), parameters, pNewHit));
-
-            newHits.push_back(pNewHit);
-            newHitInfoMap.emplace(pNewHit, spHitInfo);
-        }
-    }
-
-    caloHitList.insert(caloHitList.end(), std::make_move_iterator(newHits.begin()), std::make_move_iterator(newHits.end()));
-    hitInfoMap.insert(std::make_move_iterator(newHitInfoMap.begin()), std::make_move_iterator(newHitInfoMap.end()));
-
-    if (m_makePlots)
-        this->MakeColourCodedHitPlot("Generating new hits", caloHitList, hitInfoMap, nullptr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

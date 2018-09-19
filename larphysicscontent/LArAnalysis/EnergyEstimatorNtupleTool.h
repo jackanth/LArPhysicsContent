@@ -90,6 +90,7 @@ private:
 
     using HitCalorimetryInfoPtr = std::shared_ptr<HitCalorimetryInfo>;
     using HitCalorimetryInfoMap = std::unordered_map<const pandora::CaloHit *, HitCalorimetryInfoPtr>;
+    using CaloHitMap = std::unordered_map<const pandora::CaloHit *, const pandora::CaloHit *>;
 
     template <typename T>
     using HitDataGetter = std::function<std::optional<std::decay_t<T>>(const pandora::CaloHit *const, const HitCalorimetryInfo &hitInfo)>;
@@ -146,8 +147,8 @@ private:
     std::vector<LArNtupleRecord> ProduceTrainingRecords(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &,
         const pandora::MCParticle *const pMcParticle, const pandora::MCParticleList *const);
 
-    std::tuple<pandora::FloatVector, float> SelectNoisyHits(const lar_content::ThreeDSlidingFitResult &trackFit,
-        pandora::CaloHitList caloHitList, const pandora::MCParticle *const pMCParticle) const;
+    std::tuple<pandora::FloatVector, pandora::FloatVector, float> SelectNoisyHits(const lar_content::ThreeDSlidingFitResult &trackFit,
+        pandora::CaloHitList caloHitList, const pandora::MCParticle *const pMCParticle, const CaloHitMap &caloHitMap) const;
 
     TF1 *FitHitGenerationFunction(const pandora::CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap) const;
 
@@ -155,10 +156,10 @@ private:
 
     float SumNoisyCharge(const HitCalorimetryInfoMap &hitInfoMap, const bool useAllHits) const;
 
-    HitCalorimetryInfoMap CalculateHitCalorimetryInfo(const lar_content::ThreeDSlidingFitResult &trackFit, const pandora::CaloHitList &caloHitList) const;
+    HitCalorimetryInfoMap CalculateHitCalorimetryInfo(const lar_content::ThreeDSlidingFitResult &trackFit, const pandora::CaloHitList &caloHitList, const CaloHitMap &caloHitMap) const;
 
     HitCalorimetryInfoPtr CalculateHitCalorimetryInfo(const lar_content::ThreeDSlidingFitResult &trackFit,
-        const pandora::CartesianVector &twoDPositionVector, const float dQ, const float hitWidth) const;
+        const pandora::CartesianVector &twoDPositionVector, const float dQ, const float hitWidth, const CaloHitMap &caloHitMap, const pandora::CaloHit *const pCaloHit) const;
 
     bool IdentifyNoisyHits(const pandora::CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap, TF1 *pdEdXFunction) const;
 
@@ -168,8 +169,6 @@ private:
     std::tuple<float, float, float, float> GetGapParameters(
     const lar_content::ThreeDSlidingFitResult &trackFit, pandora::CaloHitList &caloHitList, HitCalorimetryInfoMap &hitInfoMap) const;
 
-    void GenerateNewHits(const lar_content::ThreeDSlidingFitResult &trackFit,
-        pandora::CaloHitList &caloHitList, HitCalorimetryInfoMap &hitInfoMap, TF1 *pHitGenerationFunction) const;
 
     pandora::StatusCode CalculateCoordinateRange(
         const pandora::CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap, float &minCoordinate, float &maxCoordinate) const;
