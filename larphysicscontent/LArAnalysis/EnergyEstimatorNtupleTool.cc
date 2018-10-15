@@ -135,7 +135,7 @@ float EnergyEstimatorNtupleTool::CellToThreeDDistance(const float hitWidth, cons
 
     // For non-negligible polar angle, this shouldn't happen
     std::cerr << "EnergyEstimatorNtupleTool: Failed to calculate hit's 3D distance" << std::endl;
-    throw STATUS_CODE_FAILURE;
+    throw StatusCodeException(STATUS_CODE_FAILURE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -216,7 +216,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
         {
             std::cerr << "EnergyEstimatorNtupleTool: The size of the dQ/dx vector (" << dQdXVector.size()
                       << ") did not match the size of the dx vector (" << dXVector.size() << ")" << std::endl;
-            throw STATUS_CODE_FAILURE;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
         records.emplace_back("dQdX", dQdXVector);
@@ -284,7 +284,7 @@ std::tuple<FloatVector, FloatVector, float> EnergyEstimatorNtupleTool::SelectNoi
     if (liveLength <= std::numeric_limits<float>::epsilon())
     {
         std::cerr << "EnergyEstimatorNtupleTool: The live track length was too small" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     const bool  ignoreTrackContributionsFromNoisyHits(false);
@@ -380,7 +380,7 @@ void EnergyEstimatorNtupleTool::IdentifyNoisyUnprojectedHits(const HitCalorimetr
     if (numNoiseHits == 0UL && numNonNoiseHits == 0UL)
     {
         std::cerr << "EnergyEstimatorNtupleTool: No hits were successfully projected" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     if (numNoiseHits == 0UL) // nothing is noise
@@ -527,7 +527,7 @@ TF1 *EnergyEstimatorNtupleTool::FitHitGenerationFunction(const CaloHitList &calo
     if (STATUS_CODE_SUCCESS != this->CalculateCoordinateRange(caloHitList, hitInfoMap, minCoordinate, maxCoordinate))
     {
         std::cerr << "EnergyEstimatorNtupleTool: Failed to calculate coordinate range" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     const float minCentralCoord = minCoordinate + (maxCoordinate - minCoordinate) / 10.f;
@@ -719,19 +719,19 @@ TF1 *EnergyEstimatorNtupleTool::FitdQdXFunction(const CaloHitList &caloHitList, 
         if (!forwardsFitSuccess && !backwardsFitSuccess)
         {
             std::cerr << "EnergyEstimatorNtupleTool: Forwards- and backwards-dQdX fits failed" << std::endl;
-            throw STATUS_CODE_FAILURE;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
         if (!forwardsFitSuccess)
         {
             std::cerr << "EnergyEstimatorNtupleTool: Forwards-dQdX fit failed" << std::endl;
-            throw STATUS_CODE_FAILURE;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
         if (!backwardsFitSuccess)
         {
             std::cerr << "EnergyEstimatorNtupleTool: Backwards-dQdX fit failed" << std::endl;
-            throw STATUS_CODE_FAILURE;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
         // Both fits are viable
@@ -758,7 +758,7 @@ TF1 *EnergyEstimatorNtupleTool::FitdQdXFunction(const CaloHitList &caloHitList, 
             if (!fitSuccess)
             {
                 std::cerr << "EnergyEstimatorNtupleTool: Exponential dQdX fit failed" << std::endl;
-                throw STATUS_CODE_FAILURE;
+                throw StatusCodeException(STATUS_CODE_FAILURE);
             }
 
             pFunction = pExpFunction;
@@ -785,7 +785,7 @@ TF1 *EnergyEstimatorNtupleTool::FitdQdXFunction(const CaloHitList &caloHitList, 
             if (!fitSuccess)
             {
                 std::cerr << "EnergyEstimatorNtupleTool: Linear dQdX fit failed" << std::endl;
-                throw STATUS_CODE_FAILURE;
+                throw StatusCodeException(STATUS_CODE_FAILURE);
             }
 
             pFunction = pLinearFunction;
@@ -800,7 +800,7 @@ TF1 *EnergyEstimatorNtupleTool::FitdQdXFunction(const CaloHitList &caloHitList, 
     if (!pFunction)
     {
         std::cerr << "EnergyEstimatorNtupleTool: All noisy hit fits failed" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     if (m_makePlots)
@@ -824,7 +824,7 @@ std::tuple<float, float, float, float> EnergyEstimatorNtupleTool::GetGapParamete
         if (findIter == hitInfoMap.end())
         {
             std::cerr << "EnergyEstimatorNtupleTool: Failed to find hit in calorimetry hit info map" << std::endl;
-            throw STATUS_CODE_FAILURE;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
         const HitCalorimetryInfo &hitInfo = *findIter->second;
@@ -840,7 +840,7 @@ std::tuple<float, float, float, float> EnergyEstimatorNtupleTool::GetGapParamete
     if (STATUS_CODE_SUCCESS != this->CalculateCoordinateRange(caloHitList, hitInfoMap, minCoordinate, maxCoordinate))
     {
         std::cerr << "EnergyEstimatorNtupleTool: Failed to generate new hits because could not get range" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     const float coordinateSpan = maxCoordinate - minCoordinate;
@@ -860,7 +860,7 @@ std::tuple<float, float, float, float> EnergyEstimatorNtupleTool::GetGapParamete
     if (liveLength <= std::numeric_limits<float>::epsilon())
     {
         std::cerr << "EnergyEstimatorNtupleTool: Failed to generate new hits because the live length was too small" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     const float deadLength = coordinateSpan > liveLength ? coordinateSpan - liveLength : 0.f;
@@ -885,7 +885,7 @@ StatusCode EnergyEstimatorNtupleTool::CalculateCoordinateRange(
         if (findIter == hitInfoMap.end())
         {
             std::cerr << "EnergyEstimatorNtupleTool: Failed to find hit in calorimetry hit info map" << std::endl;
-            throw STATUS_CODE_FAILURE;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
         const HitCalorimetryInfo &hitInfo = *findIter->second;
@@ -929,7 +929,7 @@ TH1F *EnergyEstimatorNtupleTool::MakeOneDHitHistogram(const LArRootHelper::PlotO
         if (findIter == hitInfoMap.end())
         {
             std::cerr << "EnergyEstimatorNtupleTool: Failed to find CaloHit in calorimetry map" << std::endl;
-            throw STATUS_CODE_FAILURE;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
         if (const auto oData = hitDataGetter(pCaloHit, *findIter->second))
@@ -953,7 +953,7 @@ TH2F *EnergyEstimatorNtupleTool::MakeTwoDHitHistogram(const LArRootHelper::PlotO
         if (findIter == hitInfoMap.end())
         {
             std::cerr << "EnergyEstimatorNtupleTool: Failed to find CaloHit in calorimetry map" << std::endl;
-            throw STATUS_CODE_FAILURE;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
         if (const auto oData = hitDataGetter(pCaloHit, *findIter->second))
@@ -966,7 +966,7 @@ TH2F *EnergyEstimatorNtupleTool::MakeTwoDHitHistogram(const LArRootHelper::PlotO
     if (xValues.size() != yValues.size())
     {
         std::cerr << "EnergyEstimatorNtupleTool: ..." << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     if (xValues.empty())

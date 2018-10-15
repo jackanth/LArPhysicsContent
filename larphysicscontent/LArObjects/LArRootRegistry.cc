@@ -34,20 +34,20 @@ LArRootRegistry::LArRootRegistry(const std::string &filePath, const FILE_MODE fi
                 m_pFile = new TFile(filePath.c_str(), "RECREATE");
                 break;
             default:
-                throw STATUS_CODE_FAILURE;
+                throw StatusCodeException(STATUS_CODE_FAILURE);
         }
     }
 
     catch (...)
     {
         std::cerr << "LArRootRegistry: Failed to open file at " << filePath << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
-    if (!m_pFile || !m_pFile->IsOpen())
+    if (!m_pFile || !m_pFile->IsOpen() || m_pFile->IsZombie() || m_pFile->TestBit(TFile::kRecovered))
     {
         std::cerr << "LArRootRegistry: Failed to open file at " << filePath << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     m_pFile->SetBit(TFile::kDevNull);
@@ -103,7 +103,7 @@ void LArRootRegistry::ChangeDirectory(TDirectory *pDir) const
     if (pDir && !pDir->cd())
     {
         std::cerr << "LArRootRegistry: Failed to change ROOT directory" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 }
 } // namespace lar_physics_content

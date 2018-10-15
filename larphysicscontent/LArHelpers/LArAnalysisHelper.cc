@@ -26,7 +26,7 @@ std::tuple<CartesianVector, CartesianVector> LArAnalysisHelper::GetFiducialCutCo
     if (larTPCMap.size() != 1UL)
     {
         std::cout << "LArAnalysisHelper: the number of LArTPCs was not equal to 1" << std::endl;
-        throw STATUS_CODE_NOT_FOUND;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
     const LArTPC *const pLArTPC(larTPCMap.begin()->second);

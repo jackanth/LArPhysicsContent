@@ -383,6 +383,7 @@ std::vector<std::shared_ptr<LArInteractionValidationInfo>> EventValidationTool::
             const int isLost(nTargetMatches == 0);
 
             const ParticleFlowObject *pRecoNeutrino(nullptr);
+            const MCParticle *pMcNeutrino(nullptr);
 
             if (isLastNeutrinoPrimary)
             {
@@ -393,14 +394,14 @@ std::vector<std::shared_ptr<LArInteractionValidationInfo>> EventValidationTool::
                 }
 
                 pRecoNeutrino = recoNeutrinos.empty() ? nullptr : *recoNeutrinos.begin();
-            }
 
-            const MCParticle *const pMcNeutrino(LArMCParticleHelper::GetParentMCParticle(pMCPrimary));
+                pMcNeutrino = LArMCParticleHelper::GetParentMCParticle(pMCPrimary);
 
-            if (!LArMCParticleHelper::IsNeutrino(pMcNeutrino))
-            {
-                std::cerr << "EventValidationTool: Neutrino rimary parent was not neutrino" << std::endl;
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+                if (!LArMCParticleHelper::IsNeutrino(pMcNeutrino))
+                {
+                    std::cerr << "EventValidationTool: Neutrino primary parent was not neutrino" << std::endl;
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+                }
             }
 
             spInteractionInfo->SetParameters(interactionType, (isCorrectNu || isCorrectCR), (isFakeNu || isFakeCR),

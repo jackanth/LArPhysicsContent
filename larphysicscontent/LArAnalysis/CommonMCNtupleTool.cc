@@ -37,7 +37,7 @@ void CommonMCNtupleTool::PrepareEvent(const PfoList &, const std::vector<std::sh
     if ((PandoraContentApi::GetList(*this->GetAlgorithm(), m_twoDCaloHitListName, m_pTwoDCaloHitList) != STATUS_CODE_SUCCESS) || !m_pTwoDCaloHitList)
     {
         std::cerr << "CommonMCNtupleTool: Failed to get list of 2D calo hits '" << m_twoDCaloHitListName << "'" << std::endl;
-        throw STATUS_CODE_NOT_FOUND;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 }
 
@@ -350,7 +350,7 @@ float CommonMCNtupleTool::GetHitWeightAssociatedWithMcParticle(const MCParticle 
     if (!m_pTwoDCaloHitList)
     {
         std::cerr << "CommonMCNtupleTool: Could not get reco/MC match quality because there was no hit list" << std::endl;
-        throw STATUS_CODE_NOT_FOUND;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
     float hitsAssociatedWithMcParticle(0.f);

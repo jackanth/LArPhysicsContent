@@ -55,10 +55,19 @@
     </algorithm>
     
     <algorithm type = "LArAnalysisNtuple">
-        <NtupleOutputFile>PandoraNtuple.root</NtupleOutputFile>
-        <AppendNtuple>true</AppendNtuple>
-        <PfoListName>RecreatedPfos</PfoListName>
+        <CaloHitListName>CaloHitList2D</CaloHitListName>
         <MCParticleListName>Input</MCParticleListName>
+        <PrintValidation>true</PrintValidation>
+        <ProduceAllOutcomes>false</ProduceAllOutcomes>
+        <PfoListName>RecreatedPfos</PfoListName>
+        <NtupleOutputFile>PandoraNtuple.root</NtupleOutputFile>
+        <PlotsOutputFile>PandoraPlots.root</PlotsOutputFile>
+        <TmpOutputFile>Tmp.root</TmpOutputFile>
+        <FileIdentifier>0</FileIdentifier>
+        <AppendNtuple>true</AppendNtuple>
+        <EventValidationTools>
+            <tool type = "LArEventValidationTool"></tool>
+        </EventValidationTools>
         <NtupleTools>
             <tool type = "LArTestNtupleTool"/>
         </NtupleTools>

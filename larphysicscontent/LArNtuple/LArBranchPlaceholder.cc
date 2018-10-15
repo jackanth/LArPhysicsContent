@@ -36,7 +36,7 @@ void LArBranchPlaceholder::PushNtupleScalarRecord()
     if (!m_spNtupleScalarRecord)
     {
         std::cerr << "LArBranchPlaceholder: Failed to push ntuple scalar record because it was null" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     m_ntupleVectorRecord.emplace_back(std::move(m_spNtupleScalarRecord));

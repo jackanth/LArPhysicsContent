@@ -19,7 +19,6 @@
 #include "Objects/ParticleFlowObject.h"
 #include "Pandora/Algorithm.h"
 
-#include "TFile.h"
 #include "TTree.h"
 
 #include <any>
@@ -29,7 +28,7 @@ namespace lar_physics_content
 {
 
 /**
- *  @briefi Forward declaration of the AnalysisNtupleAlgorithm class
+ *  @brief Forward declaration of the AnalysisNtupleAlgorithm class
  */
 class AnalysisNtupleAlgorithm;
 
@@ -93,7 +92,6 @@ private:
     template <typename T>
     using RecordMapGetter = std::function<LArBranchPlaceholder::NtupleRecordMap<const std::decay_t<T> *>(const LArBranchPlaceholder &)>; ///< Alias for a record map getter function
 
-    TFile *                                              m_pOutputTFile;           ///< The output TFile
     TTree *                                              m_pOutputTree;            ///< The output TTree
     BranchMap                                            m_scalarBranchMap;        ///< The scalar branch map
     BranchMap                                            m_vectorElementBranchMap; ///< The vector element branch map
@@ -299,14 +297,6 @@ private:
      *  @param  record the record
      */
     void ValidateAndAddRecord(BranchMap &branchMap, const LArNtupleRecord &record);
-
-    /**
-     *  @brief  Instantiate the TFile object
-     *
-     *  @param  appendMode whether we are in append mode
-     *  @param  filePath the file path
-     */
-    void InstantiateTFile(const bool appendMode, const std::string &filePath);
 
     /**
      *  @brief  Instantiate the TTree object

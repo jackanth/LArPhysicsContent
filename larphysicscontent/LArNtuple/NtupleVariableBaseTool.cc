@@ -45,7 +45,7 @@ const CaloHitList &NtupleVariableBaseTool::GetAllDownstreamThreeDHits(const Part
     if (!m_spNtuple)
     {
         std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     return m_spNtuple->GetAllDownstreamThreeDHits(pPfo);
@@ -58,7 +58,7 @@ CaloHitList NtupleVariableBaseTool::GetAllDownstreamTwoDHits(const ParticleFlowO
     if (!m_spNtuple)
     {
         std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     return m_spNtuple->GetAllDownstreamTwoDHits(pPfo);
@@ -71,7 +71,7 @@ const CaloHitList &NtupleVariableBaseTool::GetAllDownstreamUHits(const ParticleF
     if (!m_spNtuple)
     {
         std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     return m_spNtuple->GetAllDownstreamUHits(pPfo);
@@ -84,7 +84,7 @@ const CaloHitList &NtupleVariableBaseTool::GetAllDownstreamVHits(const ParticleF
     if (!m_spNtuple)
     {
         std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     return m_spNtuple->GetAllDownstreamVHits(pPfo);
@@ -97,7 +97,7 @@ const CaloHitList &NtupleVariableBaseTool::GetAllDownstreamWHits(const ParticleF
     if (!m_spNtuple)
     {
         std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     return m_spNtuple->GetAllDownstreamWHits(pPfo);
@@ -110,7 +110,7 @@ const PfoList &NtupleVariableBaseTool::GetAllDownstreamPfos(const ParticleFlowOb
     if (!m_spNtuple)
     {
         std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     return m_spNtuple->GetAllDownstreamPfos(pPfo);
@@ -123,7 +123,7 @@ const LArNtupleHelper::TrackFitSharedPtr &NtupleVariableBaseTool::GetTrackFit(co
     if (!m_spNtuple)
     {
         std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     return m_spNtuple->GetTrackFit(this->GetPandora(), pPfo);
@@ -137,7 +137,7 @@ void NtupleVariableBaseTool::PrepareEventWrapper(const AnalysisNtupleAlgorithm *
     if (!m_isSetup)
     {
         std::cerr << "NtupleVariableBaseTool: Tool was not setup" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -167,7 +167,8 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEventWrapper(const A
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessNeutrinoWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
     const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo)
 {
-    return this->ProcessImpl(pAlgorithm, m_neutrinoPrefix, pPfo, spInteractionInfo->GetMcNeutrino(),
+    const MCParticle *const pMCParticle = spInteractionInfo ? spInteractionInfo->GetMcNeutrino() : nullptr;
+    return this->ProcessImpl(pAlgorithm, m_neutrinoPrefix, pPfo, pMCParticle,
         [&]() { return this->ProcessNeutrino(pPfo, pfoList, spInteractionInfo); });
 }
 
@@ -176,8 +177,9 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessNeutrinoWrapper(cons
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessPrimaryWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
     const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
 {
+    const MCParticle *const pMCParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
     return this->ProcessImpl(
-        pAlgorithm, m_primaryPrefix, pPfo, spMcTarget->GetMCParticle(), [&]() { return this->ProcessPrimary(pPfo, pfoList, spMcTarget); });
+        pAlgorithm, m_primaryPrefix, pPfo, pMCParticle, [&]() { return this->ProcessPrimary(pPfo, pfoList, spMcTarget); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -185,8 +187,9 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessPrimaryWrapper(const
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessCosmicRayWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
     const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
 {
+    const MCParticle *const pMCParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
     return this->ProcessImpl(
-        pAlgorithm, m_cosmicPrefix, pPfo, spMcTarget->GetMCParticle(), [&]() { return this->ProcessCosmicRay(pPfo, pfoList, spMcTarget); });
+        pAlgorithm, m_cosmicPrefix, pPfo, pMCParticle, [&]() { return this->ProcessCosmicRay(pPfo, pfoList, spMcTarget); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -223,7 +226,7 @@ void NtupleVariableBaseTool::Setup(std::shared_ptr<LArNtuple> spNtuple, const pa
     if (!pAlgorithm || !spNtuple || !spPlotsRegistry || !spTmpRegistry)
     {
         std::cerr << "NtupleVariableBaseTool: Failed to perform setup" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     m_spNtuple               = std::move(spNtuple);

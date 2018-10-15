@@ -112,6 +112,13 @@ public:
      */
     void Write() const;
 
+    /**
+     *  @brief  Get the TFile
+     * 
+     *  @return address of the TFile
+     */
+    TFile * GetTFile();
+
 private:
     TFile *                       m_pFile;           ///< Address of this registry's TFile
     static std::size_t            m_objectNameCount; ///< The object name count for creating unique names
@@ -195,6 +202,14 @@ inline void LArRootRegistry::Write() const
     if (m_pFile && m_pFile->IsOpen())
         m_pFile->Write();
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline TFile * LArRootRegistry::GetTFile()
+{
+    return m_pFile;
+}
+
 } // namespace lar_physics_content
 
 #endif // #ifndef LAR_ROOT_REGISTRY_H

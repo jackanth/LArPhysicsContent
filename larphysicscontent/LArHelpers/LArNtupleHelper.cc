@@ -54,7 +54,7 @@ std::string LArNtupleHelper::ToString(const PARTICLE_CLASS particleClass)
     }
 
     std::cout << "LArNtupleHelper: Unknown particle class" << std::endl;
-    throw STATUS_CODE_INVALID_PARAMETER;
+    throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 }
 
 } // namespace lar_physics_content

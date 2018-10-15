@@ -40,7 +40,7 @@ TH1F *LArRootHelper::CreateOneDHistogram(LArRootRegistry &registry, const FloatV
     if (vector.empty())
     {
         std::cerr << "LArRootHelper: Could not create histogram because there were no datapoints" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     TH1F *pHistogram =
@@ -64,13 +64,13 @@ TH2F *LArRootHelper::CreateTwoDHistogram(LArRootRegistry &registry, const FloatV
     if (xVector.empty())
     {
         std::cerr << "LArRootHelper: Could not create histogram because there were no datapoints" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     if (xVector.size() != yVector.size())
     {
         std::cerr << "LArRootHelper: x-values vector and y-values vector were not the same size" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     TH2F *pHistogram = registry.CreateWithUniqueName<TH2F>(options.m_name, options.m_title.c_str(), options.m_numXBins, options.m_xMin,

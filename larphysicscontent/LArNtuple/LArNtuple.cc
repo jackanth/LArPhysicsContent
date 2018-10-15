@@ -32,7 +32,7 @@ void LArNtuple::AddScalarRecord(const LArNtupleRecord &record)
         if (!m_scalarBranchMap.emplace(record.BranchName(), LArBranchPlaceholder(record)).second)
         {
             std::cerr << "LArNtuple: cannot add multiple scalar records with the same branch name '" << record.BranchName() << "'" << std::endl;
-            throw STATUS_CODE_NOT_ALLOWED;
+            throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
         }
     }
 }
@@ -56,7 +56,7 @@ void LArNtuple::AddVectorRecordElement(const LArNtupleRecord &record, const LArN
         if (!branchMap.emplace(record.BranchName(), LArBranchPlaceholder(record)).second)
         {
             std::cerr << "LArNtuple: cannot add multiple scalar records with the same branch name '" << record.BranchName() << "'" << std::endl;
-            throw STATUS_CODE_NOT_ALLOWED;
+            throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
         }
     }
 }
@@ -74,7 +74,7 @@ void LArNtuple::FillVectors(const LArNtupleHelper::VECTOR_BRANCH_TYPE type)
         if (!branchPlaceholder.GetNtupleScalarRecord()) // the branch has not been filled
         {
             std::cerr << "LArNtuple: Could not fill vectors as the branch '" << entry.first << "' has not been populated" << std::endl;
-            throw STATUS_CODE_NOT_ALLOWED;
+            throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
         }
 
         branchPlaceholder.PushNtupleScalarRecord();
@@ -107,13 +107,13 @@ void LArNtuple::Fill()
     if (numBranches == 0UL)
     {
         std::cerr << "LArNtuple: Could not fill because no branches were set" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     if (m_pOutputTree->Fill() < 0)
     {
         std::cerr << "LArNtuple: Error filling TTree" << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     // Prepare the ntuple for the next event
@@ -125,7 +125,6 @@ void LArNtuple::Fill()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, const std::string &treeTitle, const bool appendMode) :
-    m_pOutputTFile(nullptr),
     m_pOutputTree(nullptr),
     m_scalarBranchMap(),
     m_vectorElementBranchMap(),
@@ -205,7 +204,7 @@ std::size_t LArNtuple::SetScalarBranchAddresses()
         if (!spRecord) // the branch has not been filled
         {
             std::cerr << "LArNtuple: Could not fill ntuple as the branch '" << entry.first << "' has not been populated" << std::endl;
-            throw STATUS_CODE_NOT_ALLOWED;
+            throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
         }
 
         switch (spRecord->ValueType())
@@ -231,7 +230,7 @@ std::size_t LArNtuple::SetScalarBranchAddresses()
                 break;
 
             case LArNtupleRecord::VALUE_TYPE::R_TSTRING:
-                this->PushScalarToBranch<LArNtupleRecord::RTString>(entry.first, entry.second, false);
+                this->PushScalarToBranch<LArNtupleRecord::RTString>(entry.first, entry.second, true);
                 break;
 
             case LArNtupleRecord::VALUE_TYPE::R_FLOAT_VECTOR:
@@ -244,7 +243,7 @@ std::size_t LArNtuple::SetScalarBranchAddresses()
 
             default:
                 std::cerr << "LArNtuple: Unknown value type" << std::endl;
-                throw STATUS_CODE_FAILURE;
+                throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
         ++numBranches;
@@ -288,7 +287,7 @@ std::size_t LArNtuple::SetVectorBranchAddresses()
                     break;
 
                 case LArNtupleRecord::VALUE_TYPE::R_TSTRING:
-                    this->PushVectorToBranch<LArNtupleRecord::RTString>(entry.first, branchPlaceholder, false);
+                    this->PushVectorToBranch<LArNtupleRecord::RTString>(entry.first, branchPlaceholder, true);
                     break;
 
                 case LArNtupleRecord::VALUE_TYPE::R_FLOAT_VECTOR:
@@ -301,7 +300,7 @@ std::size_t LArNtuple::SetVectorBranchAddresses()
 
                 default:
                     std::cerr << "LArNtuple: Unknown value type" << std::endl;
-                    throw STATUS_CODE_FAILURE;
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
             }
 
             ++numBranches;
@@ -322,7 +321,7 @@ void LArNtuple::ValidateAndAddRecord(BranchMap &branchMap, const LArNtupleRecord
         std::cerr << "LArNtuple: cannot add vector record element with branch name '" << record.BranchName()
                   << "' as it was not present in previous ntuple fills" << std::endl;
 
-        throw STATUS_CODE_NOT_ALLOWED;
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
     }
 
     if (const LArBranchPlaceholder::NtupleRecordSPtr spCurrentRecord = findIter->second.GetNtupleScalarRecord()) // the branch is already filled
@@ -333,34 +332,12 @@ void LArNtuple::ValidateAndAddRecord(BranchMap &branchMap, const LArNtupleRecord
             std::cerr << "LArNtuple: cannot add vector record element with branch name '" << record.BranchName()
                       << "' as it has already been populated since the last fill" << std::endl;
 
-            throw STATUS_CODE_NOT_ALLOWED;
+            throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
         }
     }
 
     // Add the record (includes type-checking)
     findIter->second.SetNtupleScalarRecord(record);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArNtuple::InstantiateTFile(const bool appendMode, const std::string &filePath)
-{
-    try
-    {
-        m_pOutputTFile = new TFile(filePath.c_str(), appendMode ? "UPDATE" : "NEW");
-    }
-
-    catch (...)
-    {
-        std::cerr << "LArNtuple: Failed to open file at " << filePath << std::endl;
-        throw STATUS_CODE_FAILURE;
-    }
-
-    if (!m_pOutputTFile->IsOpen())
-    {
-        std::cerr << "LArNtuple: Failed to open file at " << filePath << std::endl;
-        throw STATUS_CODE_FAILURE;
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -371,9 +348,9 @@ void LArNtuple::InstantiateTTree(const bool appendMode, const std::string &treeN
     {
         m_spRegistry->DoAsRegistry([&]() {
             // For our branch mechanics to work, we need to know if the TTree exists and whether it's empty or not
-            if (appendMode && m_pOutputTFile->GetListOfKeys()->Contains(treeName.c_str()))
+            if (appendMode && m_spRegistry->GetTFile()->GetListOfKeys()->Contains(treeName.c_str()))
             {
-                m_pOutputTree     = dynamic_cast<TTree *>(m_pOutputTFile->Get(treeName.c_str()));
+                m_pOutputTree     = dynamic_cast<TTree *>(m_spRegistry->GetTFile()->Get(treeName.c_str()));
                 TObjArray *pArray = m_pOutputTree->GetListOfBranches();
 
                 if (pArray && pArray->GetEntries() > 0)
@@ -398,7 +375,7 @@ void LArNtuple::InstantiateTTree(const bool appendMode, const std::string &treeN
     {
         std::cerr << "LArNtuple: Failed to find/instantiate TTree with name '" << treeName << "' and title '" << treeTitle << "' at "
                   << filePath << std::endl;
-        throw STATUS_CODE_FAILURE;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 }
 

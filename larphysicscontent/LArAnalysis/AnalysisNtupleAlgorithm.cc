@@ -610,7 +610,7 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         else
         {
             std::cerr << "AnalysisNtupleAlgorithm: Failed to cast algorithm tool as ntuple tool" << std::endl;
-            throw STATUS_CODE_FAILURE;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
         }
     }
 
