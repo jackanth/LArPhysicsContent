@@ -18,7 +18,7 @@ using namespace lar_content;
 
 namespace lar_physics_content
 {
-CommonMCNtupleTool::CommonMCNtupleTool() : NtupleVariableBaseTool(), m_twoDCaloHitListName(), m_pTwoDCaloHitList(nullptr)
+CommonMCNtupleTool::CommonMCNtupleTool() : NtupleVariableBaseTool()
 {
 }
 
@@ -26,7 +26,6 @@ CommonMCNtupleTool::CommonMCNtupleTool() : NtupleVariableBaseTool(), m_twoDCaloH
 
 StatusCode CommonMCNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TwoDCaloHitListName", m_twoDCaloHitListName));
     return NtupleVariableBaseTool::ReadSettings(xmlHandle);
 }
 
@@ -34,11 +33,6 @@ StatusCode CommonMCNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 void CommonMCNtupleTool::PrepareEvent(const PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
-    if ((PandoraContentApi::GetList(*this->GetAlgorithm(), m_twoDCaloHitListName, m_pTwoDCaloHitList) != STATUS_CODE_SUCCESS) || !m_pTwoDCaloHitList)
-    {
-        std::cerr << "CommonMCNtupleTool: Failed to get list of 2D calo hits '" << m_twoDCaloHitListName << "'" << std::endl;
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,7 +153,6 @@ std::vector<LArNtupleRecord> CommonMCNtupleTool::ProduceGenericPfoMCRecords(
         records.emplace_back("mc_VertexZ", static_cast<LArNtupleRecord::RFloat>(vertexPosition.GetZ()));
         records.emplace_back("mc_IsVertexFiducial", static_cast<LArNtupleRecord::RBool>(this->IsPointFiducial(vertexPosition)));
         records.emplace_back("mc_PdgCode", static_cast<LArNtupleRecord::RInt>(pMCParticle->GetParticleId()));
-        records.emplace_back("mc_NuanceCode", static_cast<LArNtupleRecord::RUInt>(LArMCParticleHelper::GetNuanceCode(pMCParticle)));
         records.emplace_back("mc_MomentumX", static_cast<LArNtupleRecord::RFloat>(momentum.GetX()));
         records.emplace_back("mc_MomentumY", static_cast<LArNtupleRecord::RFloat>(momentum.GetY()));
         records.emplace_back("mc_MomentumZ", static_cast<LArNtupleRecord::RFloat>(momentum.GetZ()));
@@ -179,7 +172,6 @@ std::vector<LArNtupleRecord> CommonMCNtupleTool::ProduceGenericPfoMCRecords(
         records.emplace_back("mc_VertexZ", static_cast<LArNtupleRecord::RFloat>(0.f));
         records.emplace_back("mc_IsVertexFiducial", static_cast<LArNtupleRecord::RBool>(false));
         records.emplace_back("mc_PdgCode", static_cast<LArNtupleRecord::RInt>(0));
-        records.emplace_back("mc_NuanceCode", static_cast<LArNtupleRecord::RUInt>(0U));
         records.emplace_back("mc_MomentumX", static_cast<LArNtupleRecord::RFloat>(0.f));
         records.emplace_back("mc_MomentumY", static_cast<LArNtupleRecord::RFloat>(0.f));
         records.emplace_back("mc_MomentumZ", static_cast<LArNtupleRecord::RFloat>(0.f));
@@ -195,32 +187,13 @@ std::vector<LArNtupleRecord> CommonMCNtupleTool::ProduceGenericPfoMCRecords(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> CommonMCNtupleTool::ProduceNonNeutrinoPfoMCRecords(
-    const ParticleFlowObject *const pPfo, const PfoList &, const MCParticle *const pMCParticle) const
+    const ParticleFlowObject *const, const PfoList &, const MCParticle *const pMCParticle) const
 {
     std::vector<LArNtupleRecord> records;
 
     if (pMCParticle)
     {
         const bool isShower = LArAnalysisHelper::IsTrueShower(pMCParticle);
-
-        if (pPfo)
-        {
-            const auto [matchPurity, matchCompleteness]             = this->GetRecoMcMatchQuality(pPfo, pMCParticle);
-            const auto [wPlaneMatchPurity, wPlaneMatchCompleteness] = this->GetCollectionPlaneRecoMcMatchQuality(pPfo, pMCParticle);
-
-            records.emplace_back("mc_RecoMcMatchCompleteness", static_cast<LArNtupleRecord::RFloat>(matchCompleteness));
-            records.emplace_back("mc_RecoMcMatchPurity", static_cast<LArNtupleRecord::RFloat>(matchPurity));
-            records.emplace_back("mc_RecoMcMatchCollectionPlaneCompleteness", static_cast<LArNtupleRecord::RFloat>(wPlaneMatchPurity));
-            records.emplace_back("mc_RecoMcMatchCollectionPlanePurity", static_cast<LArNtupleRecord::RFloat>(wPlaneMatchCompleteness));
-        }
-
-        else
-        {
-            records.emplace_back("mc_RecoMcMatchCompleteness", static_cast<LArNtupleRecord::RFloat>(0.f));
-            records.emplace_back("mc_RecoMcMatchPurity", static_cast<LArNtupleRecord::RFloat>(0.f));
-            records.emplace_back("mc_RecoMcMatchCollectionPlaneCompleteness", static_cast<LArNtupleRecord::RFloat>(0.f));
-            records.emplace_back("mc_RecoMcMatchCollectionPlanePurity", static_cast<LArNtupleRecord::RFloat>(0.f));
-        }
 
         records.emplace_back("mc_IsShower", static_cast<LArNtupleRecord::RBool>(isShower));
         records.emplace_back("mc_IsTrack", static_cast<LArNtupleRecord::RBool>(!isShower));
@@ -233,10 +206,6 @@ std::vector<LArNtupleRecord> CommonMCNtupleTool::ProduceNonNeutrinoPfoMCRecords(
 
     else // null values for size consistency
     {
-        records.emplace_back("mc_RecoMcMatchCompleteness", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("mc_RecoMcMatchPurity", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("mc_RecoMcMatchCompleteness", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("mc_RecoMcMatchPurity", static_cast<LArNtupleRecord::RFloat>(0.f));
         records.emplace_back("mc_IsShower", static_cast<LArNtupleRecord::RBool>(false));
         records.emplace_back("mc_IsTrack", static_cast<LArNtupleRecord::RBool>(false));
         records.emplace_back("mc_KineticEnergy", static_cast<LArNtupleRecord::RFloat>(0.f));
@@ -279,95 +248,6 @@ void CommonMCNtupleTool::RecursivelySumVisibleMomentum(const MCParticle *const p
 
     for (const MCParticle *const pDaughter : pMCParticle->GetDaughterList())
         this->RecursivelySumVisibleMomentum(pDaughter, visibleMomentum);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-std::tuple<float, float> CommonMCNtupleTool::GetRecoMcMatchQuality(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) const
-{
-    return this->GetRecoMcMatchQualityImpl(pMCParticle, [&]() { return this->GetAllDownstreamTwoDHits(pPfo); },
-        [](const CaloHit *const pCaloHit) {
-            switch (pCaloHit->GetHitType())
-            {
-                case TPC_VIEW_U:
-                case TPC_VIEW_V:
-                case TPC_VIEW_W:
-                    return true;
-                default:
-                    break;
-            }
-
-            return false;
-        });
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-std::tuple<float, float> CommonMCNtupleTool::GetCollectionPlaneRecoMcMatchQuality(
-    const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) const
-{
-    return this->GetRecoMcMatchQualityImpl(pMCParticle, [&]() { return this->GetAllDownstreamWHits(pPfo); },
-        [](const CaloHit *const pCaloHit) { return pCaloHit->GetHitType() == TPC_VIEW_W; });
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-std::tuple<float, float> CommonMCNtupleTool::GetRecoMcMatchQualityImpl(
-    const MCParticle *const pMCParticle, const HitGetter &pfoHitGetter, const HitSelector &hitSelector) const
-{
-    const float hitsAssociatedWithMcParticle = this->GetHitWeightAssociatedWithMcParticle(pMCParticle, hitSelector);
-    float       hitsAssociatedWithPfo(0.f), hitsAssociatedWithBoth(0.f);
-
-    for (const CaloHit *const pCaloHit : pfoHitGetter())
-    {
-        const MCParticleWeightMap &weightMap = pCaloHit->GetMCParticleWeightMap();
-
-        for (const auto &entry : weightMap)
-            hitsAssociatedWithPfo += entry.second;
-
-        const auto findIter = weightMap.find(pMCParticle);
-
-        if (findIter != weightMap.end())
-            hitsAssociatedWithBoth += findIter->second;
-    }
-
-    // Calculate the purity and completeness
-    float purity(0.f), completeness(0.f);
-
-    if (hitsAssociatedWithPfo > std::numeric_limits<float>::epsilon())
-        purity = hitsAssociatedWithBoth / hitsAssociatedWithPfo;
-
-    if (hitsAssociatedWithMcParticle > std::numeric_limits<float>::epsilon())
-        completeness = hitsAssociatedWithBoth / hitsAssociatedWithMcParticle;
-
-    return {purity, completeness};
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float CommonMCNtupleTool::GetHitWeightAssociatedWithMcParticle(const MCParticle *const pMCParticle, const HitSelector &hitSelector) const
-{
-    if (!m_pTwoDCaloHitList)
-    {
-        std::cerr << "CommonMCNtupleTool: Could not get reco/MC match quality because there was no hit list" << std::endl;
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-    }
-
-    float hitsAssociatedWithMcParticle(0.f);
-
-    for (const CaloHit *const pCaloHit : *m_pTwoDCaloHitList)
-    {
-        if (!hitSelector(pCaloHit))
-            continue;
-
-        const MCParticleWeightMap &weightMap = pCaloHit->GetMCParticleWeightMap();
-        const auto                 findIter  = weightMap.find(pMCParticle);
-
-        if (findIter != weightMap.end())
-            hitsAssociatedWithMcParticle += findIter->second;
-    }
-
-    return hitsAssociatedWithMcParticle;
 }
 
 } // namespace lar_physics_content

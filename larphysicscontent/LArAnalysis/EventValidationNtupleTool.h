@@ -8,8 +8,8 @@
 #ifndef LAR_EVENT_VALIDATION_NTUPLE_TOOL_H
 #define LAR_EVENT_VALIDATION_NTUPLE_TOOL_H 1
 
-#include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
 
 #include <map>
 
@@ -54,7 +54,8 @@ public:
 protected:
     void PrepareEvent(const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo) override;
 
-    std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo) override;
+    std::vector<LArNtupleRecord> ProcessEvent(
+        const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo) override;
 
     std::vector<LArNtupleRecord> ProcessNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
         const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo) override;
@@ -66,9 +67,13 @@ protected:
         const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
 private:
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, unsigned int> PfoToIdMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject *, unsigned int> PfoToIdMap;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    std::vector<LArNtupleRecord> WriteInteractionRecords(const std::shared_ptr<LArInteractionValidationInfo> &spMcInteraction) const;
+
+    std::vector<LArNtupleRecord> WriteMatchRecords(const pandora::ParticleFlowObject *const pPfo, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) const;
 };
 
 } // namespace lar_physics_content
