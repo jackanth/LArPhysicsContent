@@ -80,15 +80,6 @@ public:
     static PARTICLE_CLASS GetParticleClass(const pandora::ParticleFlowObject *const pPfo);
 
     /**
-     *  @brief  Get the class of an MCParticle
-     *
-     *  @param  pMCParticle address of the MCParticle
-     *
-     *  @return the PFO class
-     */
-    static PARTICLE_CLASS GetParticleClass(const pandora::MCParticle *const pMCParticle);
-
-    /**
      *  @brief  Translate a particle class to a string
      *
      *  @param  particleClass the particle class

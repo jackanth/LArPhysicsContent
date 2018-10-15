@@ -33,22 +33,6 @@ LArNtupleHelper::PARTICLE_CLASS LArNtupleHelper::GetParticleClass(const Particle
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArNtupleHelper::PARTICLE_CLASS LArNtupleHelper::GetParticleClass(const MCParticle *const pMCParticle)
-{
-    if (LArMCParticleHelper::IsCosmicRay(pMCParticle)) // this means 'is primary cosmic ray?'
-        return PARTICLE_CLASS::COSMIC_RAY;
-
-    if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))
-        return PARTICLE_CLASS::PRIMARY;
-
-    if (LArMCParticleHelper::IsNeutrino(pMCParticle)) // this means 'is beam neutrino?'
-        return PARTICLE_CLASS::NEUTRINO;
-
-    return PARTICLE_CLASS::OTHER;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 std::string LArNtupleHelper::ToString(const PARTICLE_CLASS particleClass)
 {
     switch (particleClass)

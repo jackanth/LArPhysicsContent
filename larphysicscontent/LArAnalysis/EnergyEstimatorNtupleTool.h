@@ -52,16 +52,16 @@ public:
     ~EnergyEstimatorNtupleTool() = default;
 
 protected:
-    std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) override;
+    std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo) override;
 
     std::vector<LArNtupleRecord> ProcessNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo) override;
 
     std::vector<LArNtupleRecord> ProcessCosmicRay(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
     std::vector<LArNtupleRecord> ProcessPrimary(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
 private:
     struct HitCalorimetryInfo
@@ -140,12 +140,11 @@ private:
      *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
      *  @param  pMCParticle optional pointer to the corresponding MC particle
-     *  @param  pMCParticleList optional pointer to the MC particle list
      *
      *  @return the training records
      */
     std::vector<LArNtupleRecord> ProduceTrainingRecords(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &,
-        const pandora::MCParticle *const pMcParticle, const pandora::MCParticleList *const);
+        const pandora::MCParticle *const pMcParticle);
 
     std::tuple<pandora::FloatVector, pandora::FloatVector, float> SelectNoisyHits(const lar_content::ThreeDSlidingFitResult &trackFit,
         pandora::CaloHitList caloHitList, const pandora::MCParticle *const pMCParticle, const CaloHitMap &caloHitMap) const;
@@ -161,7 +160,7 @@ private:
     HitCalorimetryInfoPtr CalculateHitCalorimetryInfo(const lar_content::ThreeDSlidingFitResult &trackFit,
         const pandora::CartesianVector &twoDPositionVector, const float dQ, const float hitWidth, const CaloHitMap &caloHitMap, const pandora::CaloHit *const pCaloHit) const;
 
-    bool IdentifyNoisyHits(const pandora::CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap, TF1 *pdEdXFunction) const;
+    bool IdentifyNoisyHits(const pandora::CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap, TF1 *pdEdXFunction, const bool resetMode) const;
 
     TF1 *FitdQdXFunction(const pandora::CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap,
         const std::size_t iteration) const;

@@ -25,75 +25,75 @@
 
 /**
  *  @brief  Macro for testing the value of an ntuple parameter
- * 
+ *
  *  @param  fn the function to retrieve the true value
  *  @param  valueExpr the expression giving the found value
  *  @param  counter the counter argument to the function
  */
-#define TEST(fn, valueExpr, counter)                                                                                            \
-{                                                                                                                               \
-    if (fn(counter) == valueExpr)                                                                                               \
-    {                                                                                                                           \
-        ++successfulTests;                                                                                                      \
-        std::cout << "[ " << TEXT_GREEN_BOLD << "SUCCESS" << TEXT_NORMAL << " ] "#fn"("#valueExpr", "#counter");" << std::endl; \
-    }                                                                                                                           \
-                                                                                                                                \
-    else                                                                                                                        \
-    {                                                                                                                           \
-        ++failedTests;                                                                                                          \
-        std::cerr << "[ " << TEXT_RED_BOLD << "FAILURE" << TEXT_NORMAL << " ] "#fn"("#valueExpr", "#counter");" << std::endl;   \
-        std::cerr << "    - Got value     " << valueExpr << std::endl;                                                          \
-        std::cerr << "    - Correct value " << fn(counter) << std::endl;                                                        \
-    }                                                                                                                           \
-}
+#define TEST(fn, valueExpr, counter)                                                                                                       \
+    {                                                                                                                                      \
+        if (fn(counter) == valueExpr)                                                                                                      \
+        {                                                                                                                                  \
+            ++successfulTests;                                                                                                             \
+            std::cout << "[ " << TEXT_GREEN_BOLD << "SUCCESS" << TEXT_NORMAL << " ] " #fn "(" #valueExpr ", " #counter ");" << std::endl;  \
+        }                                                                                                                                  \
+                                                                                                                                           \
+        else                                                                                                                               \
+        {                                                                                                                                  \
+            ++failedTests;                                                                                                                 \
+            std::cerr << "[ " << TEXT_RED_BOLD << "FAILURE" << TEXT_NORMAL << " ] " #fn "(" #valueExpr ", " #counter ");" << std::endl;    \
+            std::cerr << "    - Got value     " << valueExpr << std::endl;                                                                 \
+            std::cerr << "    - Correct value " << fn(counter) << std::endl;                                                               \
+        }                                                                                                                                  \
+    }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  Macro for testing the size of an ntuple vector parameter
- * 
+ *
  *  @param  theVector the vector
  *  @param  correctSize the correct size
  */
-#define TEST_SIZE(theVector, correctSize)                                                                             \
-{                                                                                                                     \
-    if ((theVector).size() == correctSize)                                                                            \
-    {                                                                                                                 \
-        ++successfulTests;                                                                                            \
-        std::cout << "[ " << TEXT_GREEN_BOLD << "SUCCESS" << TEXT_NORMAL << " ] ("#theVector").size();" << std::endl; \
-    }                                                                                                                 \
-                                                                                                                      \
-    else                                                                                                              \
-    {                                                                                                                 \
-        ++failedTests;                                                                                                \
-        std::cerr << "[ " << TEXT_RED_BOLD << "FAILURE" << TEXT_NORMAL << " ] ("#theVector").size();" << std::endl;   \
-        std::cerr << "    - Got size     " << (theVector).size() << std::endl;                                        \
-        std::cerr << "    - Correct size " << correctSize << std::endl;                                               \
-    }                                                                                                                 \
-}
+#define TEST_SIZE(theVector, correctSize)                                                                                                  \
+    {                                                                                                                                      \
+        if ((theVector).size() == correctSize)                                                                                             \
+        {                                                                                                                                  \
+            ++successfulTests;                                                                                                             \
+            std::cout << "[ " << TEXT_GREEN_BOLD << "SUCCESS" << TEXT_NORMAL << " ] (" #theVector ").size();" << std::endl;                \
+        }                                                                                                                                  \
+                                                                                                                                           \
+        else                                                                                                                               \
+        {                                                                                                                                  \
+            ++failedTests;                                                                                                                 \
+            std::cerr << "[ " << TEXT_RED_BOLD << "FAILURE" << TEXT_NORMAL << " ] (" #theVector ").size();" << std::endl;                  \
+            std::cerr << "    - Got size     " << (theVector).size() << std::endl;                                                         \
+            std::cerr << "    - Correct size " << correctSize << std::endl;                                                                \
+        }                                                                                                                                  \
+    }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-Float_t GetRFloatValue(const int counter);
-Int_t GetRIntValue(const int counter);
-Bool_t GetRBoolValue(const int counter);
-UInt_t GetRUIntValue(const int counter);
-ULong64_t GetRULong64Value(const int counter);
-TString GetRTStringValue(const int counter);
+Float_t              GetRFloatValue(const int counter);
+Int_t                GetRIntValue(const int counter);
+Bool_t               GetRBoolValue(const int counter);
+UInt_t               GetRUIntValue(const int counter);
+ULong64_t            GetRULong64Value(const int counter);
+TString              GetRTStringValue(const int counter);
 std::vector<Float_t> GetRFloatVectorValue(const int counter);
-std::vector<Int_t> GetRIntVectorValue(const int counter);
+std::vector<Int_t>   GetRIntVectorValue(const int counter);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  Function for printing vectors
- * 
+ *
  *  @param  os the ostream object
  *  @param  vec the vector to print
- * 
+ *
  *  @return the ostream object
  */
-template<typename T>
+template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec)
 {
     if (vec.empty())
@@ -112,74 +112,64 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec)
 
 /**
  *  @brief  Validate the ntuple produced by the Pandora test ntuple tools
- * 
+ *
  *  @param  filePath path to the ntuple file
  *  @param  ntupleName the ntuple name
  */
 void ValidateNtuple(const TString &filePath, const TString &ntupleName = "PandoraNtuple")
 {
     // Load the ntuple
-    TFile ntupleFile(filePath);
+    TFile       ntupleFile(filePath);
     TTreeReader treeReader(ntupleName, &ntupleFile);
 
     // Prepare the reserved values
-    TTreeReaderValue<Int_t> fileId(treeReader, "fileId");
-    TTreeReaderValue<Int_t> eventNum(treeReader, "eventNum");
+    TTreeReaderValue<Int_t>  fileId(treeReader, "fileId");
+    TTreeReaderValue<Int_t>  eventNum(treeReader, "eventNum");
+    TTreeReaderValue<Int_t>  hypothesisId(treeReader, "hypothesisId");
     TTreeReaderValue<UInt_t> numNeutrinos(treeReader, "numNeutrinoEntries");
     TTreeReaderValue<UInt_t> numCosmicRays(treeReader, "numCosmicRayEntries");
     TTreeReaderValue<UInt_t> numPrimaries(treeReader, "numPrimaryEntries");
-    TTreeReaderValue<UInt_t> numPfos(treeReader, "numPfoEntries");
     TTreeReaderValue<Bool_t> hasMcInfo(treeReader, "hasMcInfo");
 
     // Prepare the per-event values
-    TTreeReaderValue<Float_t> evt_RFloat(treeReader, "evt_RFloat");
-    TTreeReaderValue<Int_t> evt_RInt(treeReader, "evt_RInt");
-    TTreeReaderValue<Bool_t> evt_RBool(treeReader, "evt_RBool");
-    TTreeReaderValue<UInt_t> evt_RUInt(treeReader, "evt_RUInt");
-    TTreeReaderValue<ULong64_t> evt_RULong64(treeReader, "evt_RULong64");
-    TTreeReaderValue<TString> evt_RTString(treeReader, "evt_RTString");
+    TTreeReaderValue<Float_t>              evt_RFloat(treeReader, "evt_RFloat");
+    TTreeReaderValue<Int_t>                evt_RInt(treeReader, "evt_RInt");
+    TTreeReaderValue<Bool_t>               evt_RBool(treeReader, "evt_RBool");
+    TTreeReaderValue<UInt_t>               evt_RUInt(treeReader, "evt_RUInt");
+    TTreeReaderValue<ULong64_t>            evt_RULong64(treeReader, "evt_RULong64");
+    TTreeReaderValue<TString>              evt_RTString(treeReader, "evt_RTString");
     TTreeReaderValue<std::vector<Float_t>> evt_RFloatVector(treeReader, "evt_RFloatVector");
-    TTreeReaderValue<std::vector<Int_t>> evt_RIntVector(treeReader, "evt_RIntVector");
+    TTreeReaderValue<std::vector<Int_t>>   evt_RIntVector(treeReader, "evt_RIntVector");
 
     // Prepare the per-neutrino values
-    TTreeReaderValue<std::vector<Float_t>> nu_RFloat(treeReader, "nu_RFloat");
-    TTreeReaderValue<std::vector<Int_t>> nu_RInt(treeReader, "nu_RInt");
-    TTreeReaderValue<std::vector<Bool_t>> nu_RBool(treeReader, "nu_RBool");
-    TTreeReaderValue<std::vector<UInt_t>> nu_RUInt(treeReader, "nu_RUInt");
-    TTreeReaderValue<std::vector<ULong64_t>> nu_RULong64(treeReader, "nu_RULong64");
-    TTreeReaderValue<std::vector<TString>> nu_RTString(treeReader, "nu_RTString");
+    TTreeReaderValue<std::vector<Float_t>>              nu_RFloat(treeReader, "nu_RFloat");
+    TTreeReaderValue<std::vector<Int_t>>                nu_RInt(treeReader, "nu_RInt");
+    TTreeReaderValue<std::vector<Bool_t>>               nu_RBool(treeReader, "nu_RBool");
+    TTreeReaderValue<std::vector<UInt_t>>               nu_RUInt(treeReader, "nu_RUInt");
+    TTreeReaderValue<std::vector<ULong64_t>>            nu_RULong64(treeReader, "nu_RULong64");
+    TTreeReaderValue<std::vector<TString>>              nu_RTString(treeReader, "nu_RTString");
     TTreeReaderValue<std::vector<std::vector<Float_t>>> nu_RFloatVector(treeReader, "nu_RFloatVector");
-    TTreeReaderValue<std::vector<std::vector<Int_t>>> nu_RIntVector(treeReader, "nu_RIntVector");
-
-    // Prepare the per-PFO values
-    TTreeReaderValue<std::vector<Float_t>> pfo_RFloat(treeReader, "pfo_RFloat");
-    TTreeReaderValue<std::vector<Int_t>> pfo_RInt(treeReader, "pfo_RInt");
-    TTreeReaderValue<std::vector<Bool_t>> pfo_RBool(treeReader, "pfo_RBool");
-    TTreeReaderValue<std::vector<UInt_t>> pfo_RUInt(treeReader, "pfo_RUInt");
-    TTreeReaderValue<std::vector<ULong64_t>> pfo_RULong64(treeReader, "pfo_RULong64");
-    TTreeReaderValue<std::vector<TString>> pfo_RTString(treeReader, "pfo_RTString");
-    TTreeReaderValue<std::vector<std::vector<Float_t>>> pfo_RFloatVector(treeReader, "pfo_RFloatVector");
-    TTreeReaderValue<std::vector<std::vector<Int_t>>> pfo_RIntVector(treeReader, "pfo_RIntVector");
+    TTreeReaderValue<std::vector<std::vector<Int_t>>>   nu_RIntVector(treeReader, "nu_RIntVector");
 
     // Prepare the per-primary values
-    TTreeReaderValue<std::vector<Float_t>> primary_RFloat(treeReader, "primary_RFloat");
-    TTreeReaderValue<std::vector<Int_t>> primary_RInt(treeReader, "primary_RInt");
-    TTreeReaderValue<std::vector<Bool_t>> primary_RBool(treeReader, "primary_RBool");
-    TTreeReaderValue<std::vector<UInt_t>> primary_RUInt(treeReader, "primary_RUInt");
-    TTreeReaderValue<std::vector<ULong64_t>> primary_RULong64(treeReader, "primary_RULong64");
-    TTreeReaderValue<std::vector<TString>> primary_RTString(treeReader, "primary_RTString");
+    TTreeReaderValue<std::vector<Float_t>>              primary_RFloat(treeReader, "primary_RFloat");
+    TTreeReaderValue<std::vector<Int_t>>                primary_RInt(treeReader, "primary_RInt");
+    TTreeReaderValue<std::vector<Bool_t>>               primary_RBool(treeReader, "primary_RBool");
+    TTreeReaderValue<std::vector<UInt_t>>               primary_RUInt(treeReader, "primary_RUInt");
+    TTreeReaderValue<std::vector<ULong64_t>>            primary_RULong64(treeReader, "primary_RULong64");
+    TTreeReaderValue<std::vector<TString>>              primary_RTString(treeReader, "primary_RTString");
     TTreeReaderValue<std::vector<std::vector<Float_t>>> primary_RFloatVector(treeReader, "primary_RFloatVector");
-    TTreeReaderValue<std::vector<std::vector<Int_t>>> primary_RIntVector(treeReader, "primary_RIntVector");
+    TTreeReaderValue<std::vector<std::vector<Int_t>>>   primary_RIntVector(treeReader, "primary_RIntVector");
 
     // Prepare the per-cosmic values
-    TTreeReaderValue<std::vector<Float_t>> cr_RFloat(treeReader, "cr_RFloat");
-    TTreeReaderValue<std::vector<Int_t>> cr_RInt(treeReader, "cr_RInt");
-    TTreeReaderValue<std::vector<Bool_t>> cr_RBool(treeReader, "cr_RBool");
-    TTreeReaderValue<std::vector<UInt_t>> cr_RUInt(treeReader, "cr_RUInt");
-    TTreeReaderValue<std::vector<ULong64_t>> cr_RULong64(treeReader, "cr_RULong64");
-    TTreeReaderValue<std::vector<TString>> cr_RTString(treeReader, "cr_RTString");
+    TTreeReaderValue<std::vector<Float_t>>              cr_RFloat(treeReader, "cr_RFloat");
+    TTreeReaderValue<std::vector<Int_t>>                cr_RInt(treeReader, "cr_RInt");
+    TTreeReaderValue<std::vector<Bool_t>>               cr_RBool(treeReader, "cr_RBool");
+    TTreeReaderValue<std::vector<UInt_t>>               cr_RUInt(treeReader, "cr_RUInt");
+    TTreeReaderValue<std::vector<ULong64_t>>            cr_RULong64(treeReader, "cr_RULong64");
+    TTreeReaderValue<std::vector<TString>>              cr_RTString(treeReader, "cr_RTString");
     TTreeReaderValue<std::vector<std::vector<Float_t>>> cr_RFloatVector(treeReader, "cr_RFloatVector");
-    TTreeReaderValue<std::vector<std::vector<Int_t>>> cr_RIntVector(treeReader, "cr_RIntVector");
+    TTreeReaderValue<std::vector<std::vector<Int_t>>>   cr_RIntVector(treeReader, "cr_RIntVector");
 
     std::cout << "Beginning ntuple validation" << std::endl;
 
@@ -188,17 +178,17 @@ void ValidateNtuple(const TString &filePath, const TString &ntupleName = "Pandor
 
     while (treeReader.Next())
     {
-        int nuCounter(0), pfoCounter(0), primaryCounter(0), cosmicCounter(0);
+        int nuCounter(0), primaryCounter(0), cosmicCounter(0);
 
         // Output event info
         std::cout << "--------------------------------------------------------------------------------------------" << std::endl;
         std::cout << TEXT_WHITE_BOLD << "Processing event #" << evtCounter << TEXT_NORMAL << std::endl;
         std::cout << "fileId        = " << *fileId << std::endl;
         std::cout << "eventNum      = " << *eventNum << std::endl;
+        std::cout << "hypothesisId  = " << *hypothesisId << std::endl;
         std::cout << "numNeutrinos  = " << *numNeutrinos << std::endl;
         std::cout << "numCosmicRays = " << *numCosmicRays << std::endl;
         std::cout << "numPrimaries  = " << *numPrimaries << std::endl;
-        std::cout << "numPfos       = " << *numPfos << std::endl;
         std::cout << "hasMcInfo     = " << std::boolalpha << *hasMcInfo << std::endl;
 
         // Event numbers should get out of sync only if there are completely null events (i.e. all hits removed by CR tagger) or the ntuple
@@ -260,47 +250,6 @@ void ValidateNtuple(const TString &filePath, const TString &ntupleName = "Pandor
                 TEST(GetRIntVectorValue, (*nu_RIntVector).at(i), nuCounter);
 
             ++nuCounter;
-        }
-
-        // Per-PFO tests
-        std::cout << std::endl << "Testing per-PFO parameters" << std::endl;
-
-        TEST_SIZE(*pfo_RFloat, *numPfos);
-        TEST_SIZE(*pfo_RInt, *numPfos);
-        TEST_SIZE(*pfo_RBool, *numPfos);
-        TEST_SIZE(*pfo_RUInt, *numPfos);
-        TEST_SIZE(*pfo_RULong64, *numPfos);
-        TEST_SIZE(*pfo_RTString, *numPfos);
-        TEST_SIZE(*pfo_RFloatVector, *numPfos);
-        TEST_SIZE(*pfo_RIntVector, *numPfos);
-
-        for (std::size_t i = 0; i < *numPfos; ++i)
-        {
-            if (i < (*pfo_RFloat).size())
-                TEST(GetRFloatValue, (*pfo_RFloat).at(i), pfoCounter);
-
-            if (i < (*pfo_RInt).size())
-                TEST(GetRIntValue, (*pfo_RInt).at(i), pfoCounter);
-            
-            if (i < (*pfo_RBool).size())
-                TEST(GetRBoolValue, (*pfo_RBool).at(i), pfoCounter);
-
-            if (i < (*pfo_RUInt).size())
-                TEST(GetRUIntValue, (*pfo_RUInt).at(i), pfoCounter);
-
-            if (i < (*pfo_RULong64).size())
-                TEST(GetRULong64Value, (*pfo_RULong64).at(i), pfoCounter);
-
-            if (i < (*pfo_RTString).size())
-                TEST(GetRTStringValue, (*pfo_RTString).at(i), pfoCounter);
-
-            if (i < (*pfo_RFloatVector).size())
-                TEST(GetRFloatVectorValue, (*pfo_RFloatVector).at(i), pfoCounter);
-
-            if (i < (*pfo_RIntVector).size())
-                TEST(GetRIntVectorValue, (*pfo_RIntVector).at(i), pfoCounter);
-
-            ++pfoCounter;
         }
 
         // Per-primary tests
@@ -390,9 +339,9 @@ void ValidateNtuple(const TString &filePath, const TString &ntupleName = "Pandor
 
     // Print summary
     std::cout << "--------------------------------------------------------------------------------------------" << std::endl;
-    std::cout << "Processed " << TEXT_WHITE_BOLD << evtCounter << " event(s) " << TEXT_NORMAL << "with " << TEXT_GREEN_BOLD << successfulTests
-              << " passed test(s)" << TEXT_NORMAL << ", " << TEXT_RED_BOLD << failedTests << " failed test(s) " << TEXT_NORMAL << "and "
-              << TEXT_YELLOW_BOLD << warnings <<  " warning(s)" << TEXT_NORMAL << std::endl;
+    std::cout << "Processed " << TEXT_WHITE_BOLD << evtCounter << " event(s) " << TEXT_NORMAL << "with " << TEXT_GREEN_BOLD
+              << successfulTests << " passed test(s)" << TEXT_NORMAL << ", " << TEXT_RED_BOLD << failedTests << " failed test(s) "
+              << TEXT_NORMAL << "and " << TEXT_YELLOW_BOLD << warnings << " warning(s)" << TEXT_NORMAL << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

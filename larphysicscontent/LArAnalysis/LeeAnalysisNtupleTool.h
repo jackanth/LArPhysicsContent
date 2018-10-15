@@ -49,16 +49,17 @@ public:
     ~LeeAnalysisNtupleTool() = default;
 
 protected:
-    std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) override;
+    std::vector<LArNtupleRecord> ProcessEvent(
+        const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo) override;
 
     std::vector<LArNtupleRecord> ProcessNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo) override;
 
     std::vector<LArNtupleRecord> ProcessCosmicRay(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
     std::vector<LArNtupleRecord> ProcessPrimary(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

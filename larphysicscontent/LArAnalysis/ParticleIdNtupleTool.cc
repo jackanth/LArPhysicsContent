@@ -26,7 +26,7 @@ StatusCode ParticleIdNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> ParticleIdNtupleTool::ProcessEvent(const PfoList &, const MCParticleList *const)
+std::vector<LArNtupleRecord> ParticleIdNtupleTool::ProcessEvent(const PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
     return {};
 }
@@ -34,7 +34,7 @@ std::vector<LArNtupleRecord> ParticleIdNtupleTool::ProcessEvent(const PfoList &,
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> ParticleIdNtupleTool::ProcessNeutrino(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArInteractionValidationInfo> &)
 {
     return {};
 }
@@ -42,7 +42,7 @@ std::vector<LArNtupleRecord> ParticleIdNtupleTool::ProcessNeutrino(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> ParticleIdNtupleTool::ProcessPrimary(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     return {};
 }
@@ -50,7 +50,7 @@ std::vector<LArNtupleRecord> ParticleIdNtupleTool::ProcessPrimary(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> ParticleIdNtupleTool::ProcessCosmicRay(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     return {};
 }

@@ -7,9 +7,13 @@
  */
 
 #include "larphysicscontent/LArAnalysis/EventValidationNtupleTool.h"
+
 #include "Pandora/AlgorithmHeaders.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 using namespace pandora;
+using namespace lar_content;
 
 namespace lar_physics_content
 {
@@ -26,7 +30,13 @@ StatusCode EventValidationNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> EventValidationNtupleTool::ProcessEvent(const PfoList &, const MCParticleList *const)
+void EventValidationNtupleTool::PrepareEvent(const PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::vector<LArNtupleRecord> EventValidationNtupleTool::ProcessEvent(const PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
     return {};
 }
@@ -34,7 +44,7 @@ std::vector<LArNtupleRecord> EventValidationNtupleTool::ProcessEvent(const PfoLi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> EventValidationNtupleTool::ProcessNeutrino(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArInteractionValidationInfo> &)
 {
     return {};
 }
@@ -42,7 +52,7 @@ std::vector<LArNtupleRecord> EventValidationNtupleTool::ProcessNeutrino(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> EventValidationNtupleTool::ProcessPrimary(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     return {};
 }
@@ -50,7 +60,7 @@ std::vector<LArNtupleRecord> EventValidationNtupleTool::ProcessPrimary(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> EventValidationNtupleTool::ProcessCosmicRay(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     return {};
 }

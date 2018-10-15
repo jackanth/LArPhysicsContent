@@ -14,10 +14,11 @@
 #include "larphysicscontent/LArAnalysis/AnalysisNtupleAlgorithm.h"
 #include "larphysicscontent/LArAnalysis/CommonMCNtupleTool.h"
 #include "larphysicscontent/LArAnalysis/CommonNtupleTool.h"
-#include "larphysicscontent/LArAnalysis/ParticleIdNtupleTool.h"
 #include "larphysicscontent/LArAnalysis/EnergyEstimatorNtupleTool.h"
 #include "larphysicscontent/LArAnalysis/EventValidationNtupleTool.h"
+#include "larphysicscontent/LArAnalysis/EventValidationTool.h"
 #include "larphysicscontent/LArAnalysis/LeeAnalysisNtupleTool.h"
+#include "larphysicscontent/LArAnalysis/ParticleIdNtupleTool.h"
 
 #include "larphysicscontent/LArPhysicsContent.h"
 
@@ -28,6 +29,7 @@
     d("LArAnalysisNtuple", AnalysisNtupleAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                               \
+    d("LArEventValidationTool", EventValidationTool)             \
     d("LArTestNtupleTool", TestNtupleTool)                       \
     d("LArCommonNtupleTool", CommonNtupleTool)                   \
     d("LArCommonMCNtupleTool", CommonMCNtupleTool)               \
@@ -35,7 +37,6 @@
     d("LArEnergyEstimatorNtupleTool", EnergyEstimatorNtupleTool) \
     d("LArEventValidationNtupleTool", EventValidationNtupleTool) \
     d("LArLeeAnalysisNtupleTool", LeeAnalysisNtupleTool)
-
 // clang-format on
 
 #define FACTORY Factory

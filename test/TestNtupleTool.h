@@ -53,23 +53,20 @@ private:
 
     int m_eventCounter;    ///< The event counter
     int m_neutrinoCounter; ///< The neutrino counter
-    int m_pfoCounter;      ///< The PFO counter
     int m_cosmicCounter;   ///< The cosmic counter
     int m_primaryCounter;  ///< The primary counter
 
-    std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) override;
+    std::vector<LArNtupleRecord> ProcessEvent(
+        const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo) override;
 
     std::vector<LArNtupleRecord> ProcessNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
-
-    std::vector<LArNtupleRecord> ProcessParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo) override;
 
     std::vector<LArNtupleRecord> ProcessCosmicRay(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
     std::vector<LArNtupleRecord> ProcessPrimary(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
     /**
      *  @brief  Get the set of test records for a given counter

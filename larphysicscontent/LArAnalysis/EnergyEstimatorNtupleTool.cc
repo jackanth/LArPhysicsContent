@@ -47,7 +47,7 @@ StatusCode EnergyEstimatorNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessEvent(const PfoList &, const MCParticleList *const)
+std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessEvent(const PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
     return {};
 }
@@ -55,29 +55,33 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessEvent(const PfoLi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessNeutrino(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArInteractionValidationInfo> &)
 {
     return {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessPrimary(const ParticleFlowObject *const pPfo, const PfoList &pfoList,
-    const MCParticle *const pMcParticle, const MCParticleList *const mcParticleList)
+std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessPrimary(
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
 {
+    const MCParticle *const pMcParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
+
     if (m_trainingSetMode)
-        return this->ProduceTrainingRecords(pPfo, pfoList, pMcParticle, mcParticleList);
+        return this->ProduceTrainingRecords(pPfo, pfoList, pMcParticle);
 
     return {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessCosmicRay(const ParticleFlowObject *const pPfo, const PfoList &pfoList,
-    const MCParticle *const pMcParticle, const MCParticleList *const mcParticleList)
+std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessCosmicRay(
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
 {
+    const MCParticle *const pMcParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
+
     if (m_trainingSetMode)
-        return this->ProduceTrainingRecords(pPfo, pfoList, pMcParticle, mcParticleList);
+        return this->ProduceTrainingRecords(pPfo, pfoList, pMcParticle);
 
     return {};
 }
@@ -151,7 +155,7 @@ std::tuple<float, float> EnergyEstimatorNtupleTool::GetPolarAnglesFromDirection(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
-    const ParticleFlowObject *const pPfo, const PfoList &, const MCParticle *const pMcParticle, const MCParticleList *const)
+    const ParticleFlowObject *const pPfo, const PfoList &, const MCParticle *const pMcParticle)
 {
     std::vector<LArNtupleRecord> records;
 
@@ -159,6 +163,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
     {
         LArNtupleRecord::RFloatVector dQdXVector, dXVector;
         LArNtupleRecord::RFloat       showerCharge(0.f);
+        LArNtupleRecord::RUInt        numHitsLostToErrors(0UL);
 
         for (const ParticleFlowObject *const pDownstreamPfo : this->GetAllDownstreamPfos(pPfo))
         {
@@ -201,6 +206,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
 
                 catch (...)
                 {
+                    numHitsLostToErrors += collectionPlaneHits.size();
                     continue;
                 }
             }
@@ -208,7 +214,8 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
 
         if (dQdXVector.size() != dXVector.size())
         {
-            std::cerr << "EnergyEstimatorNtupleTool: The size of the dQ/dx vector (" << dQdXVector.size() << ") did not match the size of the dx vector (" << dXVector.size() << ")" << std::endl;
+            std::cerr << "EnergyEstimatorNtupleTool: The size of the dQ/dx vector (" << dQdXVector.size()
+                      << ") did not match the size of the dx vector (" << dXVector.size() << ")" << std::endl;
             throw STATUS_CODE_FAILURE;
         }
 
@@ -216,6 +223,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
         records.emplace_back("dX", dXVector);
         records.emplace_back("ShowerCharge", showerCharge);
         records.emplace_back("NumVectorEntries", static_cast<LArNtupleRecord::RUInt>(dQdXVector.size()));
+        records.emplace_back("NumHitsLostToFittingErrors", numHitsLostToErrors);
     }
 
     else
@@ -224,6 +232,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
         records.emplace_back("dX", LArNtupleRecord::RFloatVector());
         records.emplace_back("ShowerCharge", static_cast<LArNtupleRecord::RFloat>(0.f));
         records.emplace_back("NumVectorEntries", static_cast<LArNtupleRecord::RUInt>(0U));
+        records.emplace_back("NumHitsLostToFittingErrors", static_cast<LArNtupleRecord::RUInt>(0U));
     }
 
     return records;
@@ -258,12 +267,16 @@ std::tuple<FloatVector, FloatVector, float> EnergyEstimatorNtupleTool::SelectNoi
     while (changeMade)
     {
         pdQdXFunction = this->FitdQdXFunction(caloHitList, hitInfoMap, iteration++);
-        changeMade    = this->IdentifyNoisyHits(caloHitList, hitInfoMap, pdQdXFunction);
+        changeMade    = this->IdentifyNoisyHits(caloHitList, hitInfoMap, pdQdXFunction, false);
 
         if (this->GetNumGoodHits(hitInfoMap) < 5UL)
             return {FloatVector{}, FloatVector{}, this->SumNoisyCharge(hitInfoMap, true)};
     }
 
+    if (!pdQdXFunction)
+        return {FloatVector{}, FloatVector{}, this->SumNoisyCharge(hitInfoMap, true)};
+
+    this->IdentifyNoisyHits(caloHitList, hitInfoMap, pdQdXFunction, true);
     this->IdentifyNoisyUnprojectedHits(hitInfoMap);
 
     const auto [liveLength, deadLength, minCoordinate, maxCoordinate] = this->GetGapParameters(trackFit, caloHitList, hitInfoMap);
@@ -274,8 +287,8 @@ std::tuple<FloatVector, FloatVector, float> EnergyEstimatorNtupleTool::SelectNoi
         throw STATUS_CODE_FAILURE;
     }
 
-    float scaledAdjustedNoisyCharge = this->SumNoisyCharge(hitInfoMap, false) * (liveLength + deadLength) / liveLength;
-
+    const bool  ignoreTrackContributionsFromNoisyHits(false);
+    float       scaledAdjustedNoisyCharge(0.f);
     FloatVector dQdXVector, dXVector;
     std::size_t numNonNoisyHits(0UL);
 
@@ -283,20 +296,35 @@ std::tuple<FloatVector, FloatVector, float> EnergyEstimatorNtupleTool::SelectNoi
     {
         HitCalorimetryInfo &hitInfo = *mapPair.second;
 
-        if (hitInfo.m_isNoise)
-            continue;
-
-        ++numNonNoisyHits;
-
         if (!hitInfo.m_projectionSuccessful)
         {
             scaledAdjustedNoisyCharge += hitInfo.m_dQ;
             continue;
         }
 
-        dQdXVector.push_back(hitInfo.m_dQ / hitInfo.m_dX);
-        dXVector.push_back(hitInfo.m_dX);
+        if (hitInfo.m_isNoise)
+        {
+            if (ignoreTrackContributionsFromNoisyHits)
+                scaledAdjustedNoisyCharge += hitInfo.m_dQ;
+
+            else
+            {
+                const float fitteddQdX = pdQdXFunction->Eval(hitInfo.m_coordinate);
+                dQdXVector.push_back(fitteddQdX);
+                dXVector.push_back(hitInfo.m_dX);
+                scaledAdjustedNoisyCharge += std::max(hitInfo.m_dQ - fitteddQdX * hitInfo.m_dX, 0.f);
+            }
+        }
+
+        else
+        {
+            ++numNonNoisyHits;
+            dQdXVector.push_back(hitInfo.m_dQ / hitInfo.m_dX);
+            dXVector.push_back(hitInfo.m_dX);
+        }
     }
+
+    scaledAdjustedNoisyCharge *= (liveLength + deadLength) / liveLength;
 
     if (pdQdXFunction && numNonNoisyHits > 0UL)
     {
@@ -606,7 +634,8 @@ TF1 *EnergyEstimatorNtupleTool::FitHitGenerationFunction(const CaloHitList &calo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool EnergyEstimatorNtupleTool::IdentifyNoisyHits(const CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap, TF1 *pdQdXFunction) const
+bool EnergyEstimatorNtupleTool::IdentifyNoisyHits(
+    const CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap, TF1 *pdQdXFunction, const bool resetMode) const
 {
     const float stdev            = this->GetFitStandardDeviation(caloHitList, hitInfoMap, pdQdXFunction);
     bool        somethingChanged = false;
@@ -615,7 +644,7 @@ bool EnergyEstimatorNtupleTool::IdentifyNoisyHits(const CaloHitList &caloHitList
     {
         HitCalorimetryInfo &hitInfo = *mapPair.second;
 
-        if (!hitInfo.m_projectionSuccessful || hitInfo.m_isNoise)
+        if (!hitInfo.m_projectionSuccessful || (!resetMode && hitInfo.m_isNoise))
             continue;
 
         const float trueEnergy = hitInfo.m_dQ / hitInfo.m_dX;
@@ -623,8 +652,18 @@ bool EnergyEstimatorNtupleTool::IdentifyNoisyHits(const CaloHitList &caloHitList
 
         if (trueEnergy - fitEnergy > 3.f * stdev)
         {
+            if (!hitInfo.m_isNoise)
+                somethingChanged = true;
+
             hitInfo.m_isNoise = true;
-            somethingChanged  = true;
+        }
+
+        else
+        {
+            if (hitInfo.m_isNoise)
+                somethingChanged = true;
+
+            hitInfo.m_isNoise = false;
         }
     }
 
@@ -656,13 +695,13 @@ TF1 *EnergyEstimatorNtupleTool::FitdQdXFunction(const CaloHitList &caloHitList, 
     pFunctionForwards->SetParLimits(2, 0.f, 1000.f);
 
     TF1 *pFunctionBackwards =
-        this->GetTmpRegistry()->CreateWithUniqueName<TF1>("fdQdX", "x > [1] ? min([0]/(1.0 + x / [1]) + [2], 1000.0) : 0.0", 0.f, 1000.f);
+        this->GetTmpRegistry()->CreateWithUniqueName<TF1>("fdQdX", "x > -[1] ? min([0]/([1] + x) + [2], 1000.0) : 0.0", 0.f, 1000.f);
 
-    pFunctionBackwards->SetParameter(0, 1250.f);
-    pFunctionBackwards->SetParLimits(0, 0.f, 2500.f);
+    pFunctionBackwards->SetParameter(0, 7500.f);
+    pFunctionBackwards->SetParLimits(0, 0.f, 15000.f);
 
     pFunctionBackwards->SetParameter(1, 6.f);
-    pFunctionBackwards->SetParLimits(1, 0.3f, 15.f);
+    pFunctionBackwards->SetParLimits(1, -20.f, 20.f);
 
     pFunctionBackwards->SetParameter(2, 200.f);
     pFunctionBackwards->SetParLimits(2, 0.f, 1000.f);

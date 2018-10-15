@@ -26,7 +26,7 @@ StatusCode LeeAnalysisNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> LeeAnalysisNtupleTool::ProcessEvent(const PfoList &, const MCParticleList *const)
+std::vector<LArNtupleRecord> LeeAnalysisNtupleTool::ProcessEvent(const PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
     return {};
 }
@@ -34,7 +34,7 @@ std::vector<LArNtupleRecord> LeeAnalysisNtupleTool::ProcessEvent(const PfoList &
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> LeeAnalysisNtupleTool::ProcessNeutrino(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArInteractionValidationInfo> &)
 {
     return {};
 }
@@ -42,7 +42,7 @@ std::vector<LArNtupleRecord> LeeAnalysisNtupleTool::ProcessNeutrino(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> LeeAnalysisNtupleTool::ProcessPrimary(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     return {};
 }
@@ -50,7 +50,7 @@ std::vector<LArNtupleRecord> LeeAnalysisNtupleTool::ProcessPrimary(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> LeeAnalysisNtupleTool::ProcessCosmicRay(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     return {};
 }

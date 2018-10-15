@@ -32,7 +32,7 @@ StatusCode CommonNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> CommonNtupleTool::ProcessEvent(const PfoList &pfoList, const MCParticleList *const)
+std::vector<LArNtupleRecord> CommonNtupleTool::ProcessEvent(const PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
     std::vector<LArNtupleRecord> records;
     std::size_t                  numPrimaryTracks(0UL), numPrimaryShowers(0UL);
@@ -59,7 +59,7 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProcessEvent(const PfoList &pfoLi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> CommonNtupleTool::ProcessNeutrino(
-    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArInteractionValidationInfo> &)
 {
     std::vector<LArNtupleRecord> records;
 
@@ -72,7 +72,7 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProcessNeutrino(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> CommonNtupleTool::ProcessPrimary(
-    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     std::vector<LArNtupleRecord> records;
 
@@ -88,7 +88,7 @@ std::vector<LArNtupleRecord> CommonNtupleTool::ProcessPrimary(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> CommonNtupleTool::ProcessCosmicRay(
-    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const, const MCParticleList *const)
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     std::vector<LArNtupleRecord> records;
 

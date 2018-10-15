@@ -17,7 +17,6 @@ TestNtupleTool::TestNtupleTool() :
     NtupleVariableBaseTool(),
     m_eventCounter(0),
     m_neutrinoCounter(0),
-    m_pfoCounter(0),
     m_cosmicCounter(0),
     m_primaryCounter(0)
 {
@@ -32,11 +31,10 @@ StatusCode TestNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> TestNtupleTool::ProcessEvent(const pandora::PfoList &, const pandora::MCParticleList *const)
+std::vector<LArNtupleRecord> TestNtupleTool::ProcessEvent(const pandora::PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
     ++m_eventCounter;
     m_neutrinoCounter = 0;
-    m_pfoCounter      = 0;
     m_cosmicCounter   = 0;
     m_primaryCounter  = 0;
     return GetTestRecords(m_eventCounter - 1);
@@ -45,7 +43,7 @@ std::vector<LArNtupleRecord> TestNtupleTool::ProcessEvent(const pandora::PfoList
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> TestNtupleTool::ProcessNeutrino(
-    const ParticleFlowObject *const, const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
+    const ParticleFlowObject *const, const pandora::PfoList &, const std::shared_ptr<LArInteractionValidationInfo> &)
 {
     return GetTestRecords(m_neutrinoCounter++);
 }
@@ -53,23 +51,15 @@ std::vector<LArNtupleRecord> TestNtupleTool::ProcessNeutrino(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> TestNtupleTool::ProcessPrimary(
-    const ParticleFlowObject *const, const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
+    const ParticleFlowObject *const, const pandora::PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     return GetTestRecords(m_primaryCounter++);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> TestNtupleTool::ProcessParticle(
-    const ParticleFlowObject *const, const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
-{
-    return GetTestRecords(m_pfoCounter++);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 std::vector<LArNtupleRecord> TestNtupleTool::ProcessCosmicRay(
-    const ParticleFlowObject *const, const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
+    const ParticleFlowObject *const, const pandora::PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     return GetTestRecords(m_cosmicCounter++);
 }

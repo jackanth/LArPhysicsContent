@@ -62,9 +62,9 @@ public:
     LArNtuple &operator=(LArNtuple &&) = default;
 
     /**
-     * @brief  Default virtual destructor
+     * @brief  Default destructor
      */
-    virtual ~LArNtuple() = default;
+    ~LArNtuple() = default;
 
 protected:
     /**
@@ -75,50 +75,6 @@ protected:
      *  @param  treeTitle the TTree title
      */
     LArNtuple(const std::string &filePath, const std::string &treeName, const std::string &treeTitle, const bool appendMode);
-
-    /**
-     *  @brief  Get an MC particle
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return address of the corresponding MCParticle, if one can be found
-     */
-    virtual const pandora::MCParticle *GetMCParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
-
-    /**
-     *  @brief  Get an MC cosmic
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return address of the corresponding MCParticle, if one can be found
-     */
-    virtual const pandora::MCParticle *GetMCCosmic(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
-
-    /**
-     *  @brief  Get an MC primary
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return address of the corresponding MCParticle, if one can be found
-     */
-    virtual const pandora::MCParticle *GetMCPrimary(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
-
-    /**
-     *  @brief  Get an MC neutrino
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return address of the corresponding MCParticle, if one can be found
-     */
-    virtual const pandora::MCParticle *GetMCNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
 
     friend class AnalysisNtupleAlgorithm;
     friend class NtupleVariableBaseTool;
@@ -363,56 +319,6 @@ private:
     void InstantiateTTree(const bool appendMode, const std::string &treeName, const std::string &treeTitle, const std::string &filePath);
 
     /**
-     *  @brief  Get an MC particle (wrapper method)
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return address of the corresponding MCParticle, if one can be found
-     */
-    const pandora::MCParticle *GetMCParticleWrapper(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
-
-    /**
-     *  @brief  Get an MC cosmic (wrapper method)
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return address of the corresponding MCParticle, if one can be found
-     */
-    const pandora::MCParticle *GetMCCosmicWrapper(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
-
-    /**
-     *  @brief  Get an MC primary (wrapper method)
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return address of the corresponding MCParticle, if one can be found
-     */
-    const pandora::MCParticle *GetMCPrimaryWrapper(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
-
-    /**
-     *  @brief  Get an MC neutrino (wrapper method)
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return address of the corresponding MCParticle, if one can be found
-     */
-    const pandora::MCParticle *GetMCNeutrinoWrapper(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList);
-
-    /**
-     *  @brief  Get the MCParticle weight map for a set of CaloHits
-     *
-     *  @param  caloHitList the list of CaloHits
-     *  @param  mapFn the MC particle mapping function
-     *
-     *  @return the MCParticle weight map
-     */
-    pandora::MCParticleWeightMap GetMCParticleWeightMap(const pandora::CaloHitList &caloHitList, const MCParticleMapFn &mapFn) const;
-
-    /**
      *  @brief  Get all hits downstream of a PFO (implementation method)
      *
      *  @param  pPfo address of the PFO
@@ -423,16 +329,6 @@ private:
      */
     const pandora::CaloHitList &GetAllDownstreamHitsImpl(
         const pandora::ParticleFlowObject *const pPfo, const pandora::HitType hitType, PfoCache<pandora::CaloHitList> &cache) const;
-
-    /**
-     *  @brief  Get an MC particle (implementation method)
-     *
-     *  @param  caloHitList the CaloHit list
-     *  @param  mapFn the MC particle mapping function
-     *
-     *  @return address of the corresponding MCParticle, if one can be found
-     */
-    const pandora::MCParticle *GetMCParticleImpl(const pandora::CaloHitList &caloHitList, const MCParticleMapFn &mapFn) const;
 
     /**
      *  @brief  Get all 2D hits of a PFO
@@ -547,22 +443,6 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::MCParticle *LArNtuple::GetMCCosmic(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const)
-{
-    const pandora::CaloHitList caloHitList = this->GetAllDownstreamTwoDHits(pPfo);
-    return this->GetMCParticleImpl(caloHitList, lar_content::LArMCParticleHelper::GetPrimaryMCParticle);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::MCParticle *LArNtuple::GetMCPrimary(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const)
-{
-    const pandora::CaloHitList caloHitList = this->GetAllDownstreamTwoDHits(pPfo);
-    return this->GetMCParticleImpl(caloHitList, lar_content::LArMCParticleHelper::GetPrimaryMCParticle);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::CaloHitList &LArNtuple::GetAllDownstreamThreeDHits(const pandora::ParticleFlowObject *const pPfo) const
@@ -699,41 +579,6 @@ void LArNtuple::PushToBranch(const std::string &branchName, LArBranchPlaceholder
         branchPlaceholder.CacheElement(&m_cache.back());
         this->AddBranch<TOBJ_D>(branchName, cachedObject, splitMode);
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::MCParticle *LArNtuple::GetMCParticleWrapper(
-    const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList)
-{
-    return this->CacheWrapper<const pandora::MCParticle *>(
-        pPfo, m_cacheMCParticles, [&]() { return this->GetMCParticle(pPfo, pMCParticleList); });
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::MCParticle *LArNtuple::GetMCCosmicWrapper(
-    const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList)
-{
-    return this->CacheWrapper<const pandora::MCParticle *>(pPfo, m_cacheMCCosmics, [&]() { return this->GetMCCosmic(pPfo, pMCParticleList); });
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::MCParticle *LArNtuple::GetMCPrimaryWrapper(
-    const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList)
-{
-    return this->CacheWrapper<const pandora::MCParticle *>(
-        pPfo, m_cacheMCPrimaries, [&]() { return this->GetMCPrimary(pPfo, pMCParticleList); });
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::MCParticle *LArNtuple::GetMCNeutrinoWrapper(
-    const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList)
-{
-    return this->CacheWrapper<const pandora::MCParticle *>(
-        pPfo, m_cacheMCNeutrinos, [&]() { return this->GetMCNeutrino(pPfo, pMCParticleList); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

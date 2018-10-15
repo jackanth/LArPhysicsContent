@@ -13,6 +13,7 @@
 #include "larphysicscontent/LArHelpers/LArAnalysisHelper.h"
 #include "larphysicscontent/LArHelpers/LArNtupleHelper.h"
 #include "larphysicscontent/LArNtuple/LArBranchPlaceholder.h"
+#include "larphysicscontent/LArObjects/LArInteractionValidationInfo.h"
 #include "larphysicscontent/LArObjects/LArRootRegistry.h"
 
 #include "Api/PandoraContentApi.h"
@@ -79,73 +80,58 @@ protected:
      *  @brief  Prepare an event - to be overriden
      *
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticleList optional pointer to the MC particle list
+     *  @param  eventValidationInfo vector of shared pointers to the interaction validation info objects
      *
      *  @return the event records
      */
-    virtual void PrepareEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
+    virtual void PrepareEvent(const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo);
 
     /**
      *  @brief  Process an event - to be overriden
      *
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticleList optional pointer to the MC particle list
+     *  @param  eventValidationInfo vector of shared pointers to the interaction validation info objects
      *
      *  @return the event records
      */
-    virtual std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList);
-
-    /**
-     *  @brief  Process any particle (including non-primary daughters) - to be overriden
-     *
-     *  @param  pPfo optional address of the PFO
-     *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticle optional pointer to the corresponding MC particle
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return the particle records
-     */
-    virtual std::vector<LArNtupleRecord> ProcessParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
+    virtual std::vector<LArNtupleRecord> ProcessEvent(
+        const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo);
 
     /**
      *  @brief  Process a neutrino - to be overriden
      *
      *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticle optional pointer to the corresponding MC particle
-     *  @param  pMCParticleList optional pointer to the MC particle list
+     *  @param  spInteractionInfo shared plinter to the interaction validation info object
      *
      *  @return the neutrino records
      */
     virtual std::vector<LArNtupleRecord> ProcessNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
+        const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo);
 
     /**
      *  @brief  Process a primary neutrino daughter - to be overriden
      *
      *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticle optional pointer to the corresponding MC particle
-     *  @param  pMCParticleList optional pointer to the MC particle list
+     *  @param  spMcTarget shared pointer to the MC target
      *
      *  @return the primary records
      */
     virtual std::vector<LArNtupleRecord> ProcessPrimary(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget);
 
     /**
      *  @brief  Process a cosmic ray - to be overriden
      *
      *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticle optional pointer to the corresponding MC particle
-     *  @param  pMCParticleList optional pointer to the MC particle list
+     *  @param  spMcTarget shared pointer to the MC target
      *
      *  @return the cosmic ray records
      */
     virtual std::vector<LArNtupleRecord> ProcessCosmicRay(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget);
 
     /**
      *  @brief  Get all the downstream 3D hits of a PFO, including from the PFO itself (from the cache if possible)
@@ -350,54 +336,40 @@ protected:
 private:
     using Processor = std::function<std::vector<LArNtupleRecord>()>; ///< Alias for a function to process a PFO
 
-    std::shared_ptr<LArNtuple> m_spNtuple;               ///< Shared pointer to the ntuple
-    std::string                m_eventPrefix;            ///< The event prefix
-    std::string                m_neutrinoPrefix;         ///< The neutrino prefix
-    std::string                m_primaryPrefix;          ///< The primary prefix
-    std::string                m_particlePrefix;         ///< The particle prefix
-    std::string                m_cosmicPrefix;           ///< The cosmic prefix
-    pandora::CartesianVector   m_minFiducialCoordinates; ///< The minimum fiducial coordinates
-    pandora::CartesianVector   m_maxFiducialCoordinates; ///< The maximum fiducial coordinates
-    const pandora::Algorithm * m_pAlgorithm;             ///< The address of the calling algorithm
-    std::shared_ptr<LArRootRegistry>                m_spPlotsRegistry;        ///< The plots ROOT registry
-    std::shared_ptr<LArRootRegistry>                m_spTmpRegistry;          ///< The tmp ROOT registry
-    bool                       m_isSetup;                ///< Whether the tool has been set up.
+    std::shared_ptr<LArNtuple>       m_spNtuple;               ///< Shared pointer to the ntuple
+    std::string                      m_eventPrefix;            ///< The event prefix
+    std::string                      m_neutrinoPrefix;         ///< The neutrino prefix
+    std::string                      m_primaryPrefix;          ///< The primary prefix
+    std::string                      m_particlePrefix;         ///< The particle prefix
+    std::string                      m_cosmicPrefix;           ///< The cosmic prefix
+    pandora::CartesianVector         m_minFiducialCoordinates; ///< The minimum fiducial coordinates
+    pandora::CartesianVector         m_maxFiducialCoordinates; ///< The maximum fiducial coordinates
+    const pandora::Algorithm *       m_pAlgorithm;             ///< The address of the calling algorithm
+    std::shared_ptr<LArRootRegistry> m_spPlotsRegistry;        ///< The plots ROOT registry
+    std::shared_ptr<LArRootRegistry> m_spTmpRegistry;          ///< The tmp ROOT registry
+    bool                             m_isSetup;                ///< Whether the tool has been set up.
 
     /**
      *  @brief  Prepare an event (wrapper method)
      *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticleList optional pointer to the MC particle list
+     *  @param  eventValidationInfo vector of shared pointers to the interaction validation info objects
      */
     void PrepareEventWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::PfoList &pfoList,
-        const pandora::MCParticleList *const pMCParticleList);
+        const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo);
 
     /**
      *  @brief  Process an event (wrapper method)
      *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticleList optional pointer to the MC particle list
+     *  @param  eventValidationInfo vector of shared pointers to the interaction validation info objects
      *
      *  @return the event records
      */
     std::vector<LArNtupleRecord> ProcessEventWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::PfoList &pfoList,
-        const pandora::MCParticleList *const pMCParticleList);
-
-    /**
-     *  @brief  Process any particle (wrapper method)
-     *
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  pPfo address of the PFO
-     *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticle optional address of the MC particle
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return the particle records
-     */
-    std::vector<LArNtupleRecord> ProcessParticleWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
-        const pandora::PfoList &pfoList, const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
+        const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo);
 
     /**
      *  @brief  Process a neutrino (wrapper method)
@@ -405,13 +377,12 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pPfo address of the PFO
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticle optional address of the MC particle
-     *  @param  pMCParticleList optional pointer to the MC particle list
+     *  @param  spInteractionInfo shared pointer to the interaction validation info object
      *
      *  @return the neutrino records
      */
     std::vector<LArNtupleRecord> ProcessNeutrinoWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
-        const pandora::PfoList &pfoList, const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
+        const pandora::PfoList &pfoList, const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo);
 
     /**
      *  @brief  Process a primary neutrino daughter (wrapper method)
@@ -419,13 +390,12 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticle optional address of the MC particle
-     *  @param  pMCParticleList optional pointer to the MC particle list
+     *  @param  spMcTarget shared pointer to the MC target
      *
      *  @return the primary records
      */
     std::vector<LArNtupleRecord> ProcessPrimaryWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
-        const pandora::PfoList &pfoList, const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
+        const pandora::PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget);
 
     /**
      *  @brief  Process a cosmic ray (wrapper method)
@@ -433,13 +403,12 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
-     *  @param  pMCParticle optional address of the MC particle
-     *  @param  pMCParticleList optional pointer to the MC particle list
+     *  @param  spMcTarget shared pointer to the MC target
      *
      *  @return the cosmic ray records
      */
-    std::vector<LArNtupleRecord> ProcessCosmicRayWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
-        const pandora::PfoList &pfoList, const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList);
+    std::vector<LArNtupleRecord> ProcessCosmicRayWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
+        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget);
 
     /**
      *  @brief  Implementation of PFO processing wrapper
@@ -447,13 +416,13 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  prefix the prefix to apply to branch names
      *  @param  pPfo optional address of the PFO
-     *  @param  pMCParticle optional address of the MC particle
+     *  @param  pMcParticle optional address of the MC particle
      *  @param  processor the PFO processor method
      *
      *  @return the records
      */
     std::vector<LArNtupleRecord> ProcessImpl(const AnalysisNtupleAlgorithm *const pAlgorithm, const std::string &prefix,
-        const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticle *const pMCParticle, const Processor &processor);
+        const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticle *const pMcParticle, const Processor &processor);
 
     /**
      *  @brief  Set the ntuple shared pointer
@@ -465,18 +434,9 @@ private:
      *  @param  spPlotsRegistry shared pointer to the plots ROOT registry
      *  @param  spTmpRegistry shared pointer to the tmp ROOT registry
      */
-    void Setup(std::shared_ptr<LArNtuple> spNtuple, const pandora::Algorithm *const pAlgorithm, pandora::CartesianVector minFiducialCoordinates,
-        pandora::CartesianVector maxFiducialCoordinates, std::shared_ptr<LArRootRegistry> spPlotsRegistry, std::shared_ptr<LArRootRegistry> spTmpRegistry);
-
-    /**
-     *  @brief  Get an MC particle
-     *
-     *  @param  pPfo address of the PFO
-     *  @param  pMCParticleList optional pointer to the MC particle list
-     *
-     *  @return address of the corresponding MCParticle, if one can be found
-     */
-    const pandora::MCParticle *GetMCParticle(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList) const;
+    void Setup(std::shared_ptr<LArNtuple> spNtuple, const pandora::Algorithm *const pAlgorithm,
+        pandora::CartesianVector minFiducialCoordinates, pandora::CartesianVector maxFiducialCoordinates,
+        std::shared_ptr<LArRootRegistry> spPlotsRegistry, std::shared_ptr<LArRootRegistry> spTmpRegistry);
 
     /**
      *  @brief  Get a scalar record
@@ -522,45 +482,38 @@ inline pandora::StatusCode NtupleVariableBaseTool::ReadSettings(const pandora::T
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void NtupleVariableBaseTool::PrepareEvent(const pandora::PfoList &, const pandora::MCParticleList *const)
+inline void NtupleVariableBaseTool::PrepareEvent(const pandora::PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEvent(const pandora::PfoList &, const pandora::MCParticleList *const)
-{
-    return {};
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessParticle(const pandora::ParticleFlowObject *const,
-    const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
+inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEvent(
+    const pandora::PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
     return {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessNeutrino(const pandora::ParticleFlowObject *const,
-    const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
+inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessNeutrino(
+    const pandora::ParticleFlowObject *const, const pandora::PfoList &, const std::shared_ptr<LArInteractionValidationInfo> &)
 {
     return {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessPrimary(const pandora::ParticleFlowObject *const,
-    const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
+inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessPrimary(
+    const pandora::ParticleFlowObject *const, const pandora::PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     return {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessCosmicRay(const pandora::ParticleFlowObject *const,
-    const pandora::PfoList &, const pandora::MCParticle *const, const pandora::MCParticleList *const)
+inline std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessCosmicRay(
+    const pandora::ParticleFlowObject *const, const pandora::PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &)
 {
     return {};
 }

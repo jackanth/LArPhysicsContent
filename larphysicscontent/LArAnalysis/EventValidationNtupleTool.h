@@ -9,6 +9,9 @@
 #define LAR_EVENT_VALIDATION_NTUPLE_TOOL_H 1
 
 #include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+
+#include <map>
 
 namespace lar_physics_content
 {
@@ -49,18 +52,22 @@ public:
     ~EventValidationNtupleTool() = default;
 
 protected:
-    std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) override;
+    void PrepareEvent(const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo) override;
+
+    std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo) override;
 
     std::vector<LArNtupleRecord> ProcessNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo) override;
 
     std::vector<LArNtupleRecord> ProcessCosmicRay(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
     std::vector<LArNtupleRecord> ProcessPrimary(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
 private:
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, unsigned int> PfoToIdMap;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 

@@ -152,40 +152,6 @@ LArNtuple::LArNtuple(const std::string &filePath, const std::string &treeName, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const MCParticle *LArNtuple::GetMCParticle(const ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList)
-{
-    if (LArNtupleHelper::GetParticleClass(pPfo) == LArNtupleHelper::PARTICLE_CLASS::NEUTRINO)
-        return this->GetMCNeutrino(pPfo, pMCParticleList);
-
-    const CaloHitList caloHitList = this->GetAllTwoDHits(pPfo);
-    return this->GetMCParticleImpl(caloHitList, [](const MCParticle *const pMCParticle) { return pMCParticle; });
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *LArNtuple::GetMCNeutrino(const ParticleFlowObject *const pPfo, const MCParticleList *const pMCParticleList)
-{
-    // If we only have 0 or 1 MC neutrinos, then the answer is obvious
-    MCParticleVector mcNeutrinoVector;
-    LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
-
-    if (mcNeutrinoVector.empty())
-        return nullptr;
-
-    if (mcNeutrinoVector.size() == 1UL)
-        return mcNeutrinoVector.front();
-
-    // We have multiple MC neutrinos, so find the most fitting one
-    const CaloHitList caloHitList = this->GetAllDownstreamTwoDHits(pPfo);
-
-    return this->GetMCParticleImpl(caloHitList, [](const MCParticle *const pMCParticle) {
-        const MCParticle *const pParent = LArMCParticleHelper::GetParentMCParticle(pMCParticle);
-        return LArMCParticleHelper::IsNeutrino(pParent) ? pParent : nullptr; // this means 'is beam neutrino?'
-    });
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void LArNtuple::Reset()
 {
     // Reset the ntuple state to allow recovery from internal errors
@@ -403,7 +369,7 @@ void LArNtuple::InstantiateTTree(const bool appendMode, const std::string &treeN
 {
     try
     {
-        m_spRegistry->DoAsRegistry([&](){
+        m_spRegistry->DoAsRegistry([&]() {
             // For our branch mechanics to work, we need to know if the TTree exists and whether it's empty or not
             if (appendMode && m_pOutputTFile->GetListOfKeys()->Contains(treeName.c_str()))
             {
@@ -434,51 +400,6 @@ void LArNtuple::InstantiateTTree(const bool appendMode, const std::string &treeN
                   << filePath << std::endl;
         throw STATUS_CODE_FAILURE;
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-MCParticleWeightMap LArNtuple::GetMCParticleWeightMap(const CaloHitList &caloHitList, const MCParticleMapFn &mapFn) const
-{
-    MCParticleWeightMap mcParticleWeightMap;
-
-    for (const CaloHit *const pCaloHit : caloHitList)
-    {
-        // Synthesize the weights from every hit into the main map
-        const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
-        MCParticleVector           mcParticleVector;
-
-        for (const MCParticleWeightMap::value_type &mapEntry : hitMCParticleWeightMap)
-            mcParticleVector.push_back(mapEntry.first);
-
-        std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
-
-        for (const MCParticle *const pMCParticle : mcParticleVector)
-        {
-            try
-            {
-                const MCParticle *const pMCMappedParticle = mapFn(pMCParticle);
-
-                if (!pMCMappedParticle)
-                    continue;
-
-                const auto findIter = mcParticleWeightMap.find(pMCMappedParticle);
-
-                if (findIter == mcParticleWeightMap.end())
-                    mcParticleWeightMap.emplace(pMCMappedParticle, hitMCParticleWeightMap.at(pMCParticle));
-
-                else
-                    findIter->second += hitMCParticleWeightMap.at(pMCParticle);
-            }
-
-            catch (...)
-            {
-                continue;
-            }
-        }
-    }
-
-    return mcParticleWeightMap;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -521,36 +442,6 @@ const CaloHitList &LArNtuple::GetAllDownstreamHitsImpl(const ParticleFlowObject 
 
         return caloHitList;
     });
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *LArNtuple::GetMCParticleImpl(const CaloHitList &caloHitList, const MCParticleMapFn &mapFn) const
-{
-    const MCParticleWeightMap mcParticleWeightMap = this->GetMCParticleWeightMap(caloHitList, mapFn);
-
-    float             bestWeight(0.f);
-    const MCParticle *pBestMCParticle(nullptr);
-
-    MCParticleVector mcParticleVector;
-
-    for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
-        mcParticleVector.push_back(mapEntry.first);
-
-    std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
-
-    for (const MCParticle *const pCurrentMCParticle : mcParticleVector)
-    {
-        const float currentWeight(mcParticleWeightMap.at(pCurrentMCParticle));
-
-        if (currentWeight > bestWeight)
-        {
-            pBestMCParticle = pCurrentMCParticle;
-            bestWeight      = currentWeight;
-        }
-    }
-
-    return pBestMCParticle; // can be nullptr
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

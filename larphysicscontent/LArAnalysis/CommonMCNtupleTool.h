@@ -49,18 +49,19 @@ public:
     ~CommonMCNtupleTool() = default;
 
 protected:
-    void PrepareEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) override;
+    void PrepareEvent(const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo) override;
 
-    std::vector<LArNtupleRecord> ProcessEvent(const pandora::PfoList &pfoList, const pandora::MCParticleList *const pMCParticleList) override;
+    std::vector<LArNtupleRecord> ProcessEvent(
+        const pandora::PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo) override;
 
     std::vector<LArNtupleRecord> ProcessNeutrino(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo) override;
 
     std::vector<LArNtupleRecord> ProcessCosmicRay(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
     std::vector<LArNtupleRecord> ProcessPrimary(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) override;
+        const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) override;
 
 private:
     using HitSelector = std::function<bool(const pandora::CaloHit *const)>; ///< Alias for a hit selector function
@@ -77,12 +78,11 @@ private:
      *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
      *  @param  pMCParticle optional address of the MC particle
-     *  @param  pMCParticleList optional list of all MC particles
      *
      *  @return the records
      */
-    std::vector<LArNtupleRecord> ProduceGenericPfoMCRecords(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) const;
+    std::vector<LArNtupleRecord> ProduceGenericPfoMCRecords(
+        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const pandora::MCParticle *const pMCParticle) const;
 
     /**
      *  @brief  Produce MC records generic to every considered particle class except neutrinos
@@ -90,12 +90,11 @@ private:
      *  @param  pPfo optional address of the PFO
      *  @param  pfoList the list of all PFOs
      *  @param  pMCParticle optional address of the MC particle
-     *  @param  pMCParticleList optional list of all MC particles
      *
      *  @return the records
      */
-    std::vector<LArNtupleRecord> ProduceNonNeutrinoPfoMCRecords(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList,
-        const pandora::MCParticle *const pMCParticle, const pandora::MCParticleList *const pMCParticleList) const;
+    std::vector<LArNtupleRecord> ProduceNonNeutrinoPfoMCRecords(
+        const pandora::ParticleFlowObject *const pPfo, const pandora::PfoList &pfoList, const pandora::MCParticle *const pMCParticle) const;
 
     /**
      *  @brief  Get the kinetic-energy-weighted contained PFO fraction

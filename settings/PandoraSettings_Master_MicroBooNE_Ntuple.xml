@@ -46,7 +46,7 @@
         <VisualizeOverallRecoStatus>false</VisualizeOverallRecoStatus>
     </algorithm>
 
-    <algorithm type = "LArEventValidation">
+    <!--algorithm type = "LArEventValidation">
         <CaloHitListName>CaloHitList2D</CaloHitListName>
         <MCParticleListName>Input</MCParticleListName>
         <PfoListName>RecreatedPfos</PfoListName>
@@ -56,11 +56,12 @@
         <WriteToTree>false</WriteToTree>
         <OutputTree>Validation</OutputTree>
         <OutputFile>Validation.root</OutputFile>
-    </algorithm>
+    </algorithm-->
 
     <algorithm type = "LArAnalysisNtuple">
         <PfoListName>RecreatedPfos</PfoListName>
         <MCParticleListName>Input</MCParticleListName>
+        <CaloHitListName>CaloHitList2D</CaloHitListName>
         <NtupleOutputFile>PandoraNtuple.root</NtupleOutputFile>
         <NtupleTreeName>PandoraNtuple</NtupleTreeName>
         <NtupleTreeTitle>Pandora Ntuple</NtupleTreeTitle>

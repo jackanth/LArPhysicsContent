@@ -131,8 +131,8 @@ const LArNtupleHelper::TrackFitSharedPtr &NtupleVariableBaseTool::GetTrackFit(co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NtupleVariableBaseTool::PrepareEventWrapper(
-    const AnalysisNtupleAlgorithm *const pAlgorithm, const PfoList &pfoList, const MCParticleList *const pMCParticleList)
+void NtupleVariableBaseTool::PrepareEventWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm, const PfoList &pfoList,
+    const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo)
 {
     if (!m_isSetup)
     {
@@ -143,18 +143,18 @@ void NtupleVariableBaseTool::PrepareEventWrapper(
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    this->PrepareEvent(pfoList, pMCParticleList);
+    this->PrepareEvent(pfoList, eventValidationInfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEventWrapper(
-    const AnalysisNtupleAlgorithm *const pAlgorithm, const PfoList &pfoList, const MCParticleList *const pMCParticleList)
+std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEventWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
+    const PfoList &pfoList, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &eventValidationInfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    std::vector<LArNtupleRecord> records = this->ProcessEvent(pfoList, pMCParticleList);
+    std::vector<LArNtupleRecord> records = this->ProcessEvent(pfoList, eventValidationInfo);
 
     for (LArNtupleRecord &record : records)
         record.AddBranchNamePrefix(m_eventPrefix);
@@ -164,44 +164,35 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessEventWrapper(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessParticleWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
-{
-    return this->ProcessImpl(pAlgorithm, m_particlePrefix, pPfo, pMCParticle,
-        [&]() { return this->ProcessParticle(pPfo, pfoList, pMCParticle, pMCParticleList); });
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessNeutrinoWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo)
 {
-    return this->ProcessImpl(pAlgorithm, m_neutrinoPrefix, pPfo, pMCParticle,
-        [&]() { return this->ProcessNeutrino(pPfo, pfoList, pMCParticle, pMCParticleList); });
+    return this->ProcessImpl(pAlgorithm, m_neutrinoPrefix, pPfo, spInteractionInfo->GetMcNeutrino(),
+        [&]() { return this->ProcessNeutrino(pPfo, pfoList, spInteractionInfo); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessPrimaryWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
 {
     return this->ProcessImpl(
-        pAlgorithm, m_primaryPrefix, pPfo, pMCParticle, [&]() { return this->ProcessPrimary(pPfo, pfoList, pMCParticle, pMCParticleList); });
+        pAlgorithm, m_primaryPrefix, pPfo, spMcTarget->GetMCParticle(), [&]() { return this->ProcessPrimary(pPfo, pfoList, spMcTarget); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessCosmicRayWrapper(const AnalysisNtupleAlgorithm *const pAlgorithm,
-    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
 {
-    return this->ProcessImpl(pAlgorithm, m_cosmicPrefix, pPfo, pMCParticle,
-        [&]() { return this->ProcessCosmicRay(pPfo, pfoList, pMCParticle, pMCParticleList); });
+    return this->ProcessImpl(
+        pAlgorithm, m_cosmicPrefix, pPfo, spMcTarget->GetMCParticle(), [&]() { return this->ProcessCosmicRay(pPfo, pfoList, spMcTarget); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessImpl(const AnalysisNtupleAlgorithm *const pAlgorithm, const std::string &prefix,
-    const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle, const Processor &processor)
+    const ParticleFlowObject *const pPfo, const MCParticle *const pMcParticle, const Processor &processor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -216,8 +207,8 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessImpl(const AnalysisN
         if (pPfo)
             record.SetPfo(pPfo);
 
-        if (pMCParticle)
-            record.SetMCParticle(pMCParticle);
+        if (pMcParticle)
+            record.SetMCParticle(pMcParticle);
     }
 
     return records;
@@ -242,20 +233,6 @@ void NtupleVariableBaseTool::Setup(std::shared_ptr<LArNtuple> spNtuple, const pa
     m_spPlotsRegistry        = std::move(spPlotsRegistry);
     m_spTmpRegistry          = std::move(spTmpRegistry);
     m_isSetup                = true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const pandora::MCParticle *NtupleVariableBaseTool::GetMCParticle(
-    const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticleList *const pMCParticleList) const
-{
-    if (!m_spNtuple)
-    {
-        std::cerr << "NtupleVariableBaseTool: Could not call ntuple method because no ntuple was set" << std::endl;
-        throw STATUS_CODE_FAILURE;
-    }
-
-    return m_spNtuple->GetMCParticleWrapper(pPfo, pMCParticleList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

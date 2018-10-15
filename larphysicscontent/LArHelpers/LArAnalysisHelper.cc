@@ -87,7 +87,8 @@ StatusCode LArAnalysisHelper::ProjectTwoDPositionOntoTrackFit(const Pandora &pan
     const CartesianVector &twoDPosition, const HitType hitType, const bool linearlyProjectEnds, CartesianVector &threeDPosition, float &projectionError)
 {
     // Calculate the effective longitudinal coordinate along the 3D fit
-    const float longCoordScalingFactor = LArGeometryHelper::ProjectDirection(pandoraInstance, trackFit.GetAxisDirection(), hitType).GetDotProduct(trackFit.GetAxisDirection());
+    const float longCoordScalingFactor =
+        LArGeometryHelper::ProjectDirection(pandoraInstance, trackFit.GetAxisDirection(), hitType).GetDotProduct(trackFit.GetAxisDirection());
 
     if (longCoordScalingFactor <= std::numeric_limits<float>::epsilon())
         return STATUS_CODE_FAILURE;

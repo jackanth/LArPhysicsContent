@@ -32,7 +32,7 @@ StatusCode CommonMCNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CommonMCNtupleTool::PrepareEvent(const PfoList &, const MCParticleList *const)
+void CommonMCNtupleTool::PrepareEvent(const PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
     if ((PandoraContentApi::GetList(*this->GetAlgorithm(), m_twoDCaloHitListName, m_pTwoDCaloHitList) != STATUS_CODE_SUCCESS) || !m_pTwoDCaloHitList)
     {
@@ -43,19 +43,20 @@ void CommonMCNtupleTool::PrepareEvent(const PfoList &, const MCParticleList *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessEvent(const PfoList &, const MCParticleList *const)
+std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessEvent(const PfoList &, const std::vector<std::shared_ptr<LArInteractionValidationInfo>> &)
 {
     return {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessNeutrino(const ParticleFlowObject *const pPfo, const PfoList &pfoList,
-    const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
+std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessNeutrino(
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo)
 {
     std::vector<LArNtupleRecord> records;
 
-    std::vector<LArNtupleRecord> genericPfoMCRecords = this->ProduceGenericPfoMCRecords(pPfo, pfoList, pMCParticle, pMCParticleList);
+    const MCParticle *const      pMCParticle         = spInteractionInfo ? spInteractionInfo->GetMcNeutrino() : nullptr;
+    std::vector<LArNtupleRecord> genericPfoMCRecords = this->ProduceGenericPfoMCRecords(pPfo, pfoList, pMCParticle);
     records.insert(records.end(), std::make_move_iterator(genericPfoMCRecords.begin()), std::make_move_iterator(genericPfoMCRecords.end()));
 
     if (pMCParticle)
@@ -103,14 +104,16 @@ std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessNeutrino(const ParticleF
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessPrimary(const ParticleFlowObject *const pPfo, const PfoList &pfoList,
-    const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
+std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessPrimary(
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
 {
     std::vector<LArNtupleRecord> records;
-    std::vector<LArNtupleRecord> genericPfoMCRecords = this->ProduceGenericPfoMCRecords(pPfo, pfoList, pMCParticle, pMCParticleList);
+    const MCParticle *const      pMCParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
+
+    std::vector<LArNtupleRecord> genericPfoMCRecords = this->ProduceGenericPfoMCRecords(pPfo, pfoList, pMCParticle);
     records.insert(records.end(), std::make_move_iterator(genericPfoMCRecords.begin()), std::make_move_iterator(genericPfoMCRecords.end()));
 
-    std::vector<LArNtupleRecord> nonNuPfoMCRecords = this->ProduceNonNeutrinoPfoMCRecords(pPfo, pfoList, pMCParticle, pMCParticleList);
+    std::vector<LArNtupleRecord> nonNuPfoMCRecords = this->ProduceNonNeutrinoPfoMCRecords(pPfo, pfoList, pMCParticle);
     records.insert(records.end(), std::make_move_iterator(nonNuPfoMCRecords.begin()), std::make_move_iterator(nonNuPfoMCRecords.end()));
 
     return records;
@@ -118,14 +121,16 @@ std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessPrimary(const ParticleFl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessCosmicRay(const ParticleFlowObject *const pPfo, const PfoList &pfoList,
-    const MCParticle *const pMCParticle, const MCParticleList *const pMCParticleList)
+std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessCosmicRay(
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
 {
     std::vector<LArNtupleRecord> records;
-    std::vector<LArNtupleRecord> genericPfoMCRecords = this->ProduceGenericPfoMCRecords(pPfo, pfoList, pMCParticle, pMCParticleList);
+    const MCParticle *const      pMCParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
+
+    std::vector<LArNtupleRecord> genericPfoMCRecords = this->ProduceGenericPfoMCRecords(pPfo, pfoList, pMCParticle);
     records.insert(records.end(), std::make_move_iterator(genericPfoMCRecords.begin()), std::make_move_iterator(genericPfoMCRecords.end()));
 
-    std::vector<LArNtupleRecord> nonNuPfoMCRecords = this->ProduceNonNeutrinoPfoMCRecords(pPfo, pfoList, pMCParticle, pMCParticleList);
+    std::vector<LArNtupleRecord> nonNuPfoMCRecords = this->ProduceNonNeutrinoPfoMCRecords(pPfo, pfoList, pMCParticle);
     records.insert(records.end(), std::make_move_iterator(nonNuPfoMCRecords.begin()), std::make_move_iterator(nonNuPfoMCRecords.end()));
 
     return records;
@@ -134,7 +139,7 @@ std::vector<LArNtupleRecord> CommonMCNtupleTool::ProcessCosmicRay(const Particle
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> CommonMCNtupleTool::ProduceGenericPfoMCRecords(
-    const ParticleFlowObject *const, const PfoList &, const MCParticle *const pMCParticle, const MCParticleList *const) const
+    const ParticleFlowObject *const, const PfoList &, const MCParticle *const pMCParticle) const
 {
     std::vector<LArNtupleRecord> records;
     records.emplace_back("HasMCInfo", static_cast<LArNtupleRecord::RBool>(pMCParticle));
@@ -190,7 +195,7 @@ std::vector<LArNtupleRecord> CommonMCNtupleTool::ProduceGenericPfoMCRecords(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> CommonMCNtupleTool::ProduceNonNeutrinoPfoMCRecords(
-    const ParticleFlowObject *const pPfo, const PfoList &, const MCParticle *const pMCParticle, const MCParticleList *const) const
+    const ParticleFlowObject *const pPfo, const PfoList &, const MCParticle *const pMCParticle) const
 {
     std::vector<LArNtupleRecord> records;
 

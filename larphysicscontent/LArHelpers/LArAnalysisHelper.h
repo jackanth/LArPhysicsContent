@@ -9,6 +9,8 @@
 #define LAR_ANALYSIS_HELPER_H 1
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
+#include "larphysicscontent/LArObjects/LArInteractionValidationInfo.h"
+#include "larphysicscontent/LArObjects/LArMCTargetValidationInfo.h"
 
 #include "Objects/CartesianVector.h"
 #include "Objects/MCParticle.h"
@@ -25,6 +27,10 @@ namespace lar_physics_content
 class LArAnalysisHelper
 {
 public:
+    using PfoToTargetMap =
+        std::unordered_map<const pandora::ParticleFlowObject *, std::shared_ptr<LArMCTargetValidationInfo>>; ///< Alias for a map from PFOs to MC targets
+    using PfoToInteractionMap = std::unordered_map<const pandora::ParticleFlowObject *, std::shared_ptr<LArInteractionValidationInfo>>; ///< Alias for a map from PFOs to MC interactions
+
     /**
      *  @brief  Deleted copy constructor
      */
