@@ -17,18 +17,40 @@
 #include "TCanvas.h"
 #include "TF1.h"
 #include "THStack.h"
+#include "TTreeReader.h"
 
 using namespace pandora;
 using namespace lar_content;
 
 namespace lar_physics_content
 {
+
+EnergyEstimatorNtupleTool::HitCalorimetryInfo::HitCalorimetryInfo() :
+    m_projectionSuccessful(false),
+    m_threeDPosition(0.f, 0.f, 0.f),
+    m_projectionError(0.f),
+    m_coordinate(0.f),
+    m_dQ(0.f),
+    m_dX(0.f),
+    m_isNoise(false),
+    m_isFake(false)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 EnergyEstimatorNtupleTool::EnergyEstimatorNtupleTool() :
     NtupleVariableBaseTool(),
     m_writeEnergiesToNtuple(true),
     m_useParticleId(true),
     m_trainingSetMode(false),
-    m_makePlots(false)
+    m_makePlots(false),
+    m_recombinationCorrectionDataFile(),
+    m_birksAlpha(0.f),
+    m_birksBeta(0.f),
+    m_birksdQdXPole(0.f),
+    m_birksFitParametersSet(false)
 {
 }
 
@@ -41,6 +63,46 @@ StatusCode EnergyEstimatorNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseParticleId", m_useParticleId));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingSetMode", m_trainingSetMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MakePlots", m_makePlots));
+
+    if (!m_trainingSetMode)
+    {
+        PANDORA_RETURN_RESULT_IF(
+            STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecombinationCorrectionDataFile", m_recombinationCorrectionDataFile));
+        LArRootRegistry recombinationDataRegistry(m_recombinationCorrectionDataFile, LArRootRegistry::FILE_MODE::APPEND);
+
+        TTreeReader               treeReader("BirksFit", recombinationDataRegistry.GetTFile());
+        TTreeReaderValue<Float_t> birksAlpha(treeReader, "Alpha");
+        TTreeReaderValue<Float_t> birksBeta(treeReader, "Beta");
+        TTreeReaderValue<Float_t> birksdQdXPole(treeReader, "dQdXPole");
+
+        while (treeReader.Next())
+        {
+            m_birksAlpha    = *birksAlpha;
+            m_birksBeta     = *birksBeta;
+            m_birksdQdXPole = *birksdQdXPole;
+
+            m_birksFitParametersSet = true;
+            break;
+        }
+
+        if (!m_birksFitParametersSet)
+        {
+            std::cerr << "EnergyEstimatorNtupleTool: Failed to get Birks' fit values" << std::endl;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
+
+        if (m_birksAlpha < std::numeric_limits<float>::epsilon())
+        {
+            std::cerr << "EnergyEstimatorNtupleTool: Birks' alpha value was too small" << std::endl;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
+
+        if (m_birksBeta < std::numeric_limits<float>::epsilon())
+        {
+            std::cerr << "EnergyEstimatorNtupleTool: Birks' beta value was too small" << std::endl;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
+    }
 
     return NtupleVariableBaseTool::ReadSettings(xmlHandle);
 }
@@ -55,22 +117,35 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessEvent(const PfoLi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessNeutrino(
-    const ParticleFlowObject *const, const PfoList &, const std::shared_ptr<LArInteractionValidationInfo> &)
+    const ParticleFlowObject *const pNeutrinoPfo, const PfoList &, const std::shared_ptr<LArInteractionValidationInfo> &)
 {
-    return {};
-}
+    std::vector<LArNtupleRecord> records;
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+    if (pNeutrinoPfo)
+    {
+        LArNtupleRecord::RFloat energyEstimator(0.f);
+        LArNtupleRecord::RUInt  numTrackHits(0U), numTrackHitsLost(0U);
 
-std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessPrimary(
-    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
-{
-    const MCParticle *const pMcParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
+        for (const ParticleFlowObject *const pPrimary : pNeutrinoPfo->GetDaughterPfoList())
+        {
+            energyEstimator += this->GetPrimaryRecord<LArNtupleRecord::RFloat>("RecoKineticEnergy", pPrimary);
+            numTrackHits += this->GetPrimaryRecord<LArNtupleRecord::RUInt>("NumTrackHits", pPrimary);
+            numTrackHitsLost += this->GetPrimaryRecord<LArNtupleRecord::RUInt>("NumTrackHitsLost", pPrimary);
+        }
 
-    if (m_trainingSetMode)
-        return this->ProduceTrainingRecords(pPfo, pfoList, pMcParticle);
+        records.emplace_back("RecoKineticEnergy", energyEstimator, m_writeEnergiesToNtuple);
+        records.emplace_back("NumTrackHits", numTrackHits, m_writeEnergiesToNtuple);
+        records.emplace_back("NumTrackHitsLost", numTrackHitsLost, m_writeEnergiesToNtuple);
+    }
 
-    return {};
+    else
+    {
+        records.emplace_back("RecoKineticEnergy", static_cast<LArNtupleRecord::RFloat>(0.f), m_writeEnergiesToNtuple);
+        records.emplace_back("NumTrackHits", static_cast<LArNtupleRecord::RUInt>(0U), m_writeEnergiesToNtuple);
+        records.emplace_back("NumTrackHitsLost", static_cast<LArNtupleRecord::RUInt>(0U), m_writeEnergiesToNtuple);
+    }
+
+    return records;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -78,12 +153,128 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessPrimary(
 std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessCosmicRay(
     const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
 {
-    const MCParticle *const pMcParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
+    std::vector<LArNtupleRecord> records;
+    const MCParticle *const      pMcParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
 
     if (m_trainingSetMode)
         return this->ProduceTrainingRecords(pPfo, pfoList, pMcParticle);
 
-    return {};
+    std::vector<LArNtupleRecord> energyEstimatorRecords = this->GetEnergyEstimatorRecords(pPfo, pMcParticle);
+    records.insert(records.end(), std::make_move_iterator(energyEstimatorRecords.begin()), std::make_move_iterator(energyEstimatorRecords.end()));
+
+    return records;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessPrimary(
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
+{
+    std::vector<LArNtupleRecord> records;
+    const MCParticle *const      pMcParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
+
+    if (m_trainingSetMode)
+        return this->ProduceTrainingRecords(pPfo, pfoList, pMcParticle);
+
+    std::vector<LArNtupleRecord> energyEstimatorRecords = this->GetEnergyEstimatorRecords(pPfo, pMcParticle);
+    records.insert(records.end(), std::make_move_iterator(energyEstimatorRecords.begin()), std::make_move_iterator(energyEstimatorRecords.end()));
+
+    return records;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::GetEnergyEstimatorRecords(
+    const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) const
+{
+    std::vector<LArNtupleRecord> records;
+
+    if (pPfo)
+    {
+        const auto [dQdXVector, dXVector, showerCharge, numHitsLostToErrors] = this->GetHitCalorimetryInfo(pPfo, pMCParticle);
+        float energyEstimator                                                = this->EstimateShowerEnergy(showerCharge);
+
+        for (std::size_t i = 0UL, numHits = dQdXVector.size(); i < numHits; ++i)
+            energyEstimator += this->EstimateTrackHitEnergy(dQdXVector.at(i), dXVector.at(i));
+
+        records.emplace_back("RecoKineticEnergy", static_cast<LArNtupleRecord::RFloat>(energyEstimator), m_writeEnergiesToNtuple);
+        records.emplace_back("NumTrackHits", static_cast<LArNtupleRecord::RUInt>(dQdXVector.size()), m_writeEnergiesToNtuple);
+        records.emplace_back("NumTrackHitsLost", static_cast<LArNtupleRecord::RUInt>(numHitsLostToErrors), m_writeEnergiesToNtuple);
+    }
+
+    else
+    {
+        records.emplace_back("RecoKineticEnergy", static_cast<LArNtupleRecord::RFloat>(0.f), m_writeEnergiesToNtuple);
+        records.emplace_back("NumTrackHits", static_cast<LArNtupleRecord::RUInt>(0U), m_writeEnergiesToNtuple);
+        records.emplace_back("NumTrackHitsLost", static_cast<LArNtupleRecord::RUInt>(0U), m_writeEnergiesToNtuple);
+    }
+
+    return records;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::tuple<LArNtupleRecord::RFloatVector, LArNtupleRecord::RFloatVector, LArNtupleRecord::RFloat, LArNtupleRecord::RUInt>
+EnergyEstimatorNtupleTool::GetHitCalorimetryInfo(const ParticleFlowObject *const pPfo, const MCParticle *const pMCParticle) const
+{
+    LArNtupleRecord::RFloatVector dQdXVector, dXVector;
+    LArNtupleRecord::RFloat       showerCharge(0.f);
+    LArNtupleRecord::RUInt        numHitsLostToErrors(0UL);
+
+    for (const ParticleFlowObject *const pDownstreamPfo : this->GetAllDownstreamPfos(pPfo))
+    {
+        CaloHitList collectionPlaneHits;
+        LArPfoHelper::GetCaloHits(pDownstreamPfo, TPC_VIEW_W, collectionPlaneHits);
+
+        if (LArPfoHelper::IsShower(pDownstreamPfo) || !this->GetTrackFit(pDownstreamPfo))
+        {
+            for (const CaloHit *const pCaloHit : collectionPlaneHits)
+                showerCharge += pCaloHit->GetInputEnergy();
+
+            continue;
+        }
+
+        // It's tracklike and we have a good track fit
+        CaloHitList threeDCaloHits;
+        LArPfoHelper::GetCaloHits(pDownstreamPfo, TPC_3D, threeDCaloHits);
+        CaloHitMap caloHitMap;
+
+        for (const CaloHit *const pThreeDHit : threeDCaloHits)
+        {
+            if (const CaloHit *const pTwoDHit = reinterpret_cast<const CaloHit *const>(pThreeDHit->GetParentAddress()))
+            {
+                if (pTwoDHit->GetHitType() != TPC_VIEW_W)
+                    continue;
+
+                caloHitMap.emplace(pTwoDHit, pThreeDHit);
+            }
+        }
+
+        try
+        {
+            const LArNtupleHelper::TrackFitSharedPtr &spTrackFit = this->GetTrackFit(pDownstreamPfo);
+            auto [pfodQdX, pfodX, pfoShowerCharge] = this->SelectNoisyHits(*spTrackFit, collectionPlaneHits, pMCParticle, caloHitMap);
+
+            showerCharge += pfoShowerCharge;
+            dQdXVector.insert(dQdXVector.end(), pfodQdX.begin(), pfodQdX.end());
+            dXVector.insert(dXVector.end(), pfodX.begin(), pfodX.end());
+        }
+
+        catch (...)
+        {
+            numHitsLostToErrors += collectionPlaneHits.size();
+            continue;
+        }
+    }
+
+    if (dQdXVector.size() != dXVector.size())
+    {
+        std::cerr << "EnergyEstimatorNtupleTool: The size of the dQ/dx vector (" << dQdXVector.size()
+                  << ") did not match the size of the dx vector (" << dXVector.size() << ")" << std::endl;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    return {dQdXVector, dXVector, showerCharge, numHitsLostToErrors};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -161,63 +352,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(
 
     if (pPfo && pMcParticle)
     {
-        LArNtupleRecord::RFloatVector dQdXVector, dXVector;
-        LArNtupleRecord::RFloat       showerCharge(0.f);
-        LArNtupleRecord::RUInt        numHitsLostToErrors(0UL);
-
-        for (const ParticleFlowObject *const pDownstreamPfo : this->GetAllDownstreamPfos(pPfo))
-        {
-            CaloHitList collectionPlaneHits;
-            LArPfoHelper::GetCaloHits(pDownstreamPfo, TPC_VIEW_W, collectionPlaneHits);
-
-            if (LArPfoHelper::IsShower(pDownstreamPfo) || !this->GetTrackFit(pDownstreamPfo))
-            {
-                for (const CaloHit *const pCaloHit : collectionPlaneHits)
-                    showerCharge += pCaloHit->GetInputEnergy();
-            }
-
-            else
-            {
-
-                CaloHitList threeDCaloHits;
-                LArPfoHelper::GetCaloHits(pDownstreamPfo, TPC_3D, threeDCaloHits);
-                CaloHitMap caloHitMap;
-
-                for (const CaloHit *const pThreeDHit : threeDCaloHits)
-                {
-                    if (const CaloHit *const pTwoDHit = reinterpret_cast<const CaloHit *const>(pThreeDHit->GetParentAddress()))
-                    {
-                        if (pTwoDHit->GetHitType() != TPC_VIEW_W)
-                            continue;
-
-                        caloHitMap.emplace(pTwoDHit, pThreeDHit);
-                    }
-                }
-
-                try
-                {
-                    const LArNtupleHelper::TrackFitSharedPtr &spTrackFit = this->GetTrackFit(pDownstreamPfo);
-                    auto [pfodQdX, pfodX, pfoShowerCharge] = this->SelectNoisyHits(*spTrackFit, collectionPlaneHits, pMcParticle, caloHitMap);
-
-                    showerCharge += pfoShowerCharge;
-                    dQdXVector.insert(dQdXVector.end(), pfodQdX.begin(), pfodQdX.end());
-                    dXVector.insert(dXVector.end(), pfodX.begin(), pfodX.end());
-                }
-
-                catch (...)
-                {
-                    numHitsLostToErrors += collectionPlaneHits.size();
-                    continue;
-                }
-            }
-        }
-
-        if (dQdXVector.size() != dXVector.size())
-        {
-            std::cerr << "EnergyEstimatorNtupleTool: The size of the dQ/dx vector (" << dQdXVector.size()
-                      << ") did not match the size of the dx vector (" << dXVector.size() << ")" << std::endl;
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-        }
+        const auto [dQdXVector, dXVector, showerCharge, numHitsLostToErrors] = this->GetHitCalorimetryInfo(pPfo, pMcParticle);
 
         records.emplace_back("dQdX", dQdXVector);
         records.emplace_back("dX", dXVector);
@@ -256,7 +391,9 @@ std::tuple<FloatVector, FloatVector, float> EnergyEstimatorNtupleTool::SelectNoi
         this->PlotHitdQ(caloHitList, hitInfoMap);
         this->PlotHitdX(caloHitList, hitInfoMap);
         this->PlotHitdQdX(caloHitList, hitInfoMap);
-        this->PlotTrueMatchedHitdQdX(caloHitList, hitInfoMap, pMCParticle);
+
+        if (pMCParticle)
+            this->PlotTrueMatchedHitdQdX(caloHitList, hitInfoMap, pMCParticle);
     }
 
     TF1 *pdQdXFunction = this->FitdQdXFunction(caloHitList, hitInfoMap, 0UL);
@@ -516,120 +653,6 @@ EnergyEstimatorNtupleTool::HitCalorimetryInfoPtr EnergyEstimatorNtupleTool::Calc
     spHitInfo->m_dX                   = dX;
 
     return spHitInfo;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-TF1 *EnergyEstimatorNtupleTool::FitHitGenerationFunction(const CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap) const
-{
-    float minCoordinate(0.f), maxCoordinate(0.f);
-
-    if (STATUS_CODE_SUCCESS != this->CalculateCoordinateRange(caloHitList, hitInfoMap, minCoordinate, maxCoordinate))
-    {
-        std::cerr << "EnergyEstimatorNtupleTool: Failed to calculate coordinate range" << std::endl;
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    const float minCentralCoord = minCoordinate + (maxCoordinate - minCoordinate) / 10.f;
-    const float maxCentralCoord = maxCoordinate - (maxCoordinate - minCoordinate) / 10.f;
-    std::size_t numEntries(0UL);
-
-    LArRootHelper::PlotOptions options;
-    options.m_numXBins = static_cast<std::size_t>(std::round(static_cast<float>(caloHitList.size()) / 5.f));
-    options.m_title    = "dQ/dX distribution for central track hits";
-    options.m_xTitle   = "dQ/dX (integrated ADC/cm)";
-
-    TH1F *pHistogram = this->MakeOneDHitHistogram(
-        options, caloHitList, hitInfoMap, [&](const CaloHit *const, const HitCalorimetryInfo &hitInfo) -> std::optional<float> {
-            if (!hitInfo.m_projectionSuccessful)
-                return {};
-
-            if ((hitInfo.m_coordinate < minCentralCoord) || (hitInfo.m_coordinate > maxCentralCoord))
-                return {};
-
-            ++numEntries;
-            return hitInfo.m_dQ / hitInfo.m_dX;
-        });
-
-    // Fit a pair of Landaus (new Landau on RHS).
-    TF1 *pFunctionL = this->GetTmpRegistry()->CreateWithUniqueName<TF1>("fHitGeneration",
-        [&](double *x, double *p) { return p[0] * TMath::Landau(x[0], p[1], p[2]) + p[3] * TMath::Landau(x[0], p[4], p[5]); }, -500.f, 500.f, 6);
-    pFunctionL->SetParameter(0, static_cast<double>(numEntries) / 10.);
-    pFunctionL->SetParLimits(0, std::min(5., static_cast<double>(numEntries) / 20.), 10000.f);
-
-    pFunctionL->SetParameter(1, 250.f);
-    pFunctionL->SetParLimits(1, 150.f, 350.f);
-
-    pFunctionL->SetParameter(2, 50.f);
-    pFunctionL->SetParLimits(2, 0.01f, 200.f);
-
-    pFunctionL->SetParameter(3, static_cast<double>(numEntries) / 10.);
-    pFunctionL->SetParLimits(3, std::min(5., static_cast<double>(numEntries) / 20.), 10000.f);
-
-    pFunctionL->SetParameter(4, 200.f);
-    pFunctionL->SetParLimits(4, 10.f, 1000.f);
-
-    pFunctionL->SetParameter(5, 50.f);
-    pFunctionL->SetParLimits(5, 0.01f, 400.f);
-
-    pHistogram->Fit(pFunctionL, "N");
-
-    // Fit a pair of Landau (new Landau on RHS).
-    TF1 *pFunctionR = this->GetTmpRegistry()->CreateWithUniqueName<TF1>("fHitGeneration",
-        [&](double *x, double *p) { return p[0] * TMath::Landau(x[0], p[1], p[2]) + p[3] * TMath::Landau(x[0], p[4], p[5]); }, -500.f, 500.f, 6);
-    pFunctionR->SetParameter(0, static_cast<double>(numEntries) / 10.);
-    pFunctionR->SetParLimits(0, std::min(5., static_cast<double>(numEntries) / 20.), 10000.f);
-
-    pFunctionR->SetParameter(1, 250.f);
-    pFunctionR->SetParLimits(1, 150.f, 350.f);
-
-    pFunctionR->SetParameter(2, 50.f);
-    pFunctionR->SetParLimits(2, 0.01f, 200.f);
-
-    pFunctionR->SetParameter(3, static_cast<double>(numEntries) / 10.);
-    pFunctionR->SetParLimits(3, std::min(5., static_cast<double>(numEntries) / 20.), 10000.f);
-
-    pFunctionR->SetParameter(4, 300.f);
-    pFunctionR->SetParLimits(4, 250.f, 1000.f);
-
-    pFunctionR->SetParameter(5, 50.f);
-    pFunctionR->SetParLimits(5, 0.01f, 400.f);
-
-    pHistogram->Fit(pFunctionR, "N");
-
-    // Fit a single Landau function.
-    TF1 *pFunctionSingle = this->GetTmpRegistry()->CreateWithUniqueName<TF1>(
-        "fHitGeneration", [&](double *x, double *p) { return p[0] * TMath::Landau(x[0], p[1], p[2]); }, -500.f, 500.f, 6);
-    pFunctionSingle->SetParameter(0, static_cast<double>(numEntries) / 10.);
-    pFunctionSingle->SetParLimits(0, std::min(5., static_cast<double>(numEntries) / 20.), 10000.f);
-
-    pFunctionSingle->SetParameter(1, 250.f);
-    pFunctionSingle->SetParLimits(1, 150.f, 350.f);
-
-    pFunctionSingle->SetParameter(2, 50.f);
-    pFunctionSingle->SetParLimits(2, 0.01f, 200.f);
-
-    pHistogram->Fit(pFunctionSingle, "N");
-
-    // Find the best function.
-    TF1 *pFunction = pFunctionR;
-
-    if (pFunctionL && pFunctionL->GetChisquare() > 0.f)
-    {
-        if (!pFunction || pFunction->GetChisquare() == 0.f || (pFunctionL->GetChisquare() < pFunction->GetChisquare()))
-            pFunction = pFunctionL;
-    }
-
-    if (pFunctionSingle && pFunctionSingle->GetChisquare() > 0.f)
-    {
-        if (!pFunction || pFunction->GetChisquare() == 0.f || (pFunctionSingle->GetChisquare() < pFunction->GetChisquare()))
-            pFunction = pFunctionSingle;
-    }
-
-    if (m_makePlots && pFunction)
-        this->PlotHistogramAndFunction(pHistogram, pFunction);
-
-    return pFunction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -980,6 +1003,7 @@ TH2F *EnergyEstimatorNtupleTool::MakeTwoDHitHistogram(const LArRootHelper::PlotO
 float EnergyEstimatorNtupleTool::GetFitStandardDeviation(const CaloHitList &caloHitList, const HitCalorimetryInfoMap &hitInfoMap, TF1 *pdQdXFunction) const
 {
     float stdev(0.f);
+    std::size_t numEntries(0UL);
 
     for (const CaloHit *const pCaloHit : caloHitList)
     {
@@ -997,11 +1021,16 @@ float EnergyEstimatorNtupleTool::GetFitStandardDeviation(const CaloHitList &calo
         const float trueEnergy = hitInfo.m_dQ / hitInfo.m_dX;
 
         stdev += (fitEnergy - trueEnergy) * (fitEnergy - trueEnergy);
+        ++numEntries;
     }
 
-    if (caloHitList.size() > 1UL)
-        stdev /= static_cast<float>(caloHitList.size());
+    if (numEntries < 2UL)
+    {
+        std::cerr << "EnergyEstimatorNtupleTool: Failed to calculate standard deviation from the fit as there weren't enough good hits" << std::endl;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
 
+    stdev /= static_cast<float>(numEntries - 1UL);
     return std::sqrt(stdev);
 }
 
@@ -1214,6 +1243,42 @@ void EnergyEstimatorNtupleTool::PlotHistogramAndFunction(TH1 *pHistogram, TF1 *p
         pFunction->Draw("same");
         pCanvas->Write();
     });
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float EnergyEstimatorNtupleTool::EstimateTrackHitEnergy(const float dQdX, const float dX) const
+{
+    if (!m_birksFitParametersSet)
+    {
+        std::cerr << "EnergyEstimatorNtupleTool: Could not estimate hit energy because the Birks fit parameters have not been set" << std::endl;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    const float showerLikeEnergy = dQdX * dX / m_birksAlpha;
+
+    if (dQdX > m_birksdQdXPole)
+        return showerLikeEnergy;
+
+    const float birksScale = 1.f - dQdX / (m_birksAlpha * m_birksBeta);
+
+    if (birksScale < std::numeric_limits<float>::epsilon())
+        return showerLikeEnergy;
+
+    return showerLikeEnergy / birksScale;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float EnergyEstimatorNtupleTool::EstimateShowerEnergy(const float showerCharge) const
+{
+    if (!m_birksFitParametersSet)
+    {
+        std::cerr << "EnergyEstimatorNtupleTool: Could not estimate hit energy because the Birks fit parameters have not been set" << std::endl;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    return showerCharge / m_birksAlpha;
 }
 
 } // namespace lar_physics_content

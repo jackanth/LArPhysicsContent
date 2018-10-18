@@ -8,10 +8,7 @@
 #ifndef LAR_EVENT_VALIDATION_NTUPLE_TOOL_H
 #define LAR_EVENT_VALIDATION_NTUPLE_TOOL_H 1
 
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larphysicscontent/LArNtuple/NtupleVariableBaseTool.h"
-
-#include <map>
 
 namespace lar_physics_content
 {
@@ -71,8 +68,22 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    /**
+     *  @brief  Write interaction records
+     * 
+     *  @param  spMcInteraction shared pointer to the MC interaction
+     * 
+     *  @return the records
+     */
     std::vector<LArNtupleRecord> WriteInteractionRecords(const std::shared_ptr<LArInteractionValidationInfo> &spMcInteraction) const;
 
+    /**
+     *  @brief  Write match records
+     * 
+     *  @param  spMcTarget shared pointer to the MC target
+     * 
+     *  @return the records
+     */
     std::vector<LArNtupleRecord> WriteMatchRecords(const pandora::ParticleFlowObject *const pPfo, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget) const;
 };
 
