@@ -45,7 +45,8 @@ AnalysisNtupleAlgorithm::AnalysisNtupleAlgorithm() :
     m_maxFiducialCoordinates(0.f, 0.f, 0.f),
     m_spTmpRegistry(nullptr),
     m_spPlotsRegistry(nullptr),
-    m_ntupleVariableTools()
+    m_ntupleVariableTools(),
+    m_batchMode(false)
 {
 }
 
@@ -560,7 +561,8 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PlotsOutputFile", m_plotsOutputFile));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TmpOutputFile", m_tmpOutputFile));
 
-    gROOT->SetBatch(kTRUE);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "BatchMode", m_batchMode));
+    gROOT->SetBatch(m_batchMode);
 
     m_spTmpRegistry   = std::shared_ptr<LArRootRegistry>(new LArRootRegistry(m_tmpOutputFile, LArRootRegistry::FILE_MODE::OVERWRITE));
     m_spPlotsRegistry = std::shared_ptr<LArRootRegistry>(new LArRootRegistry(m_plotsOutputFile, LArRootRegistry::FILE_MODE::APPEND));

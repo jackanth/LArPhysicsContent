@@ -88,6 +88,7 @@ private:
     std::shared_ptr<LArRootRegistry>      m_spTmpRegistry;          ///< Shared pointer to the tmp ROOT registry
     std::shared_ptr<LArRootRegistry>      m_spPlotsRegistry;        ///< Shared pointer to the plots ROOT registry
     std::vector<NtupleVariableBaseTool *> m_ntupleVariableTools;    ///< The ntuple variable tools
+    bool                                  m_batchMode;              ///< Whether to run in batch mode
 
     /**
      *  @brief  Collect all possible PFO outcomes

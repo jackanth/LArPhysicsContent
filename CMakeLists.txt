@@ -77,6 +77,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSI
 # - Add unversioned PandoraNtupleClasses library
 add_library(PandoraNtupleClasses SHARED PandoraNtupleClassesDict.cxx)
 
+find_package(bethe-faster REQUIRED)
+target_link_libraries(${PROJECT_NAME} bethe-faster::bethe-faster-shared)
+
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Install products
 
