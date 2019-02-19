@@ -139,13 +139,14 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessNeutrino(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessCosmicRay(
-    const ParticleFlowObject *const pPfo, const PfoList &, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
+    const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArMCTargetValidationInfo> &spMcTarget)
 {
-    if (m_braggGradientTrainingMode)
-        return {};
-
     std::vector<LArNtupleRecord> records;
     const MCParticle *const      pMcParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
+
+    (void) pfoList;
+    if (m_braggGradientTrainingMode)
+        return records; // return this->ProduceBraggGradientTrainingRecords(pPfo, pfoList, pMcParticle);
 
     std::vector<LArNtupleRecord> energyEstimatorRecords = this->GetEnergyEstimatorRecords(pPfo, pMcParticle);
     records.insert(records.end(), std::make_move_iterator(energyEstimatorRecords.begin()), std::make_move_iterator(energyEstimatorRecords.end()));
@@ -238,15 +239,17 @@ EnergyEstimatorNtupleTool::GetHitCalorimetryInfo(const ParticleFlowObject *const
             }
         }
 
-        const bool                                isBackwards = pPfo->GetMomentum().GetDotProduct(pMCParticle->GetMomentum()) < 0.f;
-        const LArNtupleHelper::TrackFitSharedPtr &spTrackFit  = this->GetTrackFit(pDownstreamPfo);
-        const auto hitChargeVector = this->GetdEdxDistribution(*spTrackFit, collectionPlaneHits, caloHitMap, isBackwards, pMCParticle);
+        (void) pMCParticle;
 
-        const auto detector                        = bf::DetectorHelper::GetMicroBooNEDetector();
-        const auto quickPidAlgorithm               = bf::QuickPidAlgorithm{detector};
-        const auto [braggGradient, braggIntercept] = quickPidAlgorithm.CalculateBraggGradient(hitChargeVector);
+        // const bool                                isBackwards = pPfo->GetMomentum().GetDotProduct(pMCParticle->GetMomentum()) < 0.f;
+        // const LArNtupleHelper::TrackFitSharedPtr &spTrackFit  = this->GetTrackFit(pDownstreamPfo);
+        // const auto hitChargeVector = this->GetdEdxDistribution(*spTrackFit, collectionPlaneHits, caloHitMap, isBackwards, pMCParticle);
 
-        std::cout << "Grad = " << braggGradient << ", intercept = " << braggIntercept << std::endl;
+        // const auto detector                        = bf::DetectorHelper::GetMicroBooNEDetector();
+        // const auto quickPidAlgorithm               = bf::QuickPidAlgorithm{detector};
+        // const auto [braggGradient, braggIntercept] = quickPidAlgorithm.CalculateBraggGradient(hitChargeVector);
+
+        // std::cout << "Grad = " << braggGradient << ", intercept = " << braggIntercept << std::endl;
     }
 
     if (dQdXVector.size() != dXVector.size())
@@ -332,21 +335,33 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceBraggGradientTrai
 {
     std::vector<LArNtupleRecord> records;
 
-    float braggGradient  = 0.f;
-    float braggIntercept = 0.f;
+    float braggGradient1  = 0.f;
+    float braggIntercept1 = 0.f;
+    float braggGradient2  = 0.f;
+    float braggIntercept2 = 0.f;
+    float braggAvgDetectorThickness = 0.f;
+    float pida = 0.f;
 
-    if (this->GetBraggGradientParameters(pPfo, pMcParticle, braggGradient, braggIntercept))
+    if (this->GetBraggGradientParameters(pPfo, pMcParticle, braggGradient1, braggIntercept1, braggGradient2, braggIntercept2, braggAvgDetectorThickness, pida))
     {
         records.emplace_back("HasBraggParameters", static_cast<LArNtupleRecord::RBool>(true));
-        records.emplace_back("BraggGradient", static_cast<LArNtupleRecord::RFloat>(braggGradient));
-        records.emplace_back("BraggIntercept", static_cast<LArNtupleRecord::RFloat>(braggIntercept));
+        records.emplace_back("BraggGradient1", static_cast<LArNtupleRecord::RFloat>(braggGradient1));
+        records.emplace_back("BraggIntercept1", static_cast<LArNtupleRecord::RFloat>(braggIntercept1));
+        records.emplace_back("BraggGradient2", static_cast<LArNtupleRecord::RFloat>(braggGradient2));
+        records.emplace_back("BraggIntercept2", static_cast<LArNtupleRecord::RFloat>(braggIntercept2));
+        records.emplace_back("BraggAverageDetectorThickness", static_cast<LArNtupleRecord::RFloat>(braggAvgDetectorThickness));
+        records.emplace_back("Pida", static_cast<LArNtupleRecord::RFloat>(pida));
     }
 
     else
     {
         records.emplace_back("HasBraggParameters", static_cast<LArNtupleRecord::RBool>(false));
-        records.emplace_back("BraggGradient", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("BraggIntercept", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("BraggGradient1", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("BraggIntercept1", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("BraggGradient2", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("BraggIntercept2", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("BraggAverageDetectorThickness", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("Pida", static_cast<LArNtupleRecord::RFloat>(0.f));
     }
 
     return records;
@@ -355,7 +370,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceBraggGradientTrai
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
-    const ParticleFlowObject *const pPfo, const MCParticle *const pMcParticle, float &gradient, float &intercept) const
+    const ParticleFlowObject *const pPfo, const MCParticle *const pMcParticle, float &firstOrderGradient, float &firstOrderIntercept, float &secondOrderGradient, float &secondOrderIntercept, float &averageDetectorThickness, float &pida) const
 {
     // Check PFO eligibility.
     if (!pPfo || !pMcParticle)
@@ -392,7 +407,10 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
     }
 
     // Filter the hit charges to get Bragg peak.
-    const bool isBackwards     = pPfo->GetMomentum().GetDotProduct(pMcParticle->GetMomentum()) < 0.f;
+    const bool isReconstructedBackwards = pPfo->GetMomentum().GetDotProduct(pMcParticle->GetMomentum()) < 0.f;
+    const bool isRecoBackwardsGoing = pPfo->GetMomentum().GetZ() < 0.f;
+    const bool isBackwards = isReconstructedBackwards != isRecoBackwardsGoing;
+
     const auto hitChargeVector = this->GetdEdxDistribution(*spTrackFit, collectionPlaneHits, caloHitMap, isBackwards, pMcParticle);
 
     double                     maxCoordinate = 0.;
@@ -411,7 +429,13 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
     }
 
     // Get the Bragg parameters and optionally plot them.
-    std::tie(gradient, intercept) = bf::QuickPidAlgorithm::CalculateBraggGradient(filteredHitCharges);
+    double firstOrderGradientDouble = 0.;
+    double firstOrderInterceptDouble = 0.;
+    if (!bf::QuickPidAlgorithm::CalculateBraggGradient(filteredHitCharges, firstOrderGradientDouble, firstOrderInterceptDouble))
+        return false;
+
+    firstOrderGradient = static_cast<float>(firstOrderGradientDouble);
+    firstOrderIntercept = static_cast<float>(firstOrderInterceptDouble);
 
     if (m_makePlots)
     {
@@ -420,7 +444,7 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
         bf::PlotHelper::SetGlobalPlotStyle();
 
         TCanvas *pCanvas = this->GetTmpRegistry()->CreateWithUniqueName<TCanvas>("BraggGradientPlot", "BraggGradientPlot", 10, 10, 900, 600);
-        auto braggGraph = bf::PlotHelper::GetBraggGradientGraph(hitChargeVector);
+        auto braggGraph = bf::PlotHelper::GetBraggGradientGraph(filteredHitCharges);
 
         unsigned int colour = 7UL;
         switch (std::abs(pMcParticle->GetParticleId()))
@@ -444,8 +468,8 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
 
         TF1 *pFunction = this->GetTmpRegistry()->CreateWithUniqueName<TF1>("BraggLine", "[0] + [1] * x", 0., xMax);
         pFunction->SetLineColor(bf::PlotHelper::GetSchemeColour(colour));
-        pFunction->SetParameter(0, intercept);
-        pFunction->SetParameter(1, gradient);
+        pFunction->SetParameter(0, firstOrderIntercept);
+        pFunction->SetParameter(1, firstOrderGradient);
         pFunction->Draw("same");
 
         auto particleSymbol = std::string{};
@@ -463,7 +487,106 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
 
         std::stringstream labelStream;
         labelStream << std::fixed << std::setprecision(2);
-        labelStream << "#splitline{gradient = " << gradient << "}{intercept = " << intercept << "}";
+        labelStream << "#splitline{gradient = " << firstOrderGradient << "}{intercept = " << firstOrderIntercept << "}";
+        TLatex latex;
+        latex.SetTextSize(0.04);
+        latex.DrawLatexNDC(0.7, 0.7, labelStream.str().c_str());
+
+        TLatex latexLabel;
+        latexLabel.SetTextSize(0.06);
+        latexLabel.DrawLatexNDC(0.77, 0.8, particleSymbol.c_str());
+
+        if (gROOT->IsBatch())
+            pCanvas->SaveAs((std::string{pCanvas->GetName()} + ".eps").c_str());
+
+        else {
+            bf::PlotHelper::Pause();
+            pCanvas->Close();
+        }
+    }
+
+    // Calculate the average detector thickness.
+    float detectorThickness = 0.f;
+
+    for (const auto &hitCharge : filteredHitCharges)
+        detectorThickness += static_cast<float>(hitCharge.Extent());
+
+    detectorThickness /= static_cast<float>(filteredHitCharges.size());
+    averageDetectorThickness = detectorThickness;
+
+    // Calculate PIDA.
+    float pidaValue = 0.f;
+
+    for (const auto &hitCharge : filteredHitCharges) {
+        const float residualRange = static_cast<float>(maxCoordinate - hitCharge.Coordinate());
+        pidaValue += static_cast<float>(hitCharge.EnergyLossRate()) * std::pow(residualRange, 0.42f);
+    }
+
+    pidaValue /= static_cast<float>(filteredHitCharges.size());
+    pida = pidaValue;
+
+    // Calculate second order approx.
+    double secondOrderGradientDouble = 0.;
+    double secondOrderInterceptDouble = 0.;
+
+    const auto detector = bf::DetectorHelper::GetMicroBooNEDetector();
+    const auto quickPidAlg = bf::QuickPidAlgorithm{detector};
+    if (!quickPidAlg.CalculateSecondOrderBraggGradient(filteredHitCharges, secondOrderGradientDouble, secondOrderInterceptDouble))
+        return false;
+
+    secondOrderGradient = static_cast<float>(secondOrderGradientDouble);
+    secondOrderIntercept = static_cast<float>(secondOrderInterceptDouble);
+
+    if (m_makePlots)
+    {
+        // const float trueKineticEnergy = this->GetPrimaryRecord<LArNtupleRecord::RFloat>("mc_KineticEnergy", pPfo);
+        // std::cerr << "Plotted particle has incident energy " << trueKineticEnergy << std::endl;
+        bf::PlotHelper::SetGlobalPlotStyle();
+
+        TCanvas *pCanvas = this->GetTmpRegistry()->CreateWithUniqueName<TCanvas>("BraggGradientPlot", "BraggGradientPlot", 10, 10, 900, 600);
+        auto braggGraph = quickPidAlg.GetSecondOrderBraggGradientGraph(filteredHitCharges);
+
+        unsigned int colour = 7UL;
+        switch (std::abs(pMcParticle->GetParticleId()))
+        {
+            case 13: colour = 0UL; break;
+            case 211: colour = 1UL; break;
+            case 321: colour = 2UL; break;
+            case 2212: colour = 3UL; break;
+            default: break;
+        }
+
+        braggGraph.GetYaxis()->SetTitle("Q\\");
+        braggGraph.GetXaxis()->SetTitle("R - x  \\text{ (cm)}");
+        braggGraph.SetMarkerColor(bf::PlotHelper::GetSchemeColourLight(colour));
+        braggGraph.SetMarkerStyle(7UL);
+        braggGraph.Draw("AP");
+
+        const double xMax = braggGraph.GetXaxis()->GetXmax();
+        braggGraph.GetXaxis()->SetRangeUser(0., xMax);
+
+        TF1 *pFunction = this->GetTmpRegistry()->CreateWithUniqueName<TF1>("BraggLine", "[0] + [1] * x", 0., xMax);
+        pFunction->SetLineColor(bf::PlotHelper::GetSchemeColour(colour));
+        pFunction->SetParameter(0, secondOrderIntercept);
+        pFunction->SetParameter(1, secondOrderGradient);
+        pFunction->Draw("same");
+
+        auto particleSymbol = std::string{};
+
+        switch (pMcParticle->GetParticleId())
+        {
+            case 13: particleSymbol = "\\mu"; break;
+            case 211: particleSymbol = "\\pi^+"; break;
+            case -211: particleSymbol = "\\pi^-"; break;
+            case 321: particleSymbol = "K^+\\"; break;
+            case -321: particleSymbol = "K^-\\"; break;
+            case 2212: particleSymbol = "p\\"; break;
+            default: particleSymbol = "\\text{PDG " + std::to_string(pMcParticle->GetParticleId()) + "}"; break;
+        }
+
+        std::stringstream labelStream;
+        labelStream << std::scientific << std::setprecision(2);
+        labelStream << "#splitline{gradient = " << secondOrderGradient << "}{intercept = " << secondOrderIntercept << "}";
         TLatex latex;
         latex.SetTextSize(0.04);
         latex.DrawLatexNDC(0.7, 0.7, labelStream.str().c_str());

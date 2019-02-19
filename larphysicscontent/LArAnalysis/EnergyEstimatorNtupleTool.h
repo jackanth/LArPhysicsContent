@@ -180,13 +180,17 @@ private:
      *
      *  @param  pPfo optional address of the PFO
      *  @param  pMcParticle optional pointer to the corresponding MCParticle
-     *  @param  gradient the gradient parameter (to populate)
-     *  @param  intercept the intercept parameter (to populate)
+     *  @param  firstOrderGradient the first-order gradient parameter (to populate)
+     *  @param  firstOrderIntercept the first-order intercept parameter (to populate)
+     *  @param  secondOrderGradient the second-order gradient parameter (to populate)
+     *  @param  secondOrderIntercept the second-order intercept parameter (to populate)
+     *  @param  averageDetectorThickness the average detector thickness (to populate)
+     *  @param  pida the PIDA value
      *
      *  @return success
      */
     bool GetBraggGradientParameters(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticle *const pMcParticle,
-        float &gradient, float &intercept) const;
+        float &firstOrderGradient, float &firstOrderIntercept, float &secondOrderGradient, float &secondOrderIntercept, float &averageDetectorThickness, float &pida) const;
 
     /**
      *  @brief  Get the dE/dx distribution

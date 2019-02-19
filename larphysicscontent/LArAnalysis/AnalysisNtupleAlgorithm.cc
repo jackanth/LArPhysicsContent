@@ -286,8 +286,21 @@ void AnalysisNtupleAlgorithm::ProcessEventHypothesis(
     const auto [mcNeutrinoInts, mcCosmicRayTargets, mcPrimaryTargets] = this->GetMCParticleLists(eventValidationInfo);
     const auto [pfoToTargetMap, pfoToInteractionMap]                  = this->GetPfoToMcObjectMaps(eventValidationInfo);
 
-    this->RegisterNtupleRecords(hypothesisId, neutrinos, cosmicRays, primaries, allPfos, mcNeutrinoInts, mcCosmicRayTargets,
-        mcPrimaryTargets, pfoToTargetMap, pfoToInteractionMap, eventValidationInfo);
+    try
+    {
+        this->RegisterNtupleRecords(hypothesisId, neutrinos, cosmicRays, primaries, allPfos, mcNeutrinoInts, mcCosmicRayTargets,
+            mcPrimaryTargets, pfoToTargetMap, pfoToInteractionMap, eventValidationInfo);
+    }
+    catch (const std::runtime_error &err)
+    {
+        std::cerr << "AnalysisNtupleAlgorithm: Error: " << err.what() << std::endl;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+    catch (...)
+    {
+        std::cerr << "AnalysisNtupleAlgorithm: Unknown error" << std::endl;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
 
     gSystem->ProcessEvents();
     m_spNtuple->Fill();
