@@ -341,8 +341,10 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceBraggGradientTrai
     float braggIntercept2 = 0.f;
     float braggAvgDetectorThickness = 0.f;
     float pida = 0.f;
+    float medianFilteredEnergyLossRate = 0.f;
+    float medianUnfilteredEnergyLossRate = 0.f;
 
-    if (this->GetBraggGradientParameters(pPfo, pMcParticle, braggGradient1, braggIntercept1, braggGradient2, braggIntercept2, braggAvgDetectorThickness, pida))
+    if (this->GetBraggGradientParameters(pPfo, pMcParticle, braggGradient1, braggIntercept1, braggGradient2, braggIntercept2, braggAvgDetectorThickness, pida, medianFilteredEnergyLossRate, medianUnfilteredEnergyLossRate))
     {
         records.emplace_back("HasBraggParameters", static_cast<LArNtupleRecord::RBool>(true));
         records.emplace_back("BraggGradient1", static_cast<LArNtupleRecord::RFloat>(braggGradient1));
@@ -351,6 +353,8 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceBraggGradientTrai
         records.emplace_back("BraggIntercept2", static_cast<LArNtupleRecord::RFloat>(braggIntercept2));
         records.emplace_back("BraggAverageDetectorThickness", static_cast<LArNtupleRecord::RFloat>(braggAvgDetectorThickness));
         records.emplace_back("Pida", static_cast<LArNtupleRecord::RFloat>(pida));
+        records.emplace_back("MedianUnfilteredEnergyLossRate", static_cast<LArNtupleRecord::RFloat>(medianUnfilteredEnergyLossRate));
+        records.emplace_back("MedianFilteredEnergyLossRate", static_cast<LArNtupleRecord::RFloat>(medianFilteredEnergyLossRate));
     }
 
     else
@@ -362,6 +366,8 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceBraggGradientTrai
         records.emplace_back("BraggIntercept2", static_cast<LArNtupleRecord::RFloat>(0.f));
         records.emplace_back("BraggAverageDetectorThickness", static_cast<LArNtupleRecord::RFloat>(0.f));
         records.emplace_back("Pida", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("MedianUnfilteredEnergyLossRate", static_cast<LArNtupleRecord::RFloat>(0.f));
+        records.emplace_back("MedianFilteredEnergyLossRate", static_cast<LArNtupleRecord::RFloat>(0.f));
     }
 
     return records;
@@ -370,7 +376,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceBraggGradientTrai
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
-    const ParticleFlowObject *const pPfo, const MCParticle *const pMcParticle, float &firstOrderGradient, float &firstOrderIntercept, float &secondOrderGradient, float &secondOrderIntercept, float &averageDetectorThickness, float &pida) const
+    const ParticleFlowObject *const pPfo, const MCParticle *const pMcParticle, float &firstOrderGradient, float &firstOrderIntercept, float &secondOrderGradient, float &secondOrderIntercept, float &averageDetectorThickness, float &pida, float &medianFilteredEnergyLossRate, float &medianUnfilteredEnergyLossRate) const
 {
     // Check PFO eligibility.
     if (!pPfo || !pMcParticle)
@@ -524,6 +530,21 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
 
     pidaValue /= static_cast<float>(filteredHitCharges.size());
     pida = pidaValue;
+
+    // Calculate hasBraggPeak.
+    std::vector<double> filteredAvgEnergyLossRates;
+    std::vector<double> unFilteredAvgEnergyLossRates;
+
+    for (const auto &hitCharge : filteredHitCharges) {
+        filteredAvgEnergyLossRates.push_back(static_cast<float>(hitCharge.EnergyLossRate()));
+    }
+
+    for (const auto &hitCharge : hitChargeVector) {
+        unFilteredAvgEnergyLossRates.push_back(static_cast<float>(hitCharge.EnergyLossRate()));
+    }
+
+    medianFilteredEnergyLossRate = static_cast<float>(bf::QuickPidHelper::CalculateMedian(filteredAvgEnergyLossRates));
+    medianUnfilteredEnergyLossRate = static_cast<float>(bf::QuickPidHelper::CalculateMedian(unFilteredAvgEnergyLossRates));
 
     // Calculate second order approx.
     double secondOrderGradientDouble = 0.;
