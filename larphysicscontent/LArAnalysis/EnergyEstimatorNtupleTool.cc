@@ -421,6 +421,7 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
 
     double                     maxCoordinate = 0.;
     std::vector<bf::HitCharge> filteredHitCharges;
+    std::vector<bf::HitCharge> unfilteredHitCharges;
 
     for (const auto &hitCharge : hitChargeVector)
     {
@@ -430,8 +431,11 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
 
     for (const auto &hitCharge : hitChargeVector)
     {
-        if (maxCoordinate - hitCharge.Coordinate() < 11. && maxCoordinate - hitCharge.Coordinate() > std::numeric_limits<float>::epsilon())
+        if (maxCoordinate - hitCharge.Coordinate() < 10. && maxCoordinate - hitCharge.Coordinate() > std::numeric_limits<float>::epsilon())
             filteredHitCharges.push_back(hitCharge);
+
+        else
+            unfilteredHitCharges.push_back(hitCharge);
     }
 
     // Get the Bragg parameters and optionally plot them.
@@ -539,7 +543,7 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
         filteredAvgEnergyLossRates.push_back(static_cast<float>(hitCharge.EnergyLossRate()));
     }
 
-    for (const auto &hitCharge : hitChargeVector) {
+    for (const auto &hitCharge : unfilteredHitCharges) {
         unFilteredAvgEnergyLossRates.push_back(static_cast<float>(hitCharge.EnergyLossRate()));
     }
 
