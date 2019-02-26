@@ -270,6 +270,12 @@ private:
      *  @return the dE/dx value
      */
     float ApplyChargeScaling(const float dQdx) const;
+
+    float CorrectChargeDeposition(const float dQdxUncorrected, const pandora::CartesianVector &threeDPosition) const;
+
+    float GetDriftCoordinateCorrection(const float xPosition) const;
+
+    float GetYZCoordinateCorrection(const float yPosition, const float zPosition) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

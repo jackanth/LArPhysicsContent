@@ -304,13 +304,6 @@ protected:
     bool IsPointFiducial(const pandora::CartesianVector &point) const;
 
     /**
-     *  @brief  Get the extremal fiducial coordinates
-     *
-     *  @return the coordinates
-     */
-    std::tuple<pandora::CartesianVector, pandora::CartesianVector> GetExtremalFiducialCoordinates() const noexcept;
-
-    /**
      *  @brief  Get the algorithm address
      *
      *  @return the algorithm address
@@ -336,18 +329,20 @@ protected:
 private:
     using Processor = std::function<std::vector<LArNtupleRecord>()>; ///< Alias for a function to process a PFO
 
-    std::shared_ptr<LArNtuple>       m_spNtuple;               ///< Shared pointer to the ntuple
-    std::string                      m_eventPrefix;            ///< The event prefix
-    std::string                      m_neutrinoPrefix;         ///< The neutrino prefix
-    std::string                      m_primaryPrefix;          ///< The primary prefix
-    std::string                      m_particlePrefix;         ///< The particle prefix
-    std::string                      m_cosmicPrefix;           ///< The cosmic prefix
-    pandora::CartesianVector         m_minFiducialCoordinates; ///< The minimum fiducial coordinates
-    pandora::CartesianVector         m_maxFiducialCoordinates; ///< The maximum fiducial coordinates
-    const pandora::Algorithm *       m_pAlgorithm;             ///< The address of the calling algorithm
-    std::shared_ptr<LArRootRegistry> m_spPlotsRegistry;        ///< The plots ROOT registry
-    std::shared_ptr<LArRootRegistry> m_spTmpRegistry;          ///< The tmp ROOT registry
-    bool                             m_isSetup;                ///< Whether the tool has been set up.
+    std::shared_ptr<LArNtuple>       m_spNtuple;                 ///< Shared pointer to the ntuple
+    std::string                      m_eventPrefix;              ///< The event prefix
+    std::string                      m_neutrinoPrefix;           ///< The neutrino prefix
+    std::string                      m_primaryPrefix;            ///< The primary prefix
+    std::string                      m_particlePrefix;           ///< The particle prefix
+    std::string                      m_cosmicPrefix;             ///< The cosmic prefix
+    pandora::CartesianVector         m_fiducialRegion1MinCoords; ///< The minimum fiducial coordinates of region 1
+    pandora::CartesianVector         m_fiducialRegion1MaxCoords; ///< The maximum fiducial coordinates of region 1
+    pandora::CartesianVector         m_fiducialRegion2MinCoords; ///< The minimum fiducial coordinates of region 2
+    pandora::CartesianVector         m_fiducialRegion2MaxCoords; ///< The maximum fiducial coordinates of region 2
+    const pandora::Algorithm *       m_pAlgorithm;               ///< The address of the calling algorithm
+    std::shared_ptr<LArRootRegistry> m_spPlotsRegistry;          ///< The plots ROOT registry
+    std::shared_ptr<LArRootRegistry> m_spTmpRegistry;            ///< The tmp ROOT registry
+    bool                             m_isSetup;                  ///< Whether the tool has been set up.
 
     /**
      *  @brief  Prepare an event (wrapper method)
@@ -429,13 +424,16 @@ private:
      *
      *  @param  spNtuple shared pointer to the ntuple
      *  @param  pAlgorithm the algorithm address
-     *  @param  minFiducialCoordinates the minimum fiducial coordinates
-     *  @param  maxFiducialCoordinates the maximum fiducial coordinates
+     *  @param  fiducialRegion1MinCoords the minimum fiducial coordinates of region 1
+     *  @param  fiducialRegion1MaxCoords the maximum fiducial coordinates of region 1
+     *  @param  fiducialRegion2MinCoords the minimum fiducial coordinates of region 2
+     *  @param  fiducialRegion2MaxCoords the maximum fiducial coordinates of region 2
      *  @param  spPlotsRegistry shared pointer to the plots ROOT registry
      *  @param  spTmpRegistry shared pointer to the tmp ROOT registry
      */
     void Setup(std::shared_ptr<LArNtuple> spNtuple, const pandora::Algorithm *const pAlgorithm,
-        pandora::CartesianVector minFiducialCoordinates, pandora::CartesianVector maxFiducialCoordinates,
+        pandora::CartesianVector fiducialRegion1MinCoords, pandora::CartesianVector fiducialRegion1MaxCoords,
+        pandora::CartesianVector fiducialRegion2MinCoords, pandora::CartesianVector fiducialRegion2MaxCoords,
         std::shared_ptr<LArRootRegistry> spPlotsRegistry, std::shared_ptr<LArRootRegistry> spTmpRegistry);
 
     /**
@@ -648,14 +646,8 @@ const std::decay_t<T> &NtupleVariableBaseTool::GetNeutrinoRecord(const std::stri
 
 inline bool NtupleVariableBaseTool::IsPointFiducial(const pandora::CartesianVector &point) const
 {
-    return LArAnalysisHelper::IsPointFiducial(point, m_minFiducialCoordinates, m_maxFiducialCoordinates);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline std::tuple<pandora::CartesianVector, pandora::CartesianVector> NtupleVariableBaseTool::GetExtremalFiducialCoordinates() const noexcept
-{
-    return {m_minFiducialCoordinates, m_maxFiducialCoordinates};
+    return LArAnalysisHelper::IsPointFiducial(point, m_fiducialRegion1MinCoords, m_fiducialRegion1MaxCoords) ||
+           LArAnalysisHelper::IsPointFiducial(point, m_fiducialRegion2MinCoords, m_fiducialRegion2MaxCoords);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

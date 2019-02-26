@@ -29,8 +29,10 @@ NtupleVariableBaseTool::NtupleVariableBaseTool() noexcept :
     m_primaryPrefix("primary_"),
     m_particlePrefix("pfo_"),
     m_cosmicPrefix("cr_"),
-    m_minFiducialCoordinates(0.f, 0.f, 0.f),
-    m_maxFiducialCoordinates(0.f, 0.f, 0.f),
+    m_fiducialRegion1MinCoords(0.f, 0.f, 0.f),
+    m_fiducialRegion1MaxCoords(0.f, 0.f, 0.f),
+    m_fiducialRegion2MinCoords(0.f, 0.f, 0.f),
+    m_fiducialRegion2MaxCoords(0.f, 0.f, 0.f),
     m_pAlgorithm(nullptr),
     m_spPlotsRegistry(nullptr),
     m_spTmpRegistry(nullptr),
@@ -168,8 +170,8 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessNeutrinoWrapper(cons
     const ParticleFlowObject *const pPfo, const PfoList &pfoList, const std::shared_ptr<LArInteractionValidationInfo> &spInteractionInfo)
 {
     const MCParticle *const pMCParticle = spInteractionInfo ? spInteractionInfo->GetMcNeutrino() : nullptr;
-    return this->ProcessImpl(pAlgorithm, m_neutrinoPrefix, pPfo, pMCParticle,
-        [&]() { return this->ProcessNeutrino(pPfo, pfoList, spInteractionInfo); });
+    return this->ProcessImpl(
+        pAlgorithm, m_neutrinoPrefix, pPfo, pMCParticle, [&]() { return this->ProcessNeutrino(pPfo, pfoList, spInteractionInfo); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -220,7 +222,8 @@ std::vector<LArNtupleRecord> NtupleVariableBaseTool::ProcessImpl(const AnalysisN
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void NtupleVariableBaseTool::Setup(std::shared_ptr<LArNtuple> spNtuple, const pandora::Algorithm *const pAlgorithm,
-    pandora::CartesianVector minFiducialCoordinates, pandora::CartesianVector maxFiducialCoordinates,
+    pandora::CartesianVector fiducialRegion1MinCoords, pandora::CartesianVector fiducialRegion1MaxCoords,
+    pandora::CartesianVector fiducialRegion2MinCoords, pandora::CartesianVector fiducialRegion2MaxCoords,
     std::shared_ptr<LArRootRegistry> spPlotsRegistry, std::shared_ptr<LArRootRegistry> spTmpRegistry)
 {
     if (!pAlgorithm || !spNtuple || !spPlotsRegistry || !spTmpRegistry)
@@ -229,13 +232,15 @@ void NtupleVariableBaseTool::Setup(std::shared_ptr<LArNtuple> spNtuple, const pa
         throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
-    m_spNtuple               = std::move(spNtuple);
-    m_pAlgorithm             = pAlgorithm;
-    m_minFiducialCoordinates = std::move(minFiducialCoordinates);
-    m_maxFiducialCoordinates = std::move(maxFiducialCoordinates);
-    m_spPlotsRegistry        = std::move(spPlotsRegistry);
-    m_spTmpRegistry          = std::move(spTmpRegistry);
-    m_isSetup                = true;
+    m_spNtuple                 = std::move(spNtuple);
+    m_pAlgorithm               = pAlgorithm;
+    m_fiducialRegion1MinCoords = std::move(fiducialRegion1MinCoords);
+    m_fiducialRegion1MaxCoords = std::move(fiducialRegion1MaxCoords);
+    m_fiducialRegion2MinCoords = std::move(fiducialRegion2MinCoords);
+    m_fiducialRegion2MaxCoords = std::move(fiducialRegion2MaxCoords);
+    m_spPlotsRegistry          = std::move(spPlotsRegistry);
+    m_spTmpRegistry            = std::move(spTmpRegistry);
+    m_isSetup                  = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

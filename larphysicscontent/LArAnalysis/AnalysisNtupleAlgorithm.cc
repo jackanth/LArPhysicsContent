@@ -39,10 +39,10 @@ AnalysisNtupleAlgorithm::AnalysisNtupleAlgorithm() :
     m_spNtuple(nullptr),
     m_fileIdentifier(0),
     m_appendNtuple(false),
-    m_fiducialCutLowMargins(10.f, 20.f, 10.f),
-    m_fiducialCutHighMargins(10.f, 20.f, 10.f),
-    m_minFiducialCoordinates(0.f, 0.f, 0.f),
-    m_maxFiducialCoordinates(0.f, 0.f, 0.f),
+    m_fiducialRegion1MinCoords(12.f, -81.5f, 25.f),
+    m_fiducialRegion1MaxCoords(244.35f, 81.5f, 675.f),
+    m_fiducialRegion2MinCoords(12.f, -81.5f, 775.f),
+    m_fiducialRegion2MaxCoords(244.35f, 81.5f, 951.8f),
     m_spTmpRegistry(nullptr),
     m_spPlotsRegistry(nullptr),
     m_ntupleVariableTools(),
@@ -582,12 +582,13 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     // Get the minimum and maximum fiducial coordinates
     PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutLowMargins", m_fiducialCutLowMargins));
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialRegion1MinCoords", m_fiducialRegion1MinCoords));
     PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutHighMargins", m_fiducialCutHighMargins));
-
-    std::tie(m_minFiducialCoordinates, m_maxFiducialCoordinates) =
-        LArAnalysisHelper::GetFiducialCutCoordinates(this->GetPandora(), m_fiducialCutLowMargins, m_fiducialCutHighMargins);
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialRegion1MaxCoords", m_fiducialRegion1MaxCoords));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialRegion2MinCoords", m_fiducialRegion2MinCoords));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FiducialRegion2MaxCoords", m_fiducialRegion2MaxCoords));
 
     m_spNtuple = std::shared_ptr<LArNtuple>(new LArNtuple(m_ntupleOutputFile, m_ntupleTreeName, m_ntupleTreeTitle, m_appendNtuple));
 
@@ -618,7 +619,7 @@ StatusCode AnalysisNtupleAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         if (NtupleVariableBaseTool *const pNtupleTool = dynamic_cast<NtupleVariableBaseTool *const>(pAlgorithmTool))
         {
-            pNtupleTool->Setup(m_spNtuple, this, m_minFiducialCoordinates, m_maxFiducialCoordinates, m_spPlotsRegistry, m_spTmpRegistry);
+            pNtupleTool->Setup(m_spNtuple, this, m_fiducialRegion1MinCoords, m_fiducialRegion1MaxCoords, m_fiducialRegion2MinCoords, m_fiducialRegion1MaxCoords, m_spPlotsRegistry, m_spTmpRegistry);
             m_ntupleVariableTools.push_back(pNtupleTool);
         }
 

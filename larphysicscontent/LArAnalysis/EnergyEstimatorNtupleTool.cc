@@ -16,8 +16,8 @@
 
 #include "TCanvas.h"
 #include "TF1.h"
-#include "TLatex.h"
 #include "THStack.h"
+#include "TLatex.h"
 #include "TTreeReader.h"
 
 using namespace pandora;
@@ -144,7 +144,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessCosmicRay(
     std::vector<LArNtupleRecord> records;
     const MCParticle *const      pMcParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
 
-    (void) pfoList;
+    (void)pfoList;
     if (m_braggGradientTrainingMode)
         return records; // return this->ProduceBraggGradientTrainingRecords(pPfo, pfoList, pMcParticle);
 
@@ -239,7 +239,7 @@ EnergyEstimatorNtupleTool::GetHitCalorimetryInfo(const ParticleFlowObject *const
             }
         }
 
-        (void) pMCParticle;
+        (void)pMCParticle;
 
         // const bool                                isBackwards = pPfo->GetMomentum().GetDotProduct(pMCParticle->GetMomentum()) < 0.f;
         // const LArNtupleHelper::TrackFitSharedPtr &spTrackFit  = this->GetTrackFit(pDownstreamPfo);
@@ -335,16 +335,17 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceBraggGradientTrai
 {
     std::vector<LArNtupleRecord> records;
 
-    float braggGradient1  = 0.f;
-    float braggIntercept1 = 0.f;
-    float braggGradient2  = 0.f;
-    float braggIntercept2 = 0.f;
-    float braggAvgDetectorThickness = 0.f;
-    float pida = 0.f;
-    float medianFilteredEnergyLossRate = 0.f;
+    float braggGradient1                 = 0.f;
+    float braggIntercept1                = 0.f;
+    float braggGradient2                 = 0.f;
+    float braggIntercept2                = 0.f;
+    float braggAvgDetectorThickness      = 0.f;
+    float pida                           = 0.f;
+    float medianFilteredEnergyLossRate   = 0.f;
     float medianUnfilteredEnergyLossRate = 0.f;
 
-    if (this->GetBraggGradientParameters(pPfo, pMcParticle, braggGradient1, braggIntercept1, braggGradient2, braggIntercept2, braggAvgDetectorThickness, pida, medianFilteredEnergyLossRate, medianUnfilteredEnergyLossRate))
+    if (this->GetBraggGradientParameters(pPfo, pMcParticle, braggGradient1, braggIntercept1, braggGradient2, braggIntercept2,
+            braggAvgDetectorThickness, pida, medianFilteredEnergyLossRate, medianUnfilteredEnergyLossRate))
     {
         records.emplace_back("HasBraggParameters", static_cast<LArNtupleRecord::RBool>(true));
         records.emplace_back("BraggGradient1", static_cast<LArNtupleRecord::RFloat>(braggGradient1));
@@ -375,8 +376,9 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceBraggGradientTrai
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
-    const ParticleFlowObject *const pPfo, const MCParticle *const pMcParticle, float &firstOrderGradient, float &firstOrderIntercept, float &secondOrderGradient, float &secondOrderIntercept, float &averageDetectorThickness, float &pida, float &medianFilteredEnergyLossRate, float &medianUnfilteredEnergyLossRate) const
+bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(const ParticleFlowObject *const pPfo, const MCParticle *const pMcParticle,
+    float &firstOrderGradient, float &firstOrderIntercept, float &secondOrderGradient, float &secondOrderIntercept,
+    float &averageDetectorThickness, float &pida, float &medianFilteredEnergyLossRate, float &medianUnfilteredEnergyLossRate) const
 {
     // Check PFO eligibility.
     if (!pPfo || !pMcParticle)
@@ -414,8 +416,8 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
 
     // Filter the hit charges to get Bragg peak.
     const bool isReconstructedBackwards = pPfo->GetMomentum().GetDotProduct(pMcParticle->GetMomentum()) < 0.f;
-    const bool isRecoBackwardsGoing = pPfo->GetMomentum().GetZ() < 0.f;
-    const bool isBackwards = isReconstructedBackwards != isRecoBackwardsGoing;
+    const bool isRecoBackwardsGoing     = pPfo->GetMomentum().GetZ() < 0.f;
+    const bool isBackwards              = isReconstructedBackwards != isRecoBackwardsGoing;
 
     const auto hitChargeVector = this->GetdEdxDistribution(*spTrackFit, collectionPlaneHits, caloHitMap, isBackwards, pMcParticle);
 
@@ -439,12 +441,12 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
     }
 
     // Get the Bragg parameters and optionally plot them.
-    double firstOrderGradientDouble = 0.;
+    double firstOrderGradientDouble  = 0.;
     double firstOrderInterceptDouble = 0.;
     if (!bf::QuickPidAlgorithm::CalculateBraggGradient(filteredHitCharges, firstOrderGradientDouble, firstOrderInterceptDouble))
         return false;
 
-    firstOrderGradient = static_cast<float>(firstOrderGradientDouble);
+    firstOrderGradient  = static_cast<float>(firstOrderGradientDouble);
     firstOrderIntercept = static_cast<float>(firstOrderInterceptDouble);
 
     if (m_makePlots)
@@ -454,16 +456,25 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
         bf::PlotHelper::SetGlobalPlotStyle();
 
         TCanvas *pCanvas = this->GetTmpRegistry()->CreateWithUniqueName<TCanvas>("BraggGradientPlot", "BraggGradientPlot", 10, 10, 900, 600);
-        auto braggGraph = bf::PlotHelper::GetBraggGradientGraph(filteredHitCharges);
+        auto     braggGraph = bf::PlotHelper::GetBraggGradientGraph(filteredHitCharges);
 
         unsigned int colour = 7UL;
         switch (std::abs(pMcParticle->GetParticleId()))
         {
-            case 13: colour = 0UL; break;
-            case 211: colour = 1UL; break;
-            case 321: colour = 2UL; break;
-            case 2212: colour = 3UL; break;
-            default: break;
+            case 13:
+                colour = 0UL;
+                break;
+            case 211:
+                colour = 1UL;
+                break;
+            case 321:
+                colour = 2UL;
+                break;
+            case 2212:
+                colour = 3UL;
+                break;
+            default:
+                break;
         }
 
         braggGraph.GetYaxis()->SetTitle("\\mathrm{d}E/\\mathrm{d}x \\text{ (MeV/cm)}");
@@ -486,13 +497,27 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
 
         switch (pMcParticle->GetParticleId())
         {
-            case 13: particleSymbol = "\\mu"; break;
-            case 211: particleSymbol = "\\pi^+"; break;
-            case -211: particleSymbol = "\\pi^-"; break;
-            case 321: particleSymbol = "K^+\\"; break;
-            case -321: particleSymbol = "K^-\\"; break;
-            case 2212: particleSymbol = "p\\"; break;
-            default: particleSymbol = "\\text{PDG " + std::to_string(pMcParticle->GetParticleId()) + "}"; break;
+            case 13:
+                particleSymbol = "\\mu";
+                break;
+            case 211:
+                particleSymbol = "\\pi^+";
+                break;
+            case -211:
+                particleSymbol = "\\pi^-";
+                break;
+            case 321:
+                particleSymbol = "K^+\\";
+                break;
+            case -321:
+                particleSymbol = "K^-\\";
+                break;
+            case 2212:
+                particleSymbol = "p\\";
+                break;
+            default:
+                particleSymbol = "\\text{PDG " + std::to_string(pMcParticle->GetParticleId()) + "}";
+                break;
         }
 
         std::stringstream labelStream;
@@ -509,7 +534,8 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
         if (gROOT->IsBatch())
             pCanvas->SaveAs((std::string{pCanvas->GetName()} + ".eps").c_str());
 
-        else {
+        else
+        {
             bf::PlotHelper::Pause();
             pCanvas->Close();
         }
@@ -527,7 +553,8 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
     // Calculate PIDA.
     float pidaValue = 0.f;
 
-    for (const auto &hitCharge : filteredHitCharges) {
+    for (const auto &hitCharge : filteredHitCharges)
+    {
         const float residualRange = static_cast<float>(maxCoordinate - hitCharge.Coordinate());
         pidaValue += static_cast<float>(hitCharge.EnergyLossRate()) * std::pow(residualRange, 0.42f);
     }
@@ -539,27 +566,29 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
     std::vector<double> filteredAvgEnergyLossRates;
     std::vector<double> unFilteredAvgEnergyLossRates;
 
-    for (const auto &hitCharge : filteredHitCharges) {
+    for (const auto &hitCharge : filteredHitCharges)
+    {
         filteredAvgEnergyLossRates.push_back(static_cast<float>(hitCharge.EnergyLossRate()));
     }
 
-    for (const auto &hitCharge : unfilteredHitCharges) {
+    for (const auto &hitCharge : unfilteredHitCharges)
+    {
         unFilteredAvgEnergyLossRates.push_back(static_cast<float>(hitCharge.EnergyLossRate()));
     }
 
-    medianFilteredEnergyLossRate = static_cast<float>(bf::QuickPidHelper::CalculateMedian(filteredAvgEnergyLossRates));
+    medianFilteredEnergyLossRate   = static_cast<float>(bf::QuickPidHelper::CalculateMedian(filteredAvgEnergyLossRates));
     medianUnfilteredEnergyLossRate = static_cast<float>(bf::QuickPidHelper::CalculateMedian(unFilteredAvgEnergyLossRates));
 
     // Calculate second order approx.
-    double secondOrderGradientDouble = 0.;
+    double secondOrderGradientDouble  = 0.;
     double secondOrderInterceptDouble = 0.;
 
-    const auto detector = bf::DetectorHelper::GetMicroBooNEDetector();
+    const auto detector    = bf::DetectorHelper::GetMicroBooNEDetector();
     const auto quickPidAlg = bf::QuickPidAlgorithm{detector};
     if (!quickPidAlg.CalculateSecondOrderBraggGradient(filteredHitCharges, secondOrderGradientDouble, secondOrderInterceptDouble))
         return false;
 
-    secondOrderGradient = static_cast<float>(secondOrderGradientDouble);
+    secondOrderGradient  = static_cast<float>(secondOrderGradientDouble);
     secondOrderIntercept = static_cast<float>(secondOrderInterceptDouble);
 
     if (m_makePlots)
@@ -569,16 +598,25 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
         bf::PlotHelper::SetGlobalPlotStyle();
 
         TCanvas *pCanvas = this->GetTmpRegistry()->CreateWithUniqueName<TCanvas>("BraggGradientPlot", "BraggGradientPlot", 10, 10, 900, 600);
-        auto braggGraph = quickPidAlg.GetSecondOrderBraggGradientGraph(filteredHitCharges);
+        auto     braggGraph = quickPidAlg.GetSecondOrderBraggGradientGraph(filteredHitCharges);
 
         unsigned int colour = 7UL;
         switch (std::abs(pMcParticle->GetParticleId()))
         {
-            case 13: colour = 0UL; break;
-            case 211: colour = 1UL; break;
-            case 321: colour = 2UL; break;
-            case 2212: colour = 3UL; break;
-            default: break;
+            case 13:
+                colour = 0UL;
+                break;
+            case 211:
+                colour = 1UL;
+                break;
+            case 321:
+                colour = 2UL;
+                break;
+            case 2212:
+                colour = 3UL;
+                break;
+            default:
+                break;
         }
 
         braggGraph.GetYaxis()->SetTitle("Q\\");
@@ -600,13 +638,27 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
 
         switch (pMcParticle->GetParticleId())
         {
-            case 13: particleSymbol = "\\mu"; break;
-            case 211: particleSymbol = "\\pi^+"; break;
-            case -211: particleSymbol = "\\pi^-"; break;
-            case 321: particleSymbol = "K^+\\"; break;
-            case -321: particleSymbol = "K^-\\"; break;
-            case 2212: particleSymbol = "p\\"; break;
-            default: particleSymbol = "\\text{PDG " + std::to_string(pMcParticle->GetParticleId()) + "}"; break;
+            case 13:
+                particleSymbol = "\\mu";
+                break;
+            case 211:
+                particleSymbol = "\\pi^+";
+                break;
+            case -211:
+                particleSymbol = "\\pi^-";
+                break;
+            case 321:
+                particleSymbol = "K^+\\";
+                break;
+            case -321:
+                particleSymbol = "K^-\\";
+                break;
+            case 2212:
+                particleSymbol = "p\\";
+                break;
+            default:
+                particleSymbol = "\\text{PDG " + std::to_string(pMcParticle->GetParticleId()) + "}";
+                break;
         }
 
         std::stringstream labelStream;
@@ -623,7 +675,8 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
         if (gROOT->IsBatch())
             pCanvas->SaveAs((std::string{pCanvas->GetName()} + ".eps").c_str());
 
-        else {
+        else
+        {
             bf::PlotHelper::Pause();
             pCanvas->Close();
         }
@@ -634,15 +687,15 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<bf::HitCharge> EnergyEstimatorNtupleTool::GetdEdxDistribution(
-    const ThreeDSlidingFitResult &trackFit, CaloHitList caloHitList, const CaloHitMap &caloHitMap, const bool isBackwards, const MCParticle * const pMcParticle) const
+std::vector<bf::HitCharge> EnergyEstimatorNtupleTool::GetdEdxDistribution(const ThreeDSlidingFitResult &trackFit, CaloHitList caloHitList,
+    const CaloHitMap &caloHitMap, const bool isBackwards, const MCParticle *const pMcParticle) const
 {
     if (caloHitList.empty())
         return {};
 
     std::vector<HitCalorimetryInfoPtr> hitInfoVector = this->CalculateHitCalorimetryInfo(trackFit, caloHitList, caloHitMap, isBackwards);
     std::vector<bf::HitCharge>         hitChargeVector;
-    std::vector<double> coordinateVector, dQdxVector;
+    std::vector<double>                coordinateVector, dQdxVector;
 
     for (const auto spHitInfo : hitInfoVector)
     {
@@ -652,12 +705,14 @@ std::vector<bf::HitCharge> EnergyEstimatorNtupleTool::GetdEdxDistribution(
         if (spHitInfo->m_dX < std::numeric_limits<float>::epsilon())
             continue;
 
-        const float dQdx = spHitInfo->m_dQ / spHitInfo->m_dX;
-        const float dEdx = this->ApplyModBoxCorrection(dQdx);
+        const float dQdxUncorrected = spHitInfo->m_dQ / spHitInfo->m_dX;
+        const float dQdxCorrected   = this->CorrectChargeDeposition(dQdxUncorrected, spHitInfo->m_threeDPosition);
+
+        const float dEdx = this->ApplyModBoxCorrection(dQdxCorrected);
         hitChargeVector.emplace_back(spHitInfo->m_coordinate, dEdx, spHitInfo->m_dX);
 
         coordinateVector.emplace_back(spHitInfo->m_coordinate);
-        dQdxVector.emplace_back(dQdx);
+        dQdxVector.emplace_back(dQdxCorrected);
     }
 
     if (m_makePlots && pMcParticle)
@@ -675,17 +730,27 @@ std::vector<bf::HitCharge> EnergyEstimatorNtupleTool::GetdEdxDistribution(
         for (double &coordinate : coordinateVector)
             coordinate = maxCoordinate - coordinate;
 
-        TGraph chargeDistributionGraph{static_cast<Int_t>(coordinateVector.size()), coordinateVector.data(), dQdxVector.data()};
-        TCanvas *pCanvas = this->GetTmpRegistry()->CreateWithUniqueName<TCanvas>("ChargeDistributionPlot", "ChargeDistributionPlot", 10, 10, 900, 600);
+        TGraph   chargeDistributionGraph{static_cast<Int_t>(coordinateVector.size()), coordinateVector.data(), dQdxVector.data()};
+        TCanvas *pCanvas =
+            this->GetTmpRegistry()->CreateWithUniqueName<TCanvas>("ChargeDistributionPlot", "ChargeDistributionPlot", 10, 10, 900, 600);
 
         unsigned int colour = 7UL;
         switch (std::abs(pMcParticle->GetParticleId()))
         {
-            case 13: colour = 0UL; break;
-            case 211: colour = 1UL; break;
-            case 321: colour = 2UL; break;
-            case 2212: colour = 3UL; break;
-            default: break;
+            case 13:
+                colour = 0UL;
+                break;
+            case 211:
+                colour = 1UL;
+                break;
+            case 321:
+                colour = 2UL;
+                break;
+            case 2212:
+                colour = 3UL;
+                break;
+            default:
+                break;
         }
 
         chargeDistributionGraph.GetYaxis()->SetTitle("\\mathrm{d}Q/\\mathrm{d}x \\text{ (ADC/cm)}");
@@ -702,13 +767,27 @@ std::vector<bf::HitCharge> EnergyEstimatorNtupleTool::GetdEdxDistribution(
 
         switch (pMcParticle->GetParticleId())
         {
-            case 13: particleSymbol = "\\mu"; break;
-            case 211: particleSymbol = "\\pi^+"; break;
-            case -211: particleSymbol = "\\pi^-"; break;
-            case 321: particleSymbol = "K^+\\"; break;
-            case -321: particleSymbol = "K^-\\"; break;
-            case 2212: particleSymbol = "p\\"; break;
-            default: particleSymbol = "\\text{PDG " + std::to_string(pMcParticle->GetParticleId()) + "}"; break;
+            case 13:
+                particleSymbol = "\\mu";
+                break;
+            case 211:
+                particleSymbol = "\\pi^+";
+                break;
+            case -211:
+                particleSymbol = "\\pi^-";
+                break;
+            case 321:
+                particleSymbol = "K^+\\";
+                break;
+            case -321:
+                particleSymbol = "K^-\\";
+                break;
+            case 2212:
+                particleSymbol = "p\\";
+                break;
+            default:
+                particleSymbol = "\\text{PDG " + std::to_string(pMcParticle->GetParticleId()) + "}";
+                break;
         }
 
         TLatex latexLabel;
@@ -718,7 +797,8 @@ std::vector<bf::HitCharge> EnergyEstimatorNtupleTool::GetdEdxDistribution(
         if (gROOT->IsBatch())
             pCanvas->SaveAs((std::string{pCanvas->GetName()} + ".eps").c_str());
 
-        else {
+        else
+        {
             bf::PlotHelper::Pause();
             pCanvas->Close();
         }
@@ -828,11 +908,50 @@ EnergyEstimatorNtupleTool::HitCalorimetryInfoPtr EnergyEstimatorNtupleTool::Calc
     spHitInfo->m_projectionSuccessful = true;
     spHitInfo->m_threeDPosition       = threeDPosition;
     spHitInfo->m_projectionError      = projectionError;
-    spHitInfo->m_coordinate           = trackFit.GetLongitudinalDisplacement(threeDPosition);
+    spHitInfo->m_coordinate           = trackFit.GetLongitudinalDisplacement(threeDPosition); // temporary coordinate
     spHitInfo->m_dQ                   = dQ;
     spHitInfo->m_dX                   = dX;
 
     return spHitInfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float EnergyEstimatorNtupleTool::CorrectChargeDeposition(const float dQdxUncorrected, const CartesianVector &threeDPosition) const
+{
+    const float positionX = threeDPosition.GetX();
+    const float positionY = threeDPosition.GetY();
+    const float positionZ = threeDPosition.GetZ();
+
+    return dQdxUncorrected * this->GetDriftCoordinateCorrection(positionX) * this->GetYZCoordinateCorrection(positionY, positionZ);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float EnergyEstimatorNtupleTool::GetDriftCoordinateCorrection(const float xPosition) const
+{
+    const float parameter0 = 1.35970e-1f;
+    const float parameter1 = 5.18310e-3f;
+    const float parameter2 = -3.45421f;
+    const float parameter3 = 1.37225f;
+    const float parameter4 = -4.23881e-3f;
+    const float parameter5 = -6.83842e-1f;
+
+    return (parameter0 + parameter1 * (xPosition - parameter2) + parameter3 * std::sin(parameter4 * xPosition - parameter5));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float EnergyEstimatorNtupleTool::GetYZCoordinateCorrection(const float yPosition, const float zPosition) const
+{
+    const bool zCut = (zPosition > 0.f) && (zPosition < 400.f);
+    const bool yzCut1 = yPosition > -120.f + zPosition * 220.f / 400.f;
+    const bool yzCut2 = yPosition < zPosition * 120.f / 250.f;
+
+    if (zCut && yzCut1 && yzCut2)
+        return 1.3f;
+
+    return 1.f;
 }
 
 } // namespace lar_physics_content

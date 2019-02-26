@@ -66,29 +66,29 @@ private:
     using VectorRecordProcessor = std::function<std::vector<LArNtupleRecord>(NtupleVariableBaseTool *const,
         const pandora::ParticleFlowObject *const, const std::shared_ptr<std::decay_t<T>> &)>; ///< Alias for a vector record processor
 
-    unsigned int                          m_eventNumber;            ///< The current event number
-    EventValidationTool *                 m_pEventValidationTool;   ///< Address of the event validation tool
-    std::string                           m_caloHitListName;        ///< The CaloHit list name
-    std::string                           m_mcParticleListName;     ///< The MCParticle list name
-    bool                                  m_printValidation;        ///< Whether to print the validation
-    bool                                  m_produceAllOutcomes;     ///< Whether to produce all outcomes
-    std::string                           m_pfoListName;            ///< If not all outcomes, the PFO list to use
-    std::string                           m_ntupleOutputFile;       ///< The ntuple ROOT tree output file
-    std::string                           m_ntupleTreeName;         ///< The ntuple ROOT tree name
-    std::string                           m_ntupleTreeTitle;        ///< The ntuple ROOT tree title
-    std::string                           m_plotsOutputFile;        ///< The plots ROOT output file
-    std::string                           m_tmpOutputFile;          ///< The tmp ROOT output file
-    std::shared_ptr<LArNtuple>            m_spNtuple;               ///< Shared pointer to the ntuple
-    int                                   m_fileIdentifier;         ///< The input file identifier
-    bool                                  m_appendNtuple;           ///< Whether to append to an existing ntuple
-    pandora::CartesianVector              m_fiducialCutLowMargins;  ///< The low-coordinate margins for the fiducial cut
-    pandora::CartesianVector              m_fiducialCutHighMargins; ///< The high-coordinate margins for the fiducial cut
-    pandora::CartesianVector              m_minFiducialCoordinates; ///< The minimum fiducial coordinates
-    pandora::CartesianVector              m_maxFiducialCoordinates; ///< The maximum fiducial coordinates
-    std::shared_ptr<LArRootRegistry>      m_spTmpRegistry;          ///< Shared pointer to the tmp ROOT registry
-    std::shared_ptr<LArRootRegistry>      m_spPlotsRegistry;        ///< Shared pointer to the plots ROOT registry
-    std::vector<NtupleVariableBaseTool *> m_ntupleVariableTools;    ///< The ntuple variable tools
-    bool                                  m_batchMode;              ///< Whether to run in batch mode
+    unsigned int                          m_eventNumber;              ///< The current event number
+    EventValidationTool *                 m_pEventValidationTool;     ///< Address of the event validation tool
+    std::string                           m_caloHitListName;          ///< The CaloHit list name
+    std::string                           m_mcParticleListName;       ///< The MCParticle list name
+    bool                                  m_printValidation;          ///< Whether to print the validation
+    bool                                  m_produceAllOutcomes;       ///< Whether to produce all outcomes
+    std::string                           m_pfoListName;              ///< If not all outcomes, the PFO list to use
+    std::string                           m_ntupleOutputFile;         ///< The ntuple ROOT tree output file
+    std::string                           m_ntupleTreeName;           ///< The ntuple ROOT tree name
+    std::string                           m_ntupleTreeTitle;          ///< The ntuple ROOT tree title
+    std::string                           m_plotsOutputFile;          ///< The plots ROOT output file
+    std::string                           m_tmpOutputFile;            ///< The tmp ROOT output file
+    std::shared_ptr<LArNtuple>            m_spNtuple;                 ///< Shared pointer to the ntuple
+    int                                   m_fileIdentifier;           ///< The input file identifier
+    bool                                  m_appendNtuple;             ///< Whether to append to an existing ntuple
+    pandora::CartesianVector              m_fiducialRegion1MinCoords; ///< The minimum fiducial coordinates of region 1
+    pandora::CartesianVector              m_fiducialRegion1MaxCoords; ///< The maximum fiducial coordinates of region 2
+    pandora::CartesianVector              m_fiducialRegion2MinCoords; ///< The minimum fiducial coordinates of region 2
+    pandora::CartesianVector              m_fiducialRegion2MaxCoords; ///< The maximum fiducial coordinates of region 2
+    std::shared_ptr<LArRootRegistry>      m_spTmpRegistry;            ///< Shared pointer to the tmp ROOT registry
+    std::shared_ptr<LArRootRegistry>      m_spPlotsRegistry;          ///< Shared pointer to the plots ROOT registry
+    std::vector<NtupleVariableBaseTool *> m_ntupleVariableTools;      ///< The ntuple variable tools
+    bool                                  m_batchMode;                ///< Whether to run in batch mode
 
     /**
      *  @brief  Collect all possible PFO outcomes
