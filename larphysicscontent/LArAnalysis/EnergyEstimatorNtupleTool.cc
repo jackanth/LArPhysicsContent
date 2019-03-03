@@ -344,31 +344,38 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceBraggGradientTrai
     float medianFilteredEnergyLossRate   = 0.f;
     float medianUnfilteredEnergyLossRate = 0.f;
 
-    if (this->GetBraggGradientParameters(pPfo, pMcParticle, braggGradient1, braggIntercept1, braggGradient2, braggIntercept2,
-            braggAvgDetectorThickness, pida, medianFilteredEnergyLossRate, medianUnfilteredEnergyLossRate))
-    {
-        records.emplace_back("HasBraggParameters", static_cast<LArNtupleRecord::RBool>(true));
-        records.emplace_back("BraggGradient1", static_cast<LArNtupleRecord::RFloat>(braggGradient1));
-        records.emplace_back("BraggIntercept1", static_cast<LArNtupleRecord::RFloat>(braggIntercept1));
-        records.emplace_back("BraggGradient2", static_cast<LArNtupleRecord::RFloat>(braggGradient2));
-        records.emplace_back("BraggIntercept2", static_cast<LArNtupleRecord::RFloat>(braggIntercept2));
-        records.emplace_back("BraggAverageDetectorThickness", static_cast<LArNtupleRecord::RFloat>(braggAvgDetectorThickness));
-        records.emplace_back("Pida", static_cast<LArNtupleRecord::RFloat>(pida));
-        records.emplace_back("MedianUnfilteredEnergyLossRate", static_cast<LArNtupleRecord::RFloat>(medianUnfilteredEnergyLossRate));
-        records.emplace_back("MedianFilteredEnergyLossRate", static_cast<LArNtupleRecord::RFloat>(medianFilteredEnergyLossRate));
-    }
+    std::vector<float> maxResidualRanges = {1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f, 16.f, 17.f, 18.f, 19.f, 20.f, 22.f, 24.f, 26.f, 30.f, 35.f, 40.f, 50.f, 70.f, 100.f};
 
-    else
+    for (const float maxResidualRange : maxResidualRanges)
     {
-        records.emplace_back("HasBraggParameters", static_cast<LArNtupleRecord::RBool>(false));
-        records.emplace_back("BraggGradient1", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("BraggIntercept1", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("BraggGradient2", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("BraggIntercept2", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("BraggAverageDetectorThickness", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("Pida", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("MedianUnfilteredEnergyLossRate", static_cast<LArNtupleRecord::RFloat>(0.f));
-        records.emplace_back("MedianFilteredEnergyLossRate", static_cast<LArNtupleRecord::RFloat>(0.f));
+        const std::string suffix = "_max" + std::to_string(maxResidualRange);
+
+        if (this->GetBraggGradientParameters(pPfo, pMcParticle, braggGradient1, braggIntercept1, braggGradient2, braggIntercept2,
+                braggAvgDetectorThickness, pida, medianFilteredEnergyLossRate, medianUnfilteredEnergyLossRate, maxResidualRange))
+        {
+            records.emplace_back("HasBraggParameters" + suffix, static_cast<LArNtupleRecord::RBool>(true));
+            records.emplace_back("BraggGradient1" + suffix, static_cast<LArNtupleRecord::RFloat>(braggGradient1));
+            records.emplace_back("BraggIntercept1" + suffix, static_cast<LArNtupleRecord::RFloat>(braggIntercept1));
+            records.emplace_back("BraggGradient2" + suffix, static_cast<LArNtupleRecord::RFloat>(braggGradient2));
+            records.emplace_back("BraggIntercept2" + suffix, static_cast<LArNtupleRecord::RFloat>(braggIntercept2));
+            records.emplace_back("BraggAverageDetectorThickness" + suffix, static_cast<LArNtupleRecord::RFloat>(braggAvgDetectorThickness));
+            records.emplace_back("Pida" + suffix, static_cast<LArNtupleRecord::RFloat>(pida));
+            records.emplace_back("MedianUnfilteredEnergyLossRate" + suffix, static_cast<LArNtupleRecord::RFloat>(medianUnfilteredEnergyLossRate));
+            records.emplace_back("MedianFilteredEnergyLossRate" + suffix, static_cast<LArNtupleRecord::RFloat>(medianFilteredEnergyLossRate));
+        }
+
+        else
+        {
+            records.emplace_back("HasBraggParameters" + suffix, static_cast<LArNtupleRecord::RBool>(false));
+            records.emplace_back("BraggGradient1" + suffix, static_cast<LArNtupleRecord::RFloat>(0.f));
+            records.emplace_back("BraggIntercept1" + suffix, static_cast<LArNtupleRecord::RFloat>(0.f));
+            records.emplace_back("BraggGradient2" + suffix, static_cast<LArNtupleRecord::RFloat>(0.f));
+            records.emplace_back("BraggIntercept2" + suffix, static_cast<LArNtupleRecord::RFloat>(0.f));
+            records.emplace_back("BraggAverageDetectorThickness" + suffix, static_cast<LArNtupleRecord::RFloat>(0.f));
+            records.emplace_back("Pida" + suffix, static_cast<LArNtupleRecord::RFloat>(0.f));
+            records.emplace_back("MedianUnfilteredEnergyLossRate" + suffix, static_cast<LArNtupleRecord::RFloat>(0.f));
+            records.emplace_back("MedianFilteredEnergyLossRate" + suffix, static_cast<LArNtupleRecord::RFloat>(0.f));
+        }
     }
 
     return records;
@@ -378,7 +385,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceBraggGradientTrai
 
 bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(const ParticleFlowObject *const pPfo, const MCParticle *const pMcParticle,
     float &firstOrderGradient, float &firstOrderIntercept, float &secondOrderGradient, float &secondOrderIntercept,
-    float &averageDetectorThickness, float &pida, float &medianFilteredEnergyLossRate, float &medianUnfilteredEnergyLossRate) const
+    float &averageDetectorThickness, float &pida, float &medianFilteredEnergyLossRate, float &medianUnfilteredEnergyLossRate, const float maxResidualRange) const
 {
     // Check PFO eligibility.
     if (!pPfo || !pMcParticle)
@@ -433,7 +440,7 @@ bool EnergyEstimatorNtupleTool::GetBraggGradientParameters(const ParticleFlowObj
 
     for (const auto &hitCharge : hitChargeVector)
     {
-        if (maxCoordinate - hitCharge.Coordinate() < 10. && maxCoordinate - hitCharge.Coordinate() > std::numeric_limits<float>::epsilon())
+        if (maxCoordinate - hitCharge.Coordinate() < maxResidualRange && maxCoordinate - hitCharge.Coordinate() > std::numeric_limits<float>::epsilon())
             filteredHitCharges.push_back(hitCharge);
 
         else

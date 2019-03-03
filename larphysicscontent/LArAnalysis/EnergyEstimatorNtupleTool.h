@@ -190,7 +190,7 @@ private:
      *  @return success
      */
     bool GetBraggGradientParameters(const pandora::ParticleFlowObject *const pPfo, const pandora::MCParticle *const pMcParticle,
-        float &firstOrderGradient, float &firstOrderIntercept, float &secondOrderGradient, float &secondOrderIntercept, float &averageDetectorThickness, float &pida, float &medianFilteredEnergyLossRate, float &medianUnfilteredEnergyLossRate) const;
+        float &firstOrderGradient, float &firstOrderIntercept, float &secondOrderGradient, float &secondOrderIntercept, float &averageDetectorThickness, float &pida, float &medianFilteredEnergyLossRate, float &medianUnfilteredEnergyLossRate, const float maxResidualRange) const;
 
     /**
      *  @brief  Get the dE/dx distribution
