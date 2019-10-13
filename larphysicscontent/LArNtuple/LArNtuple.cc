@@ -241,6 +241,14 @@ std::size_t LArNtuple::SetScalarBranchAddresses()
                 this->PushScalarToBranch<LArNtupleRecord::RIntVector>(entry.first, entry.second, false);
                 break;
 
+            case LArNtupleRecord::VALUE_TYPE::R_FLOAT_MATRIX:
+                this->PushScalarToBranch<LArNtupleRecord::RFloatMatrix>(entry.first, entry.second, false);
+                break;
+
+            case LArNtupleRecord::VALUE_TYPE::R_INT_MATRIX:
+                this->PushScalarToBranch<LArNtupleRecord::RIntMatrix>(entry.first, entry.second, false);
+                break;
+
             default:
                 std::cerr << "LArNtuple: Unknown value type" << std::endl;
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -296,6 +304,14 @@ std::size_t LArNtuple::SetVectorBranchAddresses()
 
                 case LArNtupleRecord::VALUE_TYPE::R_INT_VECTOR:
                     this->PushVectorToBranch<LArNtupleRecord::RIntVector>(entry.first, branchPlaceholder, false);
+                    break;
+
+                case LArNtupleRecord::VALUE_TYPE::R_FLOAT_MATRIX:
+                    this->PushVectorToBranch<LArNtupleRecord::RFloatMatrix>(entry.first, branchPlaceholder, false);
+                    break;
+
+                case LArNtupleRecord::VALUE_TYPE::R_INT_MATRIX:
+                    this->PushVectorToBranch<LArNtupleRecord::RIntMatrix>(entry.first, branchPlaceholder, false);
                     break;
 
                 default:

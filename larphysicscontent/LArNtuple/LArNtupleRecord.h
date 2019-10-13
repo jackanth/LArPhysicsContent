@@ -53,6 +53,8 @@ public:
         R_TSTRING      = 5U, ///< The ROOT TString type
         R_FLOAT_VECTOR = 6U, ///< A vector of ROOT float types
         R_INT_VECTOR   = 7U  ///< A vector of ROOT int types
+        R_FLOAT_MATRIX = 8U, ///< A 2D matrix of ROOT float types
+        R_INT_MATRIX   = 9U  ///< A 2D matrix of ROOT int types
     };
 
     using RFloat       = Float_t;              ///< Alias for a ROOT float type
@@ -63,6 +65,8 @@ public:
     using RTString     = TString;              ///< Alias for a ROOT TString type
     using RFloatVector = std::vector<Float_t>; ///< Alias for a vector of ROOT float types
     using RIntVector   = std::vector<Int_t>;   ///< Alias for a vector of ROOT int types
+    using RFloatMatrix = std::vector<std::vector<Float_t>>; ///< Alias for a 2D matrix of ROOT float types
+    using RIntMatrix   = std::vector<std::vector<Int_t>>;   ///< Alias for a 2D matrix of ROOT int types
 
     /**
      *  @brief  Constructor
@@ -74,7 +78,8 @@ public:
     template <typename TVALUE, typename = std::enable_if_t<std::is_same_v<std::decay_t<TVALUE>, RFloat> || std::is_same_v<std::decay_t<TVALUE>, RInt> ||
                                                            std::is_same_v<std::decay_t<TVALUE>, RBool> || std::is_same_v<std::decay_t<TVALUE>, RUInt> ||
                                                            std::is_same_v<std::decay_t<TVALUE>, RULong64> || std::is_same_v<std::decay_t<TVALUE>, RTString> ||
-                                                           std::is_same_v<std::decay_t<TVALUE>, RFloatVector> || std::is_same_v<std::decay_t<TVALUE>, RIntVector>>>
+                                                           std::is_same_v<std::decay_t<TVALUE>, RFloatVector> || std::is_same_v<std::decay_t<TVALUE>, RIntVector> ||
+                                                           std::is_same_v<std::decay_t<TVALUE>, RFloatMatrix> || std::is_same_v<std::decay_t<TVALUE>, RIntMatrix>>>
     LArNtupleRecord(std::string branchName, TVALUE &&value, const bool writeToNtuple = true) noexcept;
 
     /**
@@ -172,7 +177,7 @@ protected:
     friend class NtupleVariableBaseTool;
 
 private:
-    using VariantType = std::variant<RFloat, RInt, RBool, RUInt, RULong64, RTString, RFloatVector, RIntVector>; ///< Alias for the variant type
+    using VariantType = std::variant<RFloat, RInt, RBool, RUInt, RULong64, RTString, RFloatVector, RIntVector, RFloatMatrix, RIntMatrix>; ///< Alias for the variant type
 
     VALUE_TYPE                         m_valueType;     ///< The value type
     std::string                        m_branchName;    ///< The branch name
@@ -219,6 +224,12 @@ LArNtupleRecord::LArNtupleRecord(std::string branchName, TVALUE &&value, const b
 
     else if (std::is_same_v<TVALUE_D, RIntVector>)
         m_valueType = VALUE_TYPE::R_INT_VECTOR;
+
+    else if (std::is_same_v<TVALUE_D, RFloatMatrix>)
+        m_valueType = VALUE_TYPE::R_FLOAT_MATRIX;
+
+    else if (std::is_same_v<TVALUE_D, RIntMatrix>)
+        m_valueType = VALUE_TYPE::R_INT_MATRIX;
 
     else // unreachable
         assert(false && "LArNtupleRecord: Unknown value type");

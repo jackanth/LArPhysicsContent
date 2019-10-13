@@ -96,6 +96,7 @@ private:
     template <typename T>
     using HitDataGetter = std::function<std::optional<std::decay_t<T>>(const pandora::CaloHit *const, const HitCalorimetryInfo &hitInfo)>; ///< Alias for a CaloHit info getter function
 
+    bool  m_trainingMode;
     bool  m_braggGradientTrainingMode; ///< Whether to run in Bragg gradient training mode
     bool  m_makePlots;                 ///< Make plots
     float m_modboxRho;                 ///< The ModBox rho parameter
@@ -107,6 +108,8 @@ private:
     float m_modboxFactor;              ///< The ModBox (rho * epsilon / B) value
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    std::vector<LArNtupleRecord> ProduceTrainingRecords(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
      *  @brief  Get energy estimator records for a PFO

@@ -43,6 +43,7 @@ EnergyEstimatorNtupleTool::HitCalorimetryInfo::HitCalorimetryInfo() :
 
 EnergyEstimatorNtupleTool::EnergyEstimatorNtupleTool() :
     NtupleVariableBaseTool{},
+    m_trainingMode{false},
     m_braggGradientTrainingMode{false},
     m_makePlots{false},
     m_modboxRho{0.f},
@@ -59,6 +60,8 @@ EnergyEstimatorNtupleTool::EnergyEstimatorNtupleTool() :
 
 StatusCode EnergyEstimatorNtupleTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "BraggGradientTrainingMode", m_braggGradientTrainingMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MakePlots", m_makePlots));
@@ -104,7 +107,7 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessEvent(const PfoLi
 std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessNeutrino(
     const ParticleFlowObject *const pNeutrinoPfo, const PfoList &, const std::shared_ptr<LArInteractionValidationInfo> &)
 {
-    if (m_braggGradientTrainingMode)
+    if (m_trainingMode || m_braggGradientTrainingMode)
         return {};
 
     std::vector<LArNtupleRecord> records;
@@ -145,6 +148,10 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessCosmicRay(
     const MCParticle *const      pMcParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
 
     (void)pfoList;
+
+    if (m_trainingMode)
+        return this->ProduceTrainingRecords(pPfo);
+
     if (m_braggGradientTrainingMode)
         return records; // return this->ProduceBraggGradientTrainingRecords(pPfo, pfoList, pMcParticle);
 
@@ -162,11 +169,78 @@ std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProcessPrimary(
     std::vector<LArNtupleRecord> records;
     const MCParticle *const      pMcParticle = spMcTarget ? spMcTarget->GetMCParticle() : nullptr;
 
+    if (m_trainingMode)
+        return this->ProduceTrainingRecords(pPfo);
+
     if (m_braggGradientTrainingMode)
         return this->ProduceBraggGradientTrainingRecords(pPfo, pfoList, pMcParticle);
 
     std::vector<LArNtupleRecord> energyEstimatorRecords = this->GetEnergyEstimatorRecords(pPfo, pMcParticle);
     records.insert(records.end(), std::make_move_iterator(energyEstimatorRecords.begin()), std::make_move_iterator(energyEstimatorRecords.end()));
+
+    return records;
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::vector<LArNtupleRecord> EnergyEstimatorNtupleTool::ProduceTrainingRecords(const ParticleFlowObject *const pPfo) const
+{
+    std::vector<LArNtupleRecord> records;
+
+    LArNtupleRecord::RFloatMatrix dQdXMatrix, dXMatrix;
+    LArNtupleRecord::RFloat showerCharge(0.f);
+
+    for (const ParticleFlowObject *const pDownstreamPfo : this->GetAllDownstreamPfos(pPfo))
+    {
+        if (!pDownstreamPfo)
+            continue;
+
+        LArNtupleRecord::RFloatVector dQdXVector, dXVector;
+
+        CaloHitList collectionPlaneHits;
+        LArPfoHelper::GetCaloHits(pDownstreamPfo, TPC_VIEW_W, collectionPlaneHits);
+        const auto spTrackFit = this->GetTrackFit(pDownstreamPfo);
+
+        if (LArPfoHelper::IsShower(pDownstreamPfo) || !spTrackFit)
+        {
+            for (const CaloHit *const pCaloHit : collectionPlaneHits)
+                showerCharge += pCaloHit->GetInputEnergy();
+
+            continue;
+        }
+
+        // It's tracklike and we have a good track fit.
+        CaloHitList threeDCaloHits;
+        LArPfoHelper::GetCaloHits(pDownstreamPfo, TPC_3D, threeDCaloHits);
+        CaloHitMap caloHitMap;
+
+        for (const CaloHit *const pThreeDHit : threeDCaloHits)
+        {
+            if (const CaloHit *const pTwoDHit = reinterpret_cast<const CaloHit *const>(pThreeDHit->GetParentAddress()))
+            {
+                if (pTwoDHit->GetHitType() != TPC_VIEW_W)
+                    continue;
+
+                caloHitMap.emplace(pTwoDHit, pThreeDHit);
+            }
+        }
+
+        const auto hitChargeVector = this->GetdEdxDistribution(*spTrackFit, collectionPlaneHits, caloHitMap, false, pMcParticle);
+
+        for (const auto &hitCharge : hitChargeVector)
+        {
+            dQdXVector.push_back(hitCharge.EnergyLossRate())
+            dXVector.push_back(hitCharge.Extent())
+        }
+        
+        dQdXMatrix.push_back(dQdXVector)
+        dXMatrix.push_back(dXVector)
+    }
+
+    records.emplace_back("dQdXMatrix", dQdXMatrix);
+    records.emplace_back("dXMatrix", dXMatrix);
+    records.emplace_back("showerCharge", showerCharge);
 
     return records;
 }
